@@ -1,0 +1,70 @@
+/* start custom scss snippet */
+
+.image--center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
+
+.image--floatleft {
+  float: left;
+  margin: 15px;
+  width: 50%;
+}
+
+.image--floatright {
+  float: right;
+  margin: 15px;
+  width: 50%;
+}
+
+.figure--floatright {
+  float: right;
+  margin: 15px;
+  width: 50%;
+}
+  
+#screenshot {
+  margin: 15px;  
+}
+
+.figure--floatright p {
+  margin: 0px;
+}
+
+.figure--floatright figcaption {
+  margin: 0px 15px;
+}
+
+.text--datemodified {
+  color: grey;
+  font-size: small;
+  font-style: italic;
+}
+
+li li{
+  list-style-type: lower-alpha;
+}
+
+li li li{
+  list-style-type: lower-roman;
+}
+
+/*.figure--floatright {
+  float: right;
+  margin: 15px;
+  padding: 15px;
+  width: 50%;
+  border: thin silver solid;
+}
+
+#screenshot {
+  margin: 15px;  
+}
+
+.figure--floatright p {
+  margin: 0px;
+}*/
+
+/* end custom scss snippet */

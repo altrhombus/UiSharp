@@ -1,0 +1,124 @@
+header:
+  - titles:
+      en      : &EN       Docs
+      en-GB   : *EN
+      en-US   : *EN
+      en-CA   : *EN
+      en-AU   : *EN
+    url: /docs/intro/overview.html
+
+  - titles:
+      en      : &EN       Download
+      en-GB   : *EN
+      en-US   : *EN
+      en-CA   : *EN
+      en-AU   : *EN
+    url: /download
+
+  - titles:
+      en      : &EN       Terms of Use
+      en-GB   : *EN
+      en-US   : *EN
+      en-CA   : *EN
+      en-AU   : *EN
+    url: /termsofuse
+
+  - titles:
+      en      : &EN       Support
+      en-GB   : *EN
+      en-US   : *EN
+      en-CA   : *EN
+      en-AU   : *EN
+    url: http://uiplusplus.boards.net
+
+docs:
+  - title: Introduction
+    children:
+    - title: Overview
+      url: docs/intro/overview.html
+    - title: Features
+      url: docs/intro/features.html
+    - title: Prerequisite Knowledge
+      url: docs/intro/prerequisites.html
+  - title: Action Overview
+    children:
+    - title: Actions Introduction
+      url: docs/actions/introduction.html
+    - title: Interactive Actions
+      url: docs/actions/interactiveactions.html
+    - title: Non-interactive Actions
+      url: docs/actions/noninteractiveactions.html
+  - title: Running UI++
+    children:
+    - title: Common Usage
+      url: docs/running/commonusage.html
+    - title: Command Line
+      url: docs/running/commandline.html
+    - title: Log File
+      url: docs/running/logfile.html
+  - title: Configuration
+    children:
+    - title: Configuration File
+      url: docs/configuration/configurationfile.html
+    - title: Action Groups
+      url: docs/configuration/actiongroups.html
+    - title: Active Directory Checks
+      url: docs/configuration/activedirectorychecks.html
+    - title: Back Button
+      url: docs/configuration/backbutton.html
+    - title: Conditions
+      url: docs/configuration/conditions.html
+    - title: Status Messages
+      url: docs/configuration/statusmessages.html
+    - title: Values and Variables
+      url: docs/configuration/valuesandvariables.html
+  - title: Action Configuration
+    children:
+    - title: Application Tree
+      url: docs/actionconfig/apptree.html
+    - title: Default Values
+      url: docs/actionconfig/defaultvalues.html
+    - title: External Call
+      url: docs/actionconfig/externalcall.html
+    - title: Error Info
+      url: docs/actionconfig/errorinfo.html
+    - title: File Read
+      url: docs/actionconfig/fileread.html
+    - title: Info
+      url: docs/actionconfig/info.html
+    - title: Info (Full-Screen)
+      url: docs/actionconfig/infofullscreen.html
+    - title: Input
+      url: docs/actionconfig/input.html
+    - title: Preflight
+      url: docs/actionconfig/preflight.html
+    - title: Random String
+      url: docs/actionconfig/randomstring.html
+    - title: Registry Read and Write
+      url: docs/actionconfig/registry.html
+    - title: Save Items
+      url: docs/actionconfig/saveitems.html
+    - title: Software Discovery
+      url: docs/actionconfig/softwarediscovery.html
+    - title: Switch
+      url: docs/actionconfig/switch.html
+    - title: Variable List
+      url: docs/actionconfig/tsvarlist.html
+    - title: User Authentication
+      url: docs/actionconfig/userauth.html
+    - title: Variables
+      url: docs/actionconfig/variables.html
+    - title: Variable Saving and Loading
+      url: docs/actionconfig/variablesaveload.html
+    - title: WMI Read and Write
+      url: docs/actionconfig/wmi.html
+  - title: Reference
+    children:
+    - title: XML Configuration - Action Elements
+      url: docs/reference/actionelements.html
+    - title: XML Configuration - All Elements
+      url: docs/reference/allelements.html
+    - title: Default Values
+      url: docs/reference/defaultvalues.html
+    - title: Text Formatting
+      url: docs/reference/textformatting.html
