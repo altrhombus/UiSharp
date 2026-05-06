@@ -2,3 +2,8 @@ UI++.VC.db
 Build
 Intermediate
 vcpkg_installed
+
+# .NET build output
+src/**/bin/
+src/**/obj/
+*.user
