@@ -15,9 +15,14 @@ public static class XmlConstants
         public const string Messages      = "Messages";
         public const string ActionGroup   = "ActionGroup";
         public const string Libraries     = "Libraries";
-        public const string ActionLibrary = "ActionLibrary";
-        public const string Application   = "Application";
-        public const string Package       = "Package";
+        public const string ActionLibrary   = "ActionLibrary";
+        public const string Application     = "Application";
+        public const string Package         = "Package";
+        public const string Variable        = "Variable";       // child of Action, Switch Case/Default
+        public const string Case            = "Case";           // Switch case
+        public const string Default         = "Default";        // Switch default
+        public const string Attribute       = "Attribute";      // ToJSON attribute child
+        public const string SoftwareListRef = "SoftwareListRef"; // TSVarList reference
     }
 
     public static class Attributes
@@ -132,6 +137,8 @@ public static class XmlConstants
         public const string Timeout             = "Timeout";
         public const string TimeoutMsg          = "TimeoutMsg";
         public const string TimeoutAction       = "TimeoutAction";
+        public const string CaseInsensitive     = "CaseInsensitive";
+        public const string Json                = "JSON";
     }
 
     public static class ActionTypes
@@ -199,6 +206,8 @@ public static class XmlConstants
         public const string AllowedChars    = "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
         public const int    Length          = 6;
         public const int    MaxRunTime      = 60;
+        public const string RestVariable    = "RESTResult";
+        public const string JsonVariable    = "JSONValue";
     }
 
     public static class Variables
