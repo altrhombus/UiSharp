@@ -1,0 +1,101 @@
+using System.Collections.ObjectModel;
+using System.Xml.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using GUISharp.Services;
+using UIpp.Core.Configuration;
+using C = UIpp.Core.Configuration.XmlConstants;
+
+namespace GUISharp.ViewModels.ActionEditors;
+
+public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
+{
+    private readonly ActionNodeModel _model;
+
+    [ObservableProperty] private string _title           = string.Empty;
+    [ObservableProperty] private bool   _showOnFailureOnly;
+    [ObservableProperty] private string _timeout         = string.Empty;
+    [ObservableProperty] private string _timeoutAction   = string.Empty;
+    [ObservableProperty] private string _condition       = string.Empty;
+
+    public ObservableCollection<PreflightCheckItem> Checks { get; } = [];
+
+    public PreflightViewModel(ActionNodeModel model)
+    {
+        _model           = model;
+        _title           = Attr(C.Attributes.Title)          ?? string.Empty;
+        _showOnFailureOnly = BoolAttr(C.Attributes.ShowOnFailureOnly);
+        _timeout         = Attr(C.Attributes.Timeout)        ?? string.Empty;
+        _timeoutAction   = Attr(C.Attributes.TimeoutAction)  ?? C.Defaults.TimeoutAction;
+        _condition       = Attr(C.Attributes.Condition)      ?? string.Empty;
+
+        foreach (var el in model.Node.Elements(C.Elements.PreflightCheck))
+        {
+            Checks.Add(new PreflightCheckItem
+            {
+                Text             = (string?)el.Attribute(C.Attributes.Text)             ?? string.Empty,
+                Description      = (string?)el.Attribute(C.Attributes.Description)      ?? string.Empty,
+                ErrorDescription = (string?)el.Attribute(C.Attributes.ErrorDescription) ?? string.Empty,
+                WarnDescription  = (string?)el.Attribute(C.Attributes.WarnDescription)  ?? string.Empty,
+                CheckCondition   = (string?)el.Attribute(C.Attributes.CheckCondition)   ?? string.Empty,
+                WarnCondition    = (string?)el.Attribute(C.Attributes.WarnCondition)    ?? string.Empty,
+                Condition        = (string?)el.Attribute(C.Attributes.Condition)        ?? string.Empty,
+            });
+        }
+    }
+
+    [RelayCommand]
+    private void AddCheck() => Checks.Add(new PreflightCheckItem());
+
+    [RelayCommand]
+    private void RemoveCheck(PreflightCheckItem item) => Checks.Remove(item);
+
+    public void FlushToNode()
+    {
+        Set(C.Attributes.Title,             Title);
+        SetBool(C.Attributes.ShowOnFailureOnly, ShowOnFailureOnly);
+        Set(C.Attributes.Timeout,           Timeout);
+        Set(C.Attributes.TimeoutAction,     TimeoutAction);
+        Set(C.Attributes.Condition,         Condition);
+
+        _model.Node.Elements(C.Elements.PreflightCheck).Remove();
+        foreach (var item in Checks)
+        {
+            var el = new XElement(C.Elements.PreflightCheck);
+            SetEl(el, C.Attributes.Text,             item.Text);
+            SetEl(el, C.Attributes.Description,      item.Description);
+            SetEl(el, C.Attributes.ErrorDescription, item.ErrorDescription);
+            SetEl(el, C.Attributes.WarnDescription,  item.WarnDescription);
+            SetEl(el, C.Attributes.CheckCondition,   item.CheckCondition);
+            SetEl(el, C.Attributes.WarnCondition,    item.WarnCondition);
+            SetEl(el, C.Attributes.Condition,        item.Condition);
+            _model.Node.Add(el);
+        }
+    }
+
+    private string? Attr(string name) => (string?)_model.Node.Attribute(name);
+    private bool BoolAttr(string name) =>
+        string.Equals(Attr(name), C.Values.True, StringComparison.OrdinalIgnoreCase);
+    private void Set(string name, string val)
+    {
+        if (string.IsNullOrEmpty(val)) _model.Node.Attribute(name)?.Remove();
+        else _model.Node.SetAttributeValue(name, val);
+    }
+    private void SetBool(string name, bool val) =>
+        _model.Node.SetAttributeValue(name, val ? C.Values.True : C.Values.False);
+    private static void SetEl(XElement el, string attr, string val)
+    {
+        if (!string.IsNullOrEmpty(val)) el.SetAttributeValue(attr, val);
+    }
+}
+
+public sealed partial class PreflightCheckItem : ObservableObject
+{
+    [ObservableProperty] private string _text             = string.Empty;
+    [ObservableProperty] private string _description      = string.Empty;
+    [ObservableProperty] private string _errorDescription = string.Empty;
+    [ObservableProperty] private string _warnDescription  = string.Empty;
+    [ObservableProperty] private string _checkCondition   = string.Empty;
+    [ObservableProperty] private string _warnCondition    = string.Empty;
+    [ObservableProperty] private string _condition        = string.Empty;
+}

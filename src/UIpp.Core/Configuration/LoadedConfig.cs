@@ -5,7 +5,8 @@ using UIpp.Core.Software;
 namespace UIpp.Core.Configuration;
 
 public sealed record LoadedConfig(
-    XDocument                            Document,
-    DialogTraits                         GlobalTraits,
+    XDocument                              Document,
+    DialogTraits                           GlobalTraits,
     IReadOnlyDictionary<string, ISoftware> Software,
-    string                               ConditionEngine);
+    string                                 ConditionEngine,
+    int?                                   SchemaVersion);

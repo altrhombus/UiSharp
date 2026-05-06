@@ -1,0 +1,59 @@
+<Page
+    x:Class="GUISharp.Views.GlobalSettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GUISharp.Views"
+    xmlns:vm="using:GUISharp.ViewModels">
+
+    <ScrollViewer Padding="24">
+        <StackPanel Spacing="16" MaxWidth="600">
+            <TextBlock Text="Global Settings" Style="{ThemeResource TitleTextBlockStyle}" />
+
+            <local:LabeledField Label="Title">
+                <TextBox Text="{x:Bind ViewModel.GlobalSettings.Title, Mode=TwoWay}" />
+            </local:LabeledField>
+
+            <local:LabeledField Label="Subtitle">
+                <TextBox Text="{x:Bind ViewModel.GlobalSettings.Subtitle, Mode=TwoWay}" />
+            </local:LabeledField>
+
+            <local:LabeledField Label="Font Face">
+                <TextBox Text="{x:Bind ViewModel.GlobalSettings.FontFace, Mode=TwoWay}" />
+            </local:LabeledField>
+
+            <local:LabeledField Label="Icon Path">
+                <TextBox Text="{x:Bind ViewModel.GlobalSettings.IconPath, Mode=TwoWay}"
+                         PlaceholderText="e.g. UI++2.ico" />
+            </local:LabeledField>
+
+            <local:LabeledField Label="Accent Color (hex)">
+                <TextBox Text="{x:Bind ViewModel.GlobalSettings.AccentColor, Mode=TwoWay}"
+                         PlaceholderText="#002147" />
+            </local:LabeledField>
+
+            <local:LabeledField Label="Sidebar Text Color (hex)">
+                <TextBox Text="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=TwoWay}"
+                         PlaceholderText="#FFFFFF" />
+            </local:LabeledField>
+
+            <local:LabeledField Label="Condition Engine">
+                <ComboBox ItemsSource="{x:Bind ViewModel.GlobalSettings.ConditionEngineOptions}"
+                          SelectedItem="{x:Bind ViewModel.GlobalSettings.ConditionEngine, Mode=TwoWay}"
+                          HorizontalAlignment="Stretch" />
+            </local:LabeledField>
+
+            <local:LabeledField Label="Schema Version">
+                <TextBox Text="{x:Bind ViewModel.GlobalSettings.SchemaVersion, Mode=TwoWay}"
+                         PlaceholderText="(blank = original format)" />
+            </local:LabeledField>
+
+            <StackPanel Spacing="8">
+                <TextBlock Text="Dialog Options" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <CheckBox Content="Show Icons"   IsChecked="{x:Bind ViewModel.GlobalSettings.ShowIcons,   Mode=TwoWay}" />
+                <CheckBox Content="Show Sidebar" IsChecked="{x:Bind ViewModel.GlobalSettings.ShowSidebar, Mode=TwoWay}" />
+                <CheckBox Content="Always On Top" IsChecked="{x:Bind ViewModel.GlobalSettings.AlwaysOnTop, Mode=TwoWay}" />
+                <CheckBox Content="Flat"          IsChecked="{x:Bind ViewModel.GlobalSettings.Flat,        Mode=TwoWay}" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

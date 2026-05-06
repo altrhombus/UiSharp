@@ -22,8 +22,11 @@ public static class ConfigLoader
         var software       = ReadSoftware(root);
         var conditionEngine = Attr(root, XmlConstants.Attributes.ConditionEngine)
                               ?? XmlConstants.Values.ConditionEngineNative;
+        var schemaVersion  = int.TryParse(
+                                 Attr(root, XmlConstants.Attributes.SchemaVersion),
+                                 out var sv) ? sv : (int?)null;
 
-        return new LoadedConfig(doc, traits, software, conditionEngine);
+        return new LoadedConfig(doc, traits, software, conditionEngine, schemaVersion);
     }
 
     // -------------------------------------------------------------------------

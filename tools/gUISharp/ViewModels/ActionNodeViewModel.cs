@@ -1,0 +1,73 @@
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using GUISharp.Services;
+using UIpp.Core.Configuration;
+using C = UIpp.Core.Configuration.XmlConstants;
+
+namespace GUISharp.ViewModels;
+
+public sealed partial class ActionNodeViewModel : ObservableObject
+{
+    public ActionNodeModel Model { get; }
+
+    public string TypeName => Model.TypeName;
+
+    public bool IsGroup => Model.IsGroup;
+
+    public string DisplayLabel => BuildDisplayLabel();
+
+    public ObservableCollection<ActionNodeViewModel> Children { get; } = [];
+
+    [ObservableProperty]
+    private ObservableObject? _editorViewModel;
+
+    public ActionNodeViewModel(ActionNodeModel model, EditorViewModelFactory factory)
+    {
+        Model = model;
+
+        foreach (var child in model.Children)
+            Children.Add(new ActionNodeViewModel(child, factory));
+
+        _editorViewModel = factory.Create(model);
+    }
+
+    public void FlushEditsToNode()
+    {
+        if (EditorViewModel is IActionEditor editor)
+            editor.FlushToNode();
+
+        foreach (var child in Children)
+            child.FlushEditsToNode();
+    }
+
+    private string BuildDisplayLabel()
+    {
+        if (IsGroup)
+        {
+            var name = Attr(C.Attributes.Name);
+            return string.IsNullOrEmpty(name) ? "[Group]" : $"[Group] {name}";
+        }
+
+        return TypeName switch
+        {
+            C.ActionTypes.TSVar        => $"TSVar: {Attr(C.Attributes.Variable) ?? "?"}",
+            C.ActionTypes.ExternalCall => $"ExternalCall: {Model.Node.Value.Trim().Split('\n')[0].Trim()}",
+            C.ActionTypes.DefaultValues => $"DefaultValues: {Attr(C.Attributes.DefaultValueTypes) ?? "All"}",
+            C.ActionTypes.RandomString => $"RandomString → {Attr(C.Attributes.Variable) ?? "?"}",
+            C.ActionTypes.FileRead     => $"FileRead: {Attr(C.Attributes.Filename) ?? "?"}",
+            C.ActionTypes.Vars         => $"Vars ({Attr(C.Attributes.Direction) ?? "?"})",
+            C.ActionTypes.FromJson     => $"FromJSON → {Attr(C.Attributes.Variable) ?? "?"}",
+            C.ActionTypes.Rest         => $"REST: {Attr(C.Attributes.Url) ?? "?"}",
+            C.ActionTypes.SaveItems    => $"SaveItems → {Attr(C.Attributes.Path) ?? "?"}",
+            C.ActionTypes.ToJson       => $"ToJSON → {Attr(C.Attributes.Variable) ?? "?"}",
+            C.ActionTypes.TSVarList    => "TSVarList",
+            C.ActionTypes.Preflight    => $"Preflight: {Attr(C.Attributes.Title) ?? "Preflight"}",
+            C.ActionTypes.UserInput    => $"Input: {Attr(C.Attributes.Title) ?? "User Input"}",
+            _ => string.IsNullOrEmpty(Attr(C.Attributes.Name))
+                    ? TypeName
+                    : $"{TypeName}: {Attr(C.Attributes.Name)}"
+        };
+    }
+
+    private string? Attr(string name) => (string?)Model.Node.Attribute(name);
+}

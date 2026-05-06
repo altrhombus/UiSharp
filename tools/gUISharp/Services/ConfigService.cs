@@ -1,0 +1,17 @@
+using UIpp.Core.Configuration;
+
+namespace GUISharp.Services;
+
+public sealed class ConfigService : IConfigService
+{
+    public Task<EditorConfig> LoadAsync(string path) =>
+        Task.FromResult(EditorConfig.FromLoaded(ConfigLoader.Load(path)));
+
+    public Task SaveAsync(EditorConfig config, string path)
+    {
+        ConfigWriter.Save(config, path);
+        return Task.CompletedTask;
+    }
+
+    public EditorConfig NewConfig() => new();
+}

@@ -1,0 +1,18 @@
+<UserControl
+    x:Class="GUISharp.Views.ActionEditors.RawXmlEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Spacing="12">
+        <TextBlock Text="Unsupported Action Type (Read-only)" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="This action type does not have a dedicated editor in v1. It will be preserved as-is when saved."
+                   Style="{ThemeResource BodyTextBlockStyle}"
+                   TextWrapping="Wrap"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        <TextBox Text="{Binding RawXml}"
+                 IsReadOnly="True"
+                 AcceptsReturn="True"
+                 MaxHeight="400"
+                 FontFamily="Cascadia Mono, Consolas"
+                 TextWrapping="Wrap" />
+    </StackPanel>
+</UserControl>

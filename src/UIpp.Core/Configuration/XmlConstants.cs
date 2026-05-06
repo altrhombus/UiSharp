@@ -145,6 +145,7 @@ public static class XmlConstants
         public const string Json                = "JSON";
         public const string CheckedValue        = "CheckedValue";
         public const string UncheckedValue      = "UncheckedValue";
+        public const string SchemaVersion       = "SchemaVersion";
     }
 
     public static class ActionTypes
