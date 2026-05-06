@@ -1,4 +1,3 @@
-using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -31,7 +30,7 @@ public sealed class LocalTSEnv : ITSEnv
 
     public string Substitute(string input)
     {
-        if (string.IsNullOrEmpty(input) || !input.Contains('%'))
+        if (string.IsNullOrWhiteSpace(input) || !input.Contains('%'))
             return input;
 
         return SubstPattern.Replace(input, m =>
@@ -53,13 +52,10 @@ public sealed class LocalTSEnv : ITSEnv
         path ??= @"%temp%\ui++vars.dat";
         path = Substitute(path);
 
-        var sb = new StringBuilder();
-        foreach (var (k, v) in _vars)
-        {
-            if (!IsExcluded(k))
-                sb.AppendLine($"{k}={v}");
-        }
-        File.WriteAllText(path, sb.ToString());
+        var lines = _vars
+            .Where(kv => !IsExcluded(kv.Key))
+            .Select(kv => $"{kv.Key}={kv.Value}");
+        File.WriteAllLines(path, lines);
     }
 
     public void SaveToFile(string? path = null)

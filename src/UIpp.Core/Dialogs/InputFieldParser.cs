@@ -25,7 +25,7 @@ public static class InputFieldParser
             if (!IsKnownInputElement(name)) continue;
 
             var condition = (string?)el.Attribute(XmlConstants.Attributes.Condition) ?? string.Empty;
-            if (!string.IsNullOrEmpty(condition) &&
+            if (!string.IsNullOrWhiteSpace(condition) &&
                 !conditions.Evaluate(env.Substitute(condition), EmptyVars))
                 continue;
 
@@ -139,7 +139,7 @@ public static class InputFieldParser
         foreach (var choiceEl in parent.Elements(XmlConstants.Elements.Choice))
         {
             var cond = (string?)choiceEl.Attribute(XmlConstants.Attributes.Condition) ?? string.Empty;
-            if (!string.IsNullOrEmpty(cond) && !conditions.Evaluate(env.Substitute(cond), EmptyVars))
+            if (!string.IsNullOrWhiteSpace(cond) && !conditions.Evaluate(env.Substitute(cond), EmptyVars))
                 continue;
 
             var option = Attr(choiceEl, XmlConstants.Attributes.Option);
@@ -152,7 +152,7 @@ public static class InputFieldParser
         foreach (var listEl in parent.Elements(XmlConstants.Elements.ChoiceList))
         {
             var cond = (string?)listEl.Attribute(XmlConstants.Attributes.Condition) ?? string.Empty;
-            if (!string.IsNullOrEmpty(cond) && !conditions.Evaluate(env.Substitute(cond), EmptyVars))
+            if (!string.IsNullOrWhiteSpace(cond) && !conditions.Evaluate(env.Substitute(cond), EmptyVars))
                 continue;
 
             var optionList = env.Substitute(Attr(listEl, XmlConstants.Attributes.OptionList));

@@ -16,9 +16,9 @@ public sealed record PreflightResult(PreflightCheckSpec Check, PreflightStatus S
 {
     public string ActiveDescription => Status switch
     {
-        PreflightStatus.Fail => string.IsNullOrEmpty(Check.ErrorDescription)
+        PreflightStatus.Fail => string.IsNullOrWhiteSpace(Check.ErrorDescription)
             ? Check.Description : Check.ErrorDescription,
-        PreflightStatus.Warn => string.IsNullOrEmpty(Check.WarnDescription)
+        PreflightStatus.Warn => string.IsNullOrWhiteSpace(Check.WarnDescription)
             ? Check.Description : Check.WarnDescription,
         _ => Check.Description,
     };

@@ -33,7 +33,7 @@ public abstract class ActionBase(ActionData data) : IAction
     protected static bool BoolAttr(XElement el, string name, bool def = false)
     {
         var v = (string?)el.Attribute(name);
-        if (string.IsNullOrEmpty(v)) return def;
+        if (string.IsNullOrWhiteSpace(v)) return def;
         return v.Equals("true", StringComparison.OrdinalIgnoreCase)
             || v.Equals("yes",  StringComparison.OrdinalIgnoreCase)
             || v == "1";

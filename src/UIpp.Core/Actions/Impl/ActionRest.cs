@@ -15,7 +15,7 @@ public sealed class ActionRest(ActionData data) : ActionBase(data)
         var variable = Attr(XmlConstants.Attributes.Variable, XmlConstants.Defaults.RestVariable);
         var json     = Data.TsEnv.Substitute(Attr(XmlConstants.Attributes.Json));
 
-        if (string.IsNullOrEmpty(url)) return ActionResult.Next;
+        if (string.IsNullOrWhiteSpace(url)) return ActionResult.Next;
 
         try
         {

@@ -112,7 +112,7 @@ public sealed class ActionProcessor(
 
     private IConditionEvaluator ResolveEvaluator(string? engineAttr)
     {
-        if (!string.IsNullOrEmpty(engineAttr) &&
+        if (!string.IsNullOrWhiteSpace(engineAttr) &&
             engineAttr.Equals(XmlConstants.Values.ConditionEngineVbscript,
                               StringComparison.OrdinalIgnoreCase) &&
             vbscriptEvaluator is not null)

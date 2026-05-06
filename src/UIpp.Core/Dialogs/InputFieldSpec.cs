@@ -31,7 +31,7 @@ public sealed class InputTextSpec : InputFieldSpec
 
     public ValidationResult Validate(string value)
     {
-        if (Required && string.IsNullOrEmpty(value))
+        if (Required && string.IsNullOrWhiteSpace(value))
             return ValidationResult.Fail("This field is required.");
 
         if (!string.IsNullOrEmpty(Regex) && !string.IsNullOrEmpty(value) &&
@@ -62,7 +62,7 @@ public sealed class InputChoiceSpec : InputFieldSpec
 
     public ValidationResult Validate(string value)
     {
-        if (Required && string.IsNullOrEmpty(value))
+        if (Required && string.IsNullOrWhiteSpace(value))
             return ValidationResult.Fail("A selection is required.");
         return ValidationResult.Ok;
     }

@@ -47,7 +47,7 @@ public sealed class ActionExternalCall(ActionData data) : ActionBase(data)
                     LogSeverity.Warning);
             }
 
-            if (!string.IsNullOrEmpty(exitVar))
+            if (!string.IsNullOrWhiteSpace(exitVar))
                 Data.TsEnv.Set(exitVar, completed ? proc.ExitCode.ToString() : "-1");
         }
         catch (Exception ex)

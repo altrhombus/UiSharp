@@ -63,7 +63,7 @@ public static class ConfigLoader
         {
             var localName = node.Name.LocalName;
             var id        = Attr(node, XmlConstants.Attributes.Id);
-            if (string.IsNullOrEmpty(id)) continue;
+            if (string.IsNullOrWhiteSpace(id)) continue;
 
             var label      = Attr(node, XmlConstants.Attributes.Label)      ?? id;
             var info       = Attr(node, XmlConstants.Attributes.SoftwareInfo) ?? string.Empty;
@@ -113,7 +113,7 @@ public static class ConfigLoader
 
     private static bool ParseBool(string? value, bool defaultValue = false)
     {
-        if (string.IsNullOrEmpty(value)) return defaultValue;
+        if (string.IsNullOrWhiteSpace(value)) return defaultValue;
         return value.Equals("true", StringComparison.OrdinalIgnoreCase)
             || value.Equals("yes",  StringComparison.OrdinalIgnoreCase)
             || value.Equals("1",    StringComparison.Ordinal);

@@ -19,7 +19,7 @@ public static class PreflightEvaluator
         foreach (var el in actionNode.Elements(XmlConstants.Elements.PreflightCheck))
         {
             var condition = (string?)el.Attribute(XmlConstants.Attributes.Condition) ?? string.Empty;
-            if (!string.IsNullOrEmpty(condition) &&
+            if (!string.IsNullOrWhiteSpace(condition) &&
                 !conditions.Evaluate(env.Substitute(condition), EmptyVars))
                 continue;
 

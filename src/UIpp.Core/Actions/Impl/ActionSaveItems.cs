@@ -11,7 +11,7 @@ public sealed class ActionSaveItems(ActionData data) : ActionBase(data)
         var destPath = Data.TsEnv.Substitute(Attr(XmlConstants.Attributes.Path));
         var items    = Attr(XmlConstants.Attributes.Items);
 
-        if (string.IsNullOrEmpty(destPath) || string.IsNullOrEmpty(items))
+        if (string.IsNullOrWhiteSpace(destPath) || string.IsNullOrWhiteSpace(items))
             return ActionResult.Next;
 
         foreach (var rawToken in items.Split([',', ';'],
@@ -58,7 +58,7 @@ public sealed class ActionSaveItems(ActionData data) : ActionBase(data)
 
     private void TryCopy(string? src, string destDir)
     {
-        if (string.IsNullOrEmpty(src)) return;
+        if (string.IsNullOrWhiteSpace(src)) return;
         try
         {
             Directory.CreateDirectory(destDir);

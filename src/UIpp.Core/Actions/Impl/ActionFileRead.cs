@@ -12,7 +12,7 @@ public sealed class ActionFileRead(ActionData data) : ActionBase(data)
         var deleteLine = BoolAttr(XmlConstants.Attributes.DeleteLine, def: true);
         var variable   = Attr(XmlConstants.Attributes.Variable, XmlConstants.Defaults.Variable);
 
-        if (string.IsNullOrEmpty(filename)) return ActionResult.Next;
+        if (string.IsNullOrWhiteSpace(filename)) return ActionResult.Next;
 
         try
         {
