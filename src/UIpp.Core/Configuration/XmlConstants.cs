@@ -23,6 +23,9 @@ public static class XmlConstants
         public const string Default         = "Default";        // Switch default
         public const string Attribute       = "Attribute";      // ToJSON attribute child
         public const string SoftwareListRef = "SoftwareListRef"; // TSVarList reference
+        public const string Choice          = "Choice";         // child of InputChoice
+        public const string ChoiceList      = "ChoiceList";     // child of InputChoice (delimited lists)
+        public const string PreflightCheck  = "Check";          // child of Preflight action
     }
 
     public static class Attributes
@@ -140,6 +143,8 @@ public static class XmlConstants
         public const string TimeoutAction       = "TimeoutAction";
         public const string CaseInsensitive     = "CaseInsensitive";
         public const string Json                = "JSON";
+        public const string CheckedValue        = "CheckedValue";
+        public const string UncheckedValue      = "UncheckedValue";
     }
 
     public static class ActionTypes
