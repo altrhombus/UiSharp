@@ -7,3 +7,6 @@ vcpkg_installed
 src/**/bin/
 src/**/obj/
 *.user
+
+# Claude Code local settings
+.claude/
