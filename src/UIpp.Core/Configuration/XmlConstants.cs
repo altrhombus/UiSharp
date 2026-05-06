@@ -94,6 +94,7 @@ public static class XmlConstants
         public const string ShowCancel          = "ShowCancel";
         public const string DisableCancel       = "DisableCancel";
         public const string ShowBack            = "ShowBack";
+        public const string ShowProgress        = "ShowProgress";
         public const string Password            = "Password";
         public const string Username            = "Username";
         public const string Direction           = "Direction";
@@ -208,6 +209,23 @@ public static class XmlConstants
         public const int    MaxRunTime      = 60;
         public const string RestVariable    = "RESTResult";
         public const string JsonVariable    = "JSONValue";
+        public const string DefaultValueAll = "All";
+    }
+
+    public static class DefaultValueCategories
+    {
+        public const string OS       = "OS";
+        public const string Asset    = "Asset";
+        public const string VM       = "VM";
+        public const string Domain   = "Domain";
+        public const string Net      = "Net";
+        public const string TPM      = "TPM";
+        public const string Security = "Security";
+        public const string User     = "User";
+        public const string Mgmt     = "Mgmt";
+
+        public static readonly IReadOnlyList<string> Ordered =
+            [OS, Asset, VM, Domain, Net, TPM, Security, User, Mgmt];
     }
 
     public static class Variables

@@ -17,17 +17,19 @@ internal sealed class NullLog : ICMLog
 
 internal static class ActionTestData
 {
-    public static (LocalTSEnv env, NullLog log, ActionData data) Make(XElement node)
+    public static (LocalTSEnv env, NullLog log, ActionData data) Make(
+        XElement node, IDefaultValueProvider? provider = null)
     {
         var env  = new LocalTSEnv();
         var log  = new NullLog();
         var data = new ActionData
         {
-            ActionNode         = node,
-            Conditions         = new NativeConditionEvaluator(),
-            TsEnv              = env,
-            Log                = log,
-            GlobalDialogTraits = new DialogTraits(),
+            ActionNode             = node,
+            Conditions             = new NativeConditionEvaluator(),
+            TsEnv                  = env,
+            Log                    = log,
+            GlobalDialogTraits     = new DialogTraits(),
+            DefaultValueProvider   = provider,
         };
         return (env, log, data);
     }

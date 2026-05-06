@@ -20,4 +20,5 @@ public sealed class ActionData
     public IReadOnlyDictionary<string, ISoftware>? Software { get; init; }
     public ILdap? Ldap                              { get; init; }
     public XElement? Messages                       { get; init; }
+    public IDefaultValueProvider? DefaultValueProvider { get; init; }
 }

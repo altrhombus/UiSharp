@@ -1,17 +1,38 @@
-# UIPlusPlus
- UI++
+# UiSharp
 
-Initial public open-source code release: December 14, 2024
+A C# (.NET 10 / WinForms) port of [UI++](https://github.com/jason4tw/UIPlusPlus) — the ConfigMgr task-sequence front-end originally written in C++17/MFC by Jason Sandys.
 
-This is all of the UI++ source code in all of its glory and the result of my hardwork over the past 15 or so years and now available for you to do whatever you want with it. It's been more than two years since I last built this solution so I really don't remember everything but will happily help and aid in anyway that I can to help UI++ continue to exist and help those that need it.
+## What is UI++?
 
-Short brain dump of what's required:
-- Visual Studio 2022
-- Visual C++ with MFC static libraries
-- curl libraries (download at https://curl.se/download.html). This gets a bit tricky. UI++ version 3.0.3.0 (the last version I built and published and included here) uses curl version 7.83.1.
-  1. Download the curl source zip and extract.
-  2. Build the libraies for use during linking. This needs to be done four times depending on your intent, once for each platform type (x86 or x64) and once for each build type (Debug or Release). This is the command line that I used for the Debug X64 version: "nmake /f Makefile.vc VC=14 mode=static ENABLE_SSPI=yes ENABLE_IPV6=yes ENABLE_SCHANNEL=yes ENABLE_UNICODE=yes machine=x64 DEBUG=yes". Just change the machine and DEBUG parameters appropriately to build the applicable libraries.
-  3. Update the Additional Library Directories Under General->Linked in the UI++ project to point to the newly compiled libraries so they can be properly linked durung the build of the solution.
-- The binaries (FTWCMLog.dll, FTWldap.dll, and UI++.exe) will get dumped into the appropriate sub-folder of the solution Build folder.
+UI++ displays a customizable WinForms UI during OS deployments driven by Microsoft Configuration Manager (SCCM/ConfigMgr). It reads an XML configuration file and presents input dialogs, info screens, and pre-flight checks, then writes the collected values back as task-sequence variables that the rest of the deployment can consume.
 
-I'm sure there's more and I'll add it here if and when it comes up. Please reach out if you have questions, concerns, comments, or need help.
+## Why a C# port?
+
+- Easier to build and maintain without the Visual C++ / MFC / curl toolchain
+- Unit-testable pure logic (conditions, variable substitution, XML parsing)
+- Single-file self-contained publish with .NET 10
+- Retains WinPE compatibility via Windows Forms (.NET 10-windows)
+
+## Solution structure
+
+| Project | Framework | Purpose |
+|---|---|---|
+| `UIpp.Core` | net10.0 | Pure logic — parsers, evaluators, action implementations. No Windows dependencies. |
+| `UIpp.Windows` | net10.0-windows | WMI, COM, LDAP, registry integrations |
+| `UIpp.UI` | net10.0-windows | WinForms dialogs and controls |
+| `UIpp` | net10.0-windows | Entry point, single-file publish target |
+
+Only `UIpp.Core` is currently implemented. It builds and its full test suite runs on macOS and Linux.
+
+## Building
+
+**Requirements:** .NET 10 SDK
+
+```bash
+dotnet build
+dotnet test src/UIpp.Core.Tests
+```
+
+## Original project
+
+The original C++ source code is included in this repository under its original license. See [UI++](https://github.com/jason4tw/UIPlusPlus) for the upstream project and Jason Sandys's write-up of 15+ years of history behind it.
