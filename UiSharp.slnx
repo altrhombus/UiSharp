@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/UIpp.Core.Tests/UIpp.Core.Tests.csproj" />
+    <Project Path="src/UIpp.Core/UIpp.Core.csproj" />
+  </Folder>
+</Solution>
