@@ -19,16 +19,24 @@ public sealed partial class ActionNodeViewModel : ObservableObject
     public ObservableCollection<ActionNodeViewModel> Children { get; } = [];
 
     [ObservableProperty]
-    private ObservableObject? _editorViewModel;
+    public partial ObservableObject? EditorViewModel { get; set; }
+
+    public event EventHandler? Dirtied;
 
     public ActionNodeViewModel(ActionNodeModel model, EditorViewModelFactory factory)
     {
         Model = model;
 
         foreach (var child in model.Children)
-            Children.Add(new ActionNodeViewModel(child, factory));
+        {
+            var childVm = new ActionNodeViewModel(child, factory);
+            childVm.Dirtied += (_, _) => Dirtied?.Invoke(this, EventArgs.Empty);
+            Children.Add(childVm);
+        }
 
-        _editorViewModel = factory.Create(model);
+        EditorViewModel = factory.Create(model);
+        if (EditorViewModel is not null)
+            EditorViewModel.PropertyChanged += (_, _) => Dirtied?.Invoke(this, EventArgs.Empty);
     }
 
     public void FlushEditsToNode()
@@ -63,6 +71,18 @@ public sealed partial class ActionNodeViewModel : ObservableObject
             C.ActionTypes.TSVarList    => "TSVarList",
             C.ActionTypes.Preflight    => $"Preflight: {Attr(C.Attributes.Title) ?? "Preflight"}",
             C.ActionTypes.UserInput    => $"Input: {Attr(C.Attributes.Title) ?? "User Input"}",
+            C.ActionTypes.UserInfo     => $"Info: {Attr(C.Attributes.Title) ?? "?"}",
+            C.ActionTypes.UserInfoFull => $"InfoFullScreen: {Attr(C.Attributes.Title) ?? "?"}",
+            C.ActionTypes.ErrorInfo    => $"ErrorInfo: {Attr(C.Attributes.Title) ?? "?"}",
+            C.ActionTypes.RegRead      => $"RegRead → {Attr(C.Attributes.Variable) ?? "?"}",
+            C.ActionTypes.RegWrite     => $"RegWrite: {Attr(C.Attributes.Key) ?? "?"}",
+            C.ActionTypes.AppTree      => $"AppTree: {Attr(C.Attributes.Title) ?? "?"}",
+            C.ActionTypes.WmiRead      => $"WMIRead → {Attr(C.Attributes.Variable) ?? "?"}",
+            C.ActionTypes.WmiWrite     => $"WMIWrite: {Attr(C.Attributes.Class) ?? "?"}",
+            C.ActionTypes.UserAuth     => $"UserAuth: {Attr(C.Attributes.Title) ?? "?"}",
+            C.ActionTypes.SoftwareDisc => "SoftwareDiscovery",
+            C.ActionTypes.Switch       => $"Switch: {Attr(C.Attributes.OnValue) ?? "?"}",
+            C.ActionTypes.Tpm          => "TPM",
             _ => string.IsNullOrEmpty(Attr(C.Attributes.Name))
                     ? TypeName
                     : $"{TypeName}: {Attr(C.Attributes.Name)}"

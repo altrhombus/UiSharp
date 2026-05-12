@@ -12,10 +12,10 @@ public sealed partial class InputActionViewModel : ObservableObject, IActionEdit
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _title      = string.Empty;
-    [ObservableProperty] private string _size       = string.Empty;
-    [ObservableProperty] private bool   _showCancel;
-    [ObservableProperty] private string _condition  = string.Empty;
+    [ObservableProperty] public partial string Title      { get; set; }
+    [ObservableProperty] public partial string Size       { get; set; }
+    [ObservableProperty] public partial bool   ShowCancel { get; set; }
+    [ObservableProperty] public partial string Condition  { get; set; }
 
     public ObservableCollection<InputFieldItem> Fields { get; } = [];
 
@@ -25,10 +25,10 @@ public sealed partial class InputActionViewModel : ObservableObject, IActionEdit
     public InputActionViewModel(ActionNodeModel model)
     {
         _model      = model;
-        _title      = Attr(C.Attributes.Title)      ?? string.Empty;
-        _size       = Attr(C.Attributes.Size)       ?? C.Values.SizeRegular;
-        _showCancel = BoolAttr(C.Attributes.ShowCancel);
-        _condition  = Attr(C.Attributes.Condition)  ?? string.Empty;
+        Title       = Attr(C.Attributes.Title)      ?? string.Empty;
+        Size        = Attr(C.Attributes.Size)       ?? C.Values.SizeRegular;
+        ShowCancel  = BoolAttr(C.Attributes.ShowCancel);
+        Condition   = Attr(C.Attributes.Condition)  ?? string.Empty;
 
         foreach (var el in model.Node.Elements())
         {
@@ -119,9 +119,18 @@ public sealed partial class InputActionViewModel : ObservableObject, IActionEdit
 
 public sealed partial class InputFieldItem : ObservableObject
 {
-    [ObservableProperty] private string _elementName = string.Empty;
-    [ObservableProperty] private string _variable    = string.Empty;
-    [ObservableProperty] private string _question    = string.Empty;
-    [ObservableProperty] private string _condition   = string.Empty;
-    [ObservableProperty] private string _rawXml      = string.Empty;
+    [ObservableProperty] public partial string ElementName { get; set; }
+    [ObservableProperty] public partial string Variable    { get; set; }
+    [ObservableProperty] public partial string Question    { get; set; }
+    [ObservableProperty] public partial string Condition   { get; set; }
+    [ObservableProperty] public partial string RawXml      { get; set; }
+
+    public InputFieldItem()
+    {
+        ElementName = string.Empty;
+        Variable    = string.Empty;
+        Question    = string.Empty;
+        Condition   = string.Empty;
+        RawXml      = string.Empty;
+    }
 }

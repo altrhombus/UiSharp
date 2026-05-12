@@ -9,14 +9,14 @@ public sealed partial class ActionGroupViewModel : ObservableObject, IActionEdit
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _name      = string.Empty;
-    [ObservableProperty] private string _condition = string.Empty;
+    [ObservableProperty] public partial string Name      { get; set; }
+    [ObservableProperty] public partial string Condition { get; set; }
 
     public ActionGroupViewModel(ActionNodeModel model)
     {
         _model    = model;
-        _name     = Attr(C.Attributes.Name)      ?? string.Empty;
-        _condition = Attr(C.Attributes.Condition) ?? string.Empty;
+        Name      = Attr(C.Attributes.Name)      ?? string.Empty;
+        Condition = Attr(C.Attributes.Condition) ?? string.Empty;
     }
 
     public void FlushToNode()

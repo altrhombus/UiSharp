@@ -12,18 +12,18 @@ public sealed partial class TSVarListViewModel : ObservableObject, IActionEditor
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _appVarBase     = string.Empty;
-    [ObservableProperty] private string _packageVarBase = string.Empty;
-    [ObservableProperty] private string _condition      = string.Empty;
+    [ObservableProperty] public partial string AppVarBase     { get; set; }
+    [ObservableProperty] public partial string PackageVarBase { get; set; }
+    [ObservableProperty] public partial string Condition      { get; set; }
 
     public ObservableCollection<SoftwareRefItem> SoftwareRefs { get; } = [];
 
     public TSVarListViewModel(ActionNodeModel model)
     {
-        _model         = model;
-        _appVarBase    = Attr(C.Attributes.AppVarBase)     ?? C.Defaults.AppVarBase;
-        _packageVarBase = Attr(C.Attributes.PackageVarBase) ?? C.Defaults.PackageVarBase;
-        _condition     = Attr(C.Attributes.Condition)      ?? string.Empty;
+        _model        = model;
+        AppVarBase    = Attr(C.Attributes.AppVarBase)     ?? C.Defaults.AppVarBase;
+        PackageVarBase = Attr(C.Attributes.PackageVarBase) ?? C.Defaults.PackageVarBase;
+        Condition     = Attr(C.Attributes.Condition)      ?? string.Empty;
 
         foreach (var el in model.Node.Elements(C.Elements.SoftwareListRef))
         {
@@ -68,6 +68,12 @@ public sealed partial class TSVarListViewModel : ObservableObject, IActionEditor
 
 public sealed partial class SoftwareRefItem : ObservableObject
 {
-    [ObservableProperty] private string _id        = string.Empty;
-    [ObservableProperty] private string _condition = string.Empty;
+    [ObservableProperty] public partial string Id        { get; set; }
+    [ObservableProperty] public partial string Condition { get; set; }
+
+    public SoftwareRefItem()
+    {
+        Id        = string.Empty;
+        Condition = string.Empty;
+    }
 }

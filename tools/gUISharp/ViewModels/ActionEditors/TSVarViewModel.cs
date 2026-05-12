@@ -9,16 +9,16 @@ public sealed partial class TSVarViewModel : ObservableObject, IActionEditor
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _variable = string.Empty;
-    [ObservableProperty] private string _value    = string.Empty;
-    [ObservableProperty] private string _condition = string.Empty;
+    [ObservableProperty] public partial string Variable  { get; set; }
+    [ObservableProperty] public partial string Value     { get; set; }
+    [ObservableProperty] public partial string Condition { get; set; }
 
     public TSVarViewModel(ActionNodeModel model)
     {
         _model    = model;
-        _variable = Attr(C.Attributes.Variable) ?? string.Empty;
-        _value    = model.Node.Value;
-        _condition = Attr(C.Attributes.Condition) ?? string.Empty;
+        Variable  = Attr(C.Attributes.Variable) ?? string.Empty;
+        Value     = model.Node.Value;
+        Condition = Attr(C.Attributes.Condition) ?? string.Empty;
     }
 
     public void FlushToNode()

@@ -9,16 +9,16 @@ public sealed partial class FromJsonViewModel : ObservableObject, IActionEditor
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _variable  = string.Empty;
-    [ObservableProperty] private string _json      = string.Empty;
-    [ObservableProperty] private string _condition = string.Empty;
+    [ObservableProperty] public partial string Variable  { get; set; }
+    [ObservableProperty] public partial string Json      { get; set; }
+    [ObservableProperty] public partial string Condition { get; set; }
 
     public FromJsonViewModel(ActionNodeModel model)
     {
         _model    = model;
-        _variable = Attr(C.Attributes.Variable)  ?? C.Defaults.JsonVariable;
-        _json     = model.Node.Value.Trim();
-        _condition = Attr(C.Attributes.Condition) ?? string.Empty;
+        Variable  = Attr(C.Attributes.Variable)  ?? C.Defaults.JsonVariable;
+        Json      = model.Node.Value.Trim();
+        Condition = Attr(C.Attributes.Condition) ?? string.Empty;
     }
 
     public void FlushToNode()

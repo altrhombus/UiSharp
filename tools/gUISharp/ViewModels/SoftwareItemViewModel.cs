@@ -7,21 +7,34 @@ namespace GUISharp.ViewModels;
 
 public sealed partial class SoftwareItemViewModel : ObservableObject
 {
-    [ObservableProperty] private string _id          = string.Empty;
-    [ObservableProperty] private string _label       = string.Empty;
-    [ObservableProperty] private string _info        = string.Empty;
-    [ObservableProperty] private string _includeIds  = string.Empty;
-    [ObservableProperty] private string _excludeIds  = string.Empty;
-    [ObservableProperty] private bool   _isApplication = true;
+    [ObservableProperty] public partial string Id          { get; set; }
+    [ObservableProperty] public partial string Label       { get; set; }
+    [ObservableProperty] public partial string Info        { get; set; }
+    [ObservableProperty] public partial string IncludeIds  { get; set; }
+    [ObservableProperty] public partial string ExcludeIds  { get; set; }
+    [ObservableProperty] public partial bool   IsApplication { get; set; }
 
     // Application-specific
-    [ObservableProperty] private string _appName     = string.Empty;
+    [ObservableProperty] public partial string AppName     { get; set; }
 
     // Package-specific
-    [ObservableProperty] private string _pkgId       = string.Empty;
-    [ObservableProperty] private string _programName = string.Empty;
+    [ObservableProperty] public partial string PkgId       { get; set; }
+    [ObservableProperty] public partial string ProgramName { get; set; }
 
     public int OrderIndex { get; set; }
+
+    public SoftwareItemViewModel()
+    {
+        Id            = string.Empty;
+        Label         = string.Empty;
+        Info          = string.Empty;
+        IncludeIds    = string.Empty;
+        ExcludeIds    = string.Empty;
+        IsApplication = true;
+        AppName       = string.Empty;
+        PkgId         = string.Empty;
+        ProgramName   = string.Empty;
+    }
 
     public static SoftwareItemViewModel FromSoftware(ISoftware sw)
     {

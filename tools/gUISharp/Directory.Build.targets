@@ -1,0 +1,8 @@
+<Project>
+  <!-- WindowsAppSDK 2.0.x: net472 XamlCompiler.exe exits with code 1 on .NET 10 builds despite
+       generating correct output. Wrap it so dotnet build (Core MSBuild) doesn't treat it as a
+       failure, while still running the real compiler. -->
+  <PropertyGroup>
+    <XamlCompilerExePath>$(MSBuildProjectDirectory)\xamlcompiler-wrap.cmd</XamlCompilerExePath>
+  </PropertyGroup>
+</Project>

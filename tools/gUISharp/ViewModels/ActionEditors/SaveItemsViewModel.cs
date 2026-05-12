@@ -9,16 +9,16 @@ public sealed partial class SaveItemsViewModel : ObservableObject, IActionEditor
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _path      = string.Empty;
-    [ObservableProperty] private string _items     = string.Empty;
-    [ObservableProperty] private string _condition = string.Empty;
+    [ObservableProperty] public partial string Path      { get; set; }
+    [ObservableProperty] public partial string Items     { get; set; }
+    [ObservableProperty] public partial string Condition { get; set; }
 
     public SaveItemsViewModel(ActionNodeModel model)
     {
         _model    = model;
-        _path     = Attr(C.Attributes.Path)      ?? string.Empty;
-        _items    = Attr(C.Attributes.Items)      ?? string.Empty;
-        _condition = Attr(C.Attributes.Condition) ?? string.Empty;
+        Path      = Attr(C.Attributes.Path)      ?? string.Empty;
+        Items     = Attr(C.Attributes.Items)      ?? string.Empty;
+        Condition = Attr(C.Attributes.Condition)  ?? string.Empty;
     }
 
     public void FlushToNode()

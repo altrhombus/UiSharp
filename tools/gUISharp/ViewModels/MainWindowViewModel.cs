@@ -1,6 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GUISharp.Services;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using UIpp.Core.Configuration;
 
 namespace GUISharp.ViewModels;
@@ -16,16 +18,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
-    private string? _currentFile;
+    public partial string? CurrentFile { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
-    private bool _isModified;
+    public partial bool IsModified { get; set; }
 
     public string WindowTitle =>
-        _currentFile is null
+        CurrentFile is null
             ? "gUI#"
-            : $"{(IsModified ? "* " : string.Empty)}{Path.GetFileName(_currentFile)} — gUI#";
+            : $"{(IsModified ? "* " : string.Empty)}{Path.GetFileName(CurrentFile)} — gUI#";
 
     public MainWindowViewModel(
         IConfigService configService,
@@ -35,21 +37,22 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _configService     = configService;
         _fileDialogService = fileDialogService;
         ActionList         = new ActionListViewModel(factory);
+        ActionList.Dirtied += (_, _) => MarkModified();
     }
 
     [RelayCommand]
-    private void New()
+    private async Task New()
     {
-        if (!ConfirmDiscardChanges()) return;
+        if (!await ConfirmDiscardChangesAsync()) return;
         LoadConfig(_configService.NewConfig());
-        CurrentFile  = null;
-        IsModified   = false;
+        CurrentFile = null;
+        IsModified  = false;
     }
 
     [RelayCommand]
     private async Task OpenAsync()
     {
-        if (!ConfirmDiscardChanges()) return;
+        if (!await ConfirmDiscardChangesAsync()) return;
         var path = await _fileDialogService.PickOpenFileAsync();
         if (path is null) return;
 
@@ -124,16 +127,38 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public void MarkModified() => IsModified = true;
 
-    private bool ConfirmDiscardChanges()
+    private async Task<bool> ConfirmDiscardChangesAsync()
     {
-        // In v1, we always allow discarding — dialog confirmation added in polish phase.
-        return true;
+        if (!IsModified) return true;
+        if (App.MainWindow?.Content is not FrameworkElement root) return true;
+
+        var dialog = new ContentDialog
+        {
+            Title           = "Unsaved Changes",
+            Content         = "You have unsaved changes. Do you want to discard them?",
+            PrimaryButtonText = "Discard",
+            CloseButtonText   = "Cancel",
+            XamlRoot        = root.XamlRoot,
+        };
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
 
-    private static Task ShowErrorAsync(string title, string message)
+    private static async Task ShowErrorAsync(string title, string message)
     {
-        // Placeholder — wired to a WinUI ContentDialog in the view layer.
         System.Diagnostics.Debug.WriteLine($"[ERROR] {title}: {message}");
-        return Task.CompletedTask;
+        System.IO.File.AppendAllText(
+            System.IO.Path.Combine(System.IO.Path.GetTempPath(), "guisharp_error.log"),
+            $"[{DateTime.Now:HH:mm:ss}] {title}: {message}{Environment.NewLine}");
+
+        if (App.MainWindow?.Content is not FrameworkElement root) return;
+
+        var dialog = new ContentDialog
+        {
+            Title          = title,
+            Content        = message,
+            CloseButtonText = "OK",
+            XamlRoot       = root.XamlRoot,
+        };
+        await dialog.ShowAsync();
     }
 }

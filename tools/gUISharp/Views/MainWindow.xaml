@@ -13,10 +13,27 @@
 
         <!-- Toolbar -->
         <CommandBar Grid.Row="0" DefaultLabelPosition="Right" Background="{ThemeResource LayerFillColorDefaultBrush}">
-            <AppBarButton Icon="Document" Label="New"     Command="{x:Bind ViewModel.NewCommand}" />
-            <AppBarButton Icon="OpenFile" Label="Open"    Command="{x:Bind ViewModel.OpenCommand}" />
-            <AppBarButton Icon="Save"     Label="Save"    Command="{x:Bind ViewModel.SaveCommand}" />
-            <AppBarButton Icon="SaveAs"   Label="Save As" Command="{x:Bind ViewModel.SaveAsCommand}" />
+            <AppBarButton Icon="Document" Label="New"  Command="{x:Bind ViewModel.NewCommand}">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="N" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton Icon="OpenFile" Label="Open" Command="{x:Bind ViewModel.OpenCommand}">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="O" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton Icon="Save" Label="Save"     Command="{x:Bind ViewModel.SaveCommand}">
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="S" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton Label="Save As" Command="{x:Bind ViewModel.SaveAsCommand}">
+                <AppBarButton.Icon><FontIcon Glyph="&#xE792;" /></AppBarButton.Icon>
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="S" Modifiers="Control,Shift" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
         </CommandBar>
 
         <!-- Navigation shell -->

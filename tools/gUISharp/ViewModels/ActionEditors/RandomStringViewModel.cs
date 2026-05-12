@@ -9,18 +9,18 @@ public sealed partial class RandomStringViewModel : ObservableObject, IActionEdi
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _variable     = string.Empty;
-    [ObservableProperty] private string _allowedChars = string.Empty;
-    [ObservableProperty] private string _length       = string.Empty;
-    [ObservableProperty] private string _condition    = string.Empty;
+    [ObservableProperty] public partial string Variable     { get; set; }
+    [ObservableProperty] public partial string AllowedChars { get; set; }
+    [ObservableProperty] public partial string Length       { get; set; }
+    [ObservableProperty] public partial string Condition    { get; set; }
 
     public RandomStringViewModel(ActionNodeModel model)
     {
-        _model        = model;
-        _variable     = Attr(C.Attributes.Variable)     ?? string.Empty;
-        _allowedChars = Attr(C.Attributes.AllowedChars) ?? C.Defaults.AllowedChars;
-        _length       = Attr(C.Attributes.Length)       ?? C.Defaults.Length.ToString();
-        _condition    = Attr(C.Attributes.Condition)    ?? string.Empty;
+        _model       = model;
+        Variable     = Attr(C.Attributes.Variable)     ?? string.Empty;
+        AllowedChars = Attr(C.Attributes.AllowedChars) ?? C.Defaults.AllowedChars;
+        Length       = Attr(C.Attributes.Length)       ?? C.Defaults.Length.ToString();
+        Condition    = Attr(C.Attributes.Condition)    ?? string.Empty;
     }
 
     public void FlushToNode()

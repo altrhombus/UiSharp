@@ -11,7 +11,7 @@ public sealed partial class SoftwareViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
-    private SoftwareItemViewModel? _selectedItem;
+    public partial SoftwareItemViewModel? SelectedItem { get; set; }
 
     public bool HasSelection => SelectedItem is not null;
 

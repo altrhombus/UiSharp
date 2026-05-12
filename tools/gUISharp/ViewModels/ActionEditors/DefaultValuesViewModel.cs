@@ -9,19 +9,19 @@ public sealed partial class DefaultValuesViewModel : ObservableObject, IActionEd
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _valueTypes = string.Empty;
-    [ObservableProperty] private bool   _showProgress;
-    [ObservableProperty] private string _condition  = string.Empty;
+    [ObservableProperty] public partial string ValueTypes   { get; set; }
+    [ObservableProperty] public partial bool   ShowProgress { get; set; }
+    [ObservableProperty] public partial string Condition    { get; set; }
 
     public static IReadOnlyList<string> CategoryOptions { get; } =
         [C.Defaults.DefaultValueAll, .. C.DefaultValueCategories.Ordered];
 
     public DefaultValuesViewModel(ActionNodeModel model)
     {
-        _model        = model;
-        _valueTypes   = Attr(C.Attributes.DefaultValueTypes) ?? C.Defaults.DefaultValueAll;
-        _showProgress = BoolAttr(C.Attributes.ShowProgress);
-        _condition    = Attr(C.Attributes.Condition) ?? string.Empty;
+        _model       = model;
+        ValueTypes   = Attr(C.Attributes.DefaultValueTypes) ?? C.Defaults.DefaultValueAll;
+        ShowProgress = BoolAttr(C.Attributes.ShowProgress);
+        Condition    = Attr(C.Attributes.Condition) ?? string.Empty;
     }
 
     public void FlushToNode()

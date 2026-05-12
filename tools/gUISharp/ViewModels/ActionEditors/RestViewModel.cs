@@ -9,20 +9,20 @@ public sealed partial class RestViewModel : ObservableObject, IActionEditor
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _url       = string.Empty;
-    [ObservableProperty] private string _variable  = string.Empty;
-    [ObservableProperty] private string _json      = string.Empty;
-    [ObservableProperty] private string _method    = string.Empty;
-    [ObservableProperty] private string _condition = string.Empty;
+    [ObservableProperty] public partial string Url       { get; set; }
+    [ObservableProperty] public partial string Variable  { get; set; }
+    [ObservableProperty] public partial string Json      { get; set; }
+    [ObservableProperty] public partial string Method    { get; set; }
+    [ObservableProperty] public partial string Condition { get; set; }
 
     public RestViewModel(ActionNodeModel model)
     {
         _model    = model;
-        _url      = Attr(C.Attributes.Url)      ?? string.Empty;
-        _variable = Attr(C.Attributes.Variable)  ?? C.Defaults.RestVariable;
-        _json     = Attr(C.Attributes.Json)      ?? string.Empty;
-        _method   = Attr(C.Attributes.Method)    ?? string.Empty;
-        _condition = Attr(C.Attributes.Condition) ?? string.Empty;
+        Url       = Attr(C.Attributes.Url)       ?? string.Empty;
+        Variable  = Attr(C.Attributes.Variable)   ?? C.Defaults.RestVariable;
+        Json      = Attr(C.Attributes.Json)       ?? string.Empty;
+        Method    = Attr(C.Attributes.Method)     ?? string.Empty;
+        Condition = Attr(C.Attributes.Condition)  ?? string.Empty;
     }
 
     public void FlushToNode()

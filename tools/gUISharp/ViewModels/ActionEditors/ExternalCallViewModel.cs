@@ -9,18 +9,18 @@ public sealed partial class ExternalCallViewModel : ObservableObject, IActionEdi
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _commandLine    = string.Empty;
-    [ObservableProperty] private string _maxRunTime     = string.Empty;
-    [ObservableProperty] private string _exitCodeVariable = string.Empty;
-    [ObservableProperty] private string _condition      = string.Empty;
+    [ObservableProperty] public partial string CommandLine     { get; set; }
+    [ObservableProperty] public partial string MaxRunTime      { get; set; }
+    [ObservableProperty] public partial string ExitCodeVariable { get; set; }
+    [ObservableProperty] public partial string Condition       { get; set; }
 
     public ExternalCallViewModel(ActionNodeModel model)
     {
-        _model           = model;
-        _commandLine     = model.Node.Value.Trim();
-        _maxRunTime      = Attr(C.Attributes.MaxRunTime) ?? string.Empty;
-        _exitCodeVariable = Attr(C.Attributes.ExitCodeVariable) ?? string.Empty;
-        _condition       = Attr(C.Attributes.Condition) ?? string.Empty;
+        _model          = model;
+        CommandLine     = model.Node.Value.Trim();
+        MaxRunTime      = Attr(C.Attributes.MaxRunTime) ?? string.Empty;
+        ExitCodeVariable = Attr(C.Attributes.ExitCodeVariable) ?? string.Empty;
+        Condition       = Attr(C.Attributes.Condition) ?? string.Empty;
     }
 
     public void FlushToNode()

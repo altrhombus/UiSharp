@@ -23,6 +23,18 @@
         <DataTemplate x:Key="InputTemplate"         x:DataType="vm:ActionNodeViewModel"><editors:InputActionEditor   DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
         <DataTemplate x:Key="ActionGroupTemplate"   x:DataType="vm:ActionNodeViewModel"><editors:ActionGroupEditor   DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
         <DataTemplate x:Key="RawXmlTemplate"        x:DataType="vm:ActionNodeViewModel"><editors:RawXmlEditor        DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="InfoTemplate"           x:DataType="vm:ActionNodeViewModel"><editors:InfoEditor           DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="InfoFullScreenTemplate" x:DataType="vm:ActionNodeViewModel"><editors:InfoFullScreenEditor DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="ErrorInfoTemplate"      x:DataType="vm:ActionNodeViewModel"><editors:ErrorInfoEditor      DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="RegReadTemplate"        x:DataType="vm:ActionNodeViewModel"><editors:RegReadEditor        DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="RegWriteTemplate"       x:DataType="vm:ActionNodeViewModel"><editors:RegWriteEditor       DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="AppTreeTemplate"        x:DataType="vm:ActionNodeViewModel"><editors:AppTreeEditor        DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="WmiReadTemplate"        x:DataType="vm:ActionNodeViewModel"><editors:WmiReadEditor        DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="WmiWriteTemplate"       x:DataType="vm:ActionNodeViewModel"><editors:WmiWriteEditor       DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="UserAuthTemplate"       x:DataType="vm:ActionNodeViewModel"><editors:UserAuthEditor       DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="SoftwareDiscTemplate"   x:DataType="vm:ActionNodeViewModel"><editors:SoftwareDiscEditor   DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="SwitchTemplate"         x:DataType="vm:ActionNodeViewModel"><editors:SwitchEditor         DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="TpmTemplate"            x:DataType="vm:ActionNodeViewModel"><editors:TpmEditor            DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
 
         <local:ActionEditorTemplateSelector x:Key="EditorSelector"
             TSVarTemplate="{StaticResource TSVarTemplate}"
@@ -39,6 +51,18 @@
             PreflightTemplate="{StaticResource PreflightTemplate}"
             InputTemplate="{StaticResource InputTemplate}"
             ActionGroupTemplate="{StaticResource ActionGroupTemplate}"
+            InfoTemplate="{StaticResource InfoTemplate}"
+            InfoFullScreenTemplate="{StaticResource InfoFullScreenTemplate}"
+            ErrorInfoTemplate="{StaticResource ErrorInfoTemplate}"
+            RegReadTemplate="{StaticResource RegReadTemplate}"
+            RegWriteTemplate="{StaticResource RegWriteTemplate}"
+            AppTreeTemplate="{StaticResource AppTreeTemplate}"
+            WmiReadTemplate="{StaticResource WmiReadTemplate}"
+            WmiWriteTemplate="{StaticResource WmiWriteTemplate}"
+            UserAuthTemplate="{StaticResource UserAuthTemplate}"
+            SoftwareDiscTemplate="{StaticResource SoftwareDiscTemplate}"
+            SwitchTemplate="{StaticResource SwitchTemplate}"
+            TpmTemplate="{StaticResource TpmTemplate}"
             FallbackTemplate="{StaticResource RawXmlTemplate}" />
     </Page.Resources>
 
@@ -69,21 +93,36 @@
                 <SplitButton.Flyout>
                     <MenuFlyout Placement="Bottom">
                         <MenuFlyoutSubItem Text="Variables">
-                            <MenuFlyoutItem Text="TSVar"        Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TSVar" />
-                            <MenuFlyoutItem Text="TSVarList"    Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TSVarList" />
+                            <MenuFlyoutItem Text="TSVar"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TSVar" />
+                            <MenuFlyoutItem Text="TSVarList"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TSVarList" />
                             <MenuFlyoutItem Text="DefaultValues" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="DefaultValues" />
-                            <MenuFlyoutItem Text="Switch"       Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Switch" />
+                            <MenuFlyoutItem Text="Switch"        Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Switch" />
                         </MenuFlyoutSubItem>
                         <MenuFlyoutSubItem Text="Input">
                             <MenuFlyoutItem Text="Input"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Input" />
                             <MenuFlyoutItem Text="Preflight" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Preflight" />
                         </MenuFlyoutSubItem>
+                        <MenuFlyoutSubItem Text="Interactive">
+                            <MenuFlyoutItem Text="Info"           Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Info" />
+                            <MenuFlyoutItem Text="InfoFullScreen" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="InfoFullScreen" />
+                            <MenuFlyoutItem Text="ErrorInfo"      Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ErrorInfo" />
+                            <MenuFlyoutItem Text="UserAuth"       Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="UserAuth" />
+                            <MenuFlyoutItem Text="AppTree"        Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="AppTree" />
+                        </MenuFlyoutSubItem>
                         <MenuFlyoutSubItem Text="Utilities">
-                            <MenuFlyoutItem Text="ExternalCall" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ExternalCall" />
-                            <MenuFlyoutItem Text="RandomString" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RandomString" />
-                            <MenuFlyoutItem Text="FileRead"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="FileRead" />
-                            <MenuFlyoutItem Text="SaveItems"    Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="SaveItems" />
-                            <MenuFlyoutItem Text="Vars"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Vars" />
+                            <MenuFlyoutItem Text="ExternalCall"      Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ExternalCall" />
+                            <MenuFlyoutItem Text="RandomString"      Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RandomString" />
+                            <MenuFlyoutItem Text="FileRead"          Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="FileRead" />
+                            <MenuFlyoutItem Text="SaveItems"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="SaveItems" />
+                            <MenuFlyoutItem Text="Vars"              Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Vars" />
+                            <MenuFlyoutItem Text="SoftwareDiscovery" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="SoftwareDiscovery" />
+                            <MenuFlyoutItem Text="TPM"               Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TPM" />
+                        </MenuFlyoutSubItem>
+                        <MenuFlyoutSubItem Text="Registry / WMI">
+                            <MenuFlyoutItem Text="RegRead"  Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RegRead" />
+                            <MenuFlyoutItem Text="RegWrite" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RegWrite" />
+                            <MenuFlyoutItem Text="WMIRead"  Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="WMIRead" />
+                            <MenuFlyoutItem Text="WMIWrite" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="WMIWrite" />
                         </MenuFlyoutSubItem>
                         <MenuFlyoutSubItem Text="Network / Data">
                             <MenuFlyoutItem Text="REST"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="REST" />
@@ -128,11 +167,19 @@
         <!-- Splitter -->
         <Border Grid.Column="1" Width="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
 
-        <!-- Right panel: selected action editor -->
-        <ScrollViewer Grid.Column="2" Padding="16">
-            <ContentControl Content="{x:Bind ViewModel.ActionList.SelectedAction, Mode=OneWay}"
-                            ContentTemplateSelector="{StaticResource EditorSelector}"
-                            HorizontalContentAlignment="Stretch" />
-        </ScrollViewer>
+        <!-- Right panel: empty state + selected action editor -->
+        <Grid Grid.Column="2">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8"
+                        Visibility="{x:Bind ViewModel.ActionList.HasSelection, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
+                <FontIcon Glyph="&#xE8A5;" FontSize="48" Opacity="0.25" HorizontalAlignment="Center" />
+                <TextBlock Text="Select an action to edit" Opacity="0.4" HorizontalAlignment="Center" />
+            </StackPanel>
+            <ScrollViewer Padding="16"
+                          Visibility="{x:Bind ViewModel.ActionList.HasSelection, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                <ContentControl Content="{x:Bind ViewModel.ActionList.SelectedAction, Mode=OneWay}"
+                                ContentTemplateSelector="{StaticResource EditorSelector}"
+                                HorizontalContentAlignment="Stretch" />
+            </ScrollViewer>
+        </Grid>
     </Grid>
 </Page>

@@ -26,6 +26,18 @@ public sealed class EditorViewModelFactory
             [C.ActionTypes.TSVarList]     = m => new TSVarListViewModel(m),
             [C.ActionTypes.Preflight]     = m => new PreflightViewModel(m),
             [C.ActionTypes.UserInput]     = m => new InputActionViewModel(m),
+            [C.ActionTypes.UserInfo]      = m => new InfoViewModel(m),
+            [C.ActionTypes.UserInfoFull]  = m => new InfoFullScreenViewModel(m),
+            [C.ActionTypes.ErrorInfo]     = m => new ErrorInfoViewModel(m),
+            [C.ActionTypes.RegRead]       = m => new RegReadViewModel(m),
+            [C.ActionTypes.RegWrite]      = m => new RegWriteViewModel(m),
+            [C.ActionTypes.AppTree]       = m => new AppTreeViewModel(m),
+            [C.ActionTypes.WmiRead]       = m => new WmiReadViewModel(m),
+            [C.ActionTypes.WmiWrite]      = m => new WmiWriteViewModel(m),
+            [C.ActionTypes.UserAuth]      = m => new UserAuthViewModel(m),
+            [C.ActionTypes.SoftwareDisc]  = m => new SoftwareDiscViewModel(m),
+            [C.ActionTypes.Switch]        = m => new SwitchViewModel(m),
+            [C.ActionTypes.Tpm]           = m => new TpmViewModel(m),
         };
     }
 

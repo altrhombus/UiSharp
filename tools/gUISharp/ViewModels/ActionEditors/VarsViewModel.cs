@@ -9,19 +9,19 @@ public sealed partial class VarsViewModel : ObservableObject, IActionEditor
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _direction = string.Empty;
-    [ObservableProperty] private string _filename  = string.Empty;
-    [ObservableProperty] private string _condition = string.Empty;
+    [ObservableProperty] public partial string Direction { get; set; }
+    [ObservableProperty] public partial string Filename  { get; set; }
+    [ObservableProperty] public partial string Condition { get; set; }
 
     public static IReadOnlyList<string> DirectionOptions { get; } =
         [C.Values.DirectionSave, C.Values.DirectionLoad];
 
     public VarsViewModel(ActionNodeModel model)
     {
-        _model     = model;
-        _direction = Attr(C.Attributes.Direction) ?? C.Values.DirectionSave;
-        _filename  = Attr(C.Attributes.Filename)  ?? C.Defaults.Filename;
-        _condition = Attr(C.Attributes.Condition) ?? string.Empty;
+        _model    = model;
+        Direction = Attr(C.Attributes.Direction) ?? C.Values.DirectionSave;
+        Filename  = Attr(C.Attributes.Filename)  ?? C.Defaults.Filename;
+        Condition = Attr(C.Attributes.Condition) ?? string.Empty;
     }
 
     public void FlushToNode()

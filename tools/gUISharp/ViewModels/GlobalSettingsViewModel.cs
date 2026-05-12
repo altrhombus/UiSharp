@@ -7,21 +7,36 @@ namespace GUISharp.ViewModels;
 
 public sealed partial class GlobalSettingsViewModel : ObservableObject
 {
-    [ObservableProperty] private string _title           = "UI++";
-    [ObservableProperty] private string _subtitle        = string.Empty;
-    [ObservableProperty] private string _fontFace        = XmlConstants.DefaultFontFace;
-    [ObservableProperty] private string _iconPath        = string.Empty;
-    [ObservableProperty] private string _accentColor     = C.Defaults.AccentColor;
-    [ObservableProperty] private string _sidebarTextColor = C.Defaults.SidebarTextColor;
-    [ObservableProperty] private bool   _showIcons       = true;
-    [ObservableProperty] private bool   _showSidebar     = true;
-    [ObservableProperty] private bool   _alwaysOnTop     = true;
-    [ObservableProperty] private bool   _flat;
-    [ObservableProperty] private string _conditionEngine = C.Values.ConditionEngineNative;
-    [ObservableProperty] private string _schemaVersion   = string.Empty;
+    [ObservableProperty] public partial string Title           { get; set; }
+    [ObservableProperty] public partial string Subtitle        { get; set; }
+    [ObservableProperty] public partial string FontFace        { get; set; }
+    [ObservableProperty] public partial string IconPath        { get; set; }
+    [ObservableProperty] public partial string AccentColor     { get; set; }
+    [ObservableProperty] public partial string SidebarTextColor { get; set; }
+    [ObservableProperty] public partial bool   ShowIcons       { get; set; }
+    [ObservableProperty] public partial bool   ShowSidebar     { get; set; }
+    [ObservableProperty] public partial bool   AlwaysOnTop     { get; set; }
+    [ObservableProperty] public partial bool   Flat            { get; set; }
+    [ObservableProperty] public partial string ConditionEngine { get; set; }
+    [ObservableProperty] public partial string SchemaVersion   { get; set; }
 
-    public static IReadOnlyList<string> ConditionEngineOptions { get; } =
+    public IReadOnlyList<string> ConditionEngineOptions { get; } =
         [C.Values.ConditionEngineNative, C.Values.ConditionEngineVbscript];
+
+    public GlobalSettingsViewModel()
+    {
+        Title            = "UI++";
+        Subtitle         = string.Empty;
+        FontFace         = XmlConstants.DefaultFontFace;
+        IconPath         = string.Empty;
+        AccentColor      = C.Defaults.AccentColor;
+        SidebarTextColor = C.Defaults.SidebarTextColor;
+        ShowIcons        = true;
+        ShowSidebar      = true;
+        AlwaysOnTop      = true;
+        ConditionEngine  = C.Values.ConditionEngineNative;
+        SchemaVersion    = string.Empty;
+    }
 
     public void LoadFrom(DialogTraits traits, string conditionEngine, int? schemaVersion)
     {

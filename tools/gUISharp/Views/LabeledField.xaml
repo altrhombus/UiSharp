@@ -7,6 +7,6 @@
         <TextBlock Text="{x:Bind Label, Mode=OneWay}"
                    Style="{ThemeResource CaptionTextBlockStyle}"
                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-        <ContentPresenter x:Name="FieldContent" />
+        <ContentPresenter Content="{x:Bind Child, Mode=OneWay}" />
     </StackPanel>
 </UserControl>

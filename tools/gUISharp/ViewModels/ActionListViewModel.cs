@@ -15,9 +15,11 @@ public sealed partial class ActionListViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
-    private ActionNodeViewModel? _selectedAction;
+    public partial ActionNodeViewModel? SelectedAction { get; set; }
 
     public bool HasSelection => SelectedAction is not null;
+
+    public event EventHandler? Dirtied;
 
     public ActionListViewModel(EditorViewModelFactory factory)
     {
@@ -28,7 +30,11 @@ public sealed partial class ActionListViewModel : ObservableObject
     {
         ActionTree.Clear();
         foreach (var model in models)
-            ActionTree.Add(new ActionNodeViewModel(model, _factory));
+        {
+            var vm = new ActionNodeViewModel(model, _factory);
+            vm.Dirtied += (_, _) => RaiseDirty();
+            ActionTree.Add(vm);
+        }
     }
 
     public List<ActionNodeModel> CollectModels()
@@ -43,7 +49,10 @@ public sealed partial class ActionListViewModel : ObservableObject
         var node = new System.Xml.Linq.XElement(C.Elements.Action,
             new System.Xml.Linq.XAttribute(C.Attributes.Type, typeName));
         var model = new ActionNodeModel { Node = node };
-        ActionTree.Add(new ActionNodeViewModel(model, _factory));
+        var vm = new ActionNodeViewModel(model, _factory);
+        vm.Dirtied += (_, _) => RaiseDirty();
+        ActionTree.Add(vm);
+        RaiseDirty();
     }
 
     [RelayCommand]
@@ -52,7 +61,10 @@ public sealed partial class ActionListViewModel : ObservableObject
         var node = new System.Xml.Linq.XElement(C.Elements.ActionGroup,
             new System.Xml.Linq.XAttribute(C.Attributes.Name, "New Group"));
         var model = new ActionNodeModel { Node = node };
-        ActionTree.Add(new ActionNodeViewModel(model, _factory));
+        var vm = new ActionNodeViewModel(model, _factory);
+        vm.Dirtied += (_, _) => RaiseDirty();
+        ActionTree.Add(vm);
+        RaiseDirty();
     }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
@@ -61,6 +73,7 @@ public sealed partial class ActionListViewModel : ObservableObject
         if (SelectedAction is null) return;
         RemoveFromTree(ActionTree, SelectedAction);
         SelectedAction = null;
+        RaiseDirty();
     }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
@@ -69,7 +82,7 @@ public sealed partial class ActionListViewModel : ObservableObject
         if (SelectedAction is null) return;
         var list = FindOwningList(ActionTree, SelectedAction) ?? ActionTree;
         var idx = list.IndexOf(SelectedAction);
-        if (idx > 0) list.Move(idx, idx - 1);
+        if (idx > 0) { list.Move(idx, idx - 1); RaiseDirty(); }
     }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
@@ -78,7 +91,7 @@ public sealed partial class ActionListViewModel : ObservableObject
         if (SelectedAction is null) return;
         var list = FindOwningList(ActionTree, SelectedAction) ?? ActionTree;
         var idx = list.IndexOf(SelectedAction);
-        if (idx >= 0 && idx < list.Count - 1) list.Move(idx, idx + 1);
+        if (idx >= 0 && idx < list.Count - 1) { list.Move(idx, idx + 1); RaiseDirty(); }
     }
 
     partial void OnSelectedActionChanged(ActionNodeViewModel? value)
@@ -89,6 +102,8 @@ public sealed partial class ActionListViewModel : ObservableObject
     }
 
     // -------------------------------------------------------------------------
+
+    private void RaiseDirty() => Dirtied?.Invoke(this, EventArgs.Empty);
 
     private void FlushAll()
     {

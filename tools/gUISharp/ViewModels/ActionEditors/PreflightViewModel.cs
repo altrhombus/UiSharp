@@ -12,22 +12,22 @@ public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _title           = string.Empty;
-    [ObservableProperty] private bool   _showOnFailureOnly;
-    [ObservableProperty] private string _timeout         = string.Empty;
-    [ObservableProperty] private string _timeoutAction   = string.Empty;
-    [ObservableProperty] private string _condition       = string.Empty;
+    [ObservableProperty] public partial string Title           { get; set; }
+    [ObservableProperty] public partial bool   ShowOnFailureOnly { get; set; }
+    [ObservableProperty] public partial string Timeout         { get; set; }
+    [ObservableProperty] public partial string TimeoutAction   { get; set; }
+    [ObservableProperty] public partial string Condition       { get; set; }
 
     public ObservableCollection<PreflightCheckItem> Checks { get; } = [];
 
     public PreflightViewModel(ActionNodeModel model)
     {
         _model           = model;
-        _title           = Attr(C.Attributes.Title)          ?? string.Empty;
-        _showOnFailureOnly = BoolAttr(C.Attributes.ShowOnFailureOnly);
-        _timeout         = Attr(C.Attributes.Timeout)        ?? string.Empty;
-        _timeoutAction   = Attr(C.Attributes.TimeoutAction)  ?? C.Defaults.TimeoutAction;
-        _condition       = Attr(C.Attributes.Condition)      ?? string.Empty;
+        Title            = Attr(C.Attributes.Title)          ?? string.Empty;
+        ShowOnFailureOnly = BoolAttr(C.Attributes.ShowOnFailureOnly);
+        Timeout          = Attr(C.Attributes.Timeout)        ?? string.Empty;
+        TimeoutAction    = Attr(C.Attributes.TimeoutAction)  ?? C.Defaults.TimeoutAction;
+        Condition        = Attr(C.Attributes.Condition)      ?? string.Empty;
 
         foreach (var el in model.Node.Elements(C.Elements.PreflightCheck))
         {
@@ -91,11 +91,22 @@ public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
 
 public sealed partial class PreflightCheckItem : ObservableObject
 {
-    [ObservableProperty] private string _text             = string.Empty;
-    [ObservableProperty] private string _description      = string.Empty;
-    [ObservableProperty] private string _errorDescription = string.Empty;
-    [ObservableProperty] private string _warnDescription  = string.Empty;
-    [ObservableProperty] private string _checkCondition   = string.Empty;
-    [ObservableProperty] private string _warnCondition    = string.Empty;
-    [ObservableProperty] private string _condition        = string.Empty;
+    [ObservableProperty] public partial string Text             { get; set; }
+    [ObservableProperty] public partial string Description      { get; set; }
+    [ObservableProperty] public partial string ErrorDescription { get; set; }
+    [ObservableProperty] public partial string WarnDescription  { get; set; }
+    [ObservableProperty] public partial string CheckCondition   { get; set; }
+    [ObservableProperty] public partial string WarnCondition    { get; set; }
+    [ObservableProperty] public partial string Condition        { get; set; }
+
+    public PreflightCheckItem()
+    {
+        Text             = string.Empty;
+        Description      = string.Empty;
+        ErrorDescription = string.Empty;
+        WarnDescription  = string.Empty;
+        CheckCondition   = string.Empty;
+        WarnCondition    = string.Empty;
+        Condition        = string.Empty;
+    }
 }

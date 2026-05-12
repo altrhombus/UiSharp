@@ -10,7 +10,8 @@ public static class ConfigLoader
 {
     public static LoadedConfig Load(string path)
     {
-        var doc = XDocument.Load(path);
+        var rawXml = File.ReadAllText(path);
+        var doc = XDocument.Parse(EscapeAttributeLt(rawXml));
         var root = doc.Root
             ?? throw new InvalidOperationException($"XML file '{path}' has no root element.");
 
@@ -120,6 +121,54 @@ public static class ConfigLoader
         return value.Equals("true", StringComparison.OrdinalIgnoreCase)
             || value.Equals("yes",  StringComparison.OrdinalIgnoreCase)
             || value.Equals("1",    StringComparison.Ordinal);
+    }
+
+    // UI++ config files commonly contain unescaped < in Condition attribute values
+    // (e.g. VBScript operators: <>, <=). This walks the raw text character by character,
+    // escaping < only when inside a quoted attribute value, leaving tag structure intact.
+    private static string EscapeAttributeLt(string xml)
+    {
+        var sb = new System.Text.StringBuilder(xml.Length);
+        int i = 0;
+
+        while (i < xml.Length)
+        {
+            char c = xml[i];
+            sb.Append(c);
+            i++;
+
+            if (c != '<') continue;
+
+            // Scan inside the tag, escaping < only within quoted attribute values.
+            char quoteChar = '\0';
+            while (i < xml.Length)
+            {
+                char t = xml[i];
+                i++;
+
+                if (quoteChar == '\0')
+                {
+                    sb.Append(t);
+                    if (t == '>') break;
+                    if (t is '\'' or '"') quoteChar = t;
+                }
+                else if (t == quoteChar)
+                {
+                    sb.Append(t);
+                    quoteChar = '\0';
+                }
+                else if (t == '<')
+                {
+                    sb.Append("&lt;");
+                }
+                else
+                {
+                    sb.Append(t);
+                }
+            }
+        }
+
+        return sb.ToString();
     }
 
 }

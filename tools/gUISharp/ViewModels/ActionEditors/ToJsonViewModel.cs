@@ -12,16 +12,16 @@ public sealed partial class ToJsonViewModel : ObservableObject, IActionEditor
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _variable  = string.Empty;
-    [ObservableProperty] private string _condition = string.Empty;
+    [ObservableProperty] public partial string Variable  { get; set; }
+    [ObservableProperty] public partial string Condition { get; set; }
 
     public ObservableCollection<JsonAttributeItem> Attributes { get; } = [];
 
     public ToJsonViewModel(ActionNodeModel model)
     {
         _model    = model;
-        _variable = Attr(C.Attributes.Variable)  ?? C.Defaults.JsonVariable;
-        _condition = Attr(C.Attributes.Condition) ?? string.Empty;
+        Variable  = Attr(C.Attributes.Variable)  ?? C.Defaults.JsonVariable;
+        Condition = Attr(C.Attributes.Condition) ?? string.Empty;
 
         foreach (var el in model.Node.Elements(C.Elements.Attribute))
         {
@@ -68,7 +68,14 @@ public sealed partial class ToJsonViewModel : ObservableObject, IActionEditor
 
 public sealed partial class JsonAttributeItem : ObservableObject
 {
-    [ObservableProperty] private string _name      = string.Empty;
-    [ObservableProperty] private string _value     = string.Empty;
-    [ObservableProperty] private string _condition = string.Empty;
+    [ObservableProperty] public partial string Name      { get; set; }
+    [ObservableProperty] public partial string Value     { get; set; }
+    [ObservableProperty] public partial string Condition { get; set; }
+
+    public JsonAttributeItem()
+    {
+        Name      = string.Empty;
+        Value     = string.Empty;
+        Condition = string.Empty;
+    }
 }

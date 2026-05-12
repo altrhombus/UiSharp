@@ -33,6 +33,18 @@ public sealed class ActionEditorTemplateSelector : DataTemplateSelector
     public DataTemplate? PreflightTemplate     { get; set; }
     public DataTemplate? InputTemplate         { get; set; }
     public DataTemplate? ActionGroupTemplate   { get; set; }
+    public DataTemplate? InfoTemplate          { get; set; }
+    public DataTemplate? InfoFullScreenTemplate { get; set; }
+    public DataTemplate? ErrorInfoTemplate     { get; set; }
+    public DataTemplate? RegReadTemplate       { get; set; }
+    public DataTemplate? RegWriteTemplate      { get; set; }
+    public DataTemplate? AppTreeTemplate       { get; set; }
+    public DataTemplate? WmiReadTemplate       { get; set; }
+    public DataTemplate? WmiWriteTemplate      { get; set; }
+    public DataTemplate? UserAuthTemplate      { get; set; }
+    public DataTemplate? SoftwareDiscTemplate  { get; set; }
+    public DataTemplate? SwitchTemplate        { get; set; }
+    public DataTemplate? TpmTemplate           { get; set; }
     public DataTemplate? FallbackTemplate      { get; set; }
 
     protected override DataTemplate SelectTemplateCore(object item, DependencyObject container)
@@ -43,19 +55,31 @@ public sealed class ActionEditorTemplateSelector : DataTemplateSelector
 
         return vm.TypeName switch
         {
-            C.ActionTypes.TSVar         => TSVarTemplate         ?? FallbackTemplate!,
-            C.ActionTypes.ExternalCall  => ExternalCallTemplate  ?? FallbackTemplate!,
-            C.ActionTypes.DefaultValues => DefaultValuesTemplate ?? FallbackTemplate!,
-            C.ActionTypes.RandomString  => RandomStringTemplate  ?? FallbackTemplate!,
-            C.ActionTypes.FileRead      => FileReadTemplate      ?? FallbackTemplate!,
-            C.ActionTypes.Vars          => VarsTemplate          ?? FallbackTemplate!,
-            C.ActionTypes.FromJson      => FromJsonTemplate      ?? FallbackTemplate!,
-            C.ActionTypes.Rest          => RestTemplate          ?? FallbackTemplate!,
-            C.ActionTypes.SaveItems     => SaveItemsTemplate     ?? FallbackTemplate!,
-            C.ActionTypes.ToJson        => ToJsonTemplate        ?? FallbackTemplate!,
-            C.ActionTypes.TSVarList     => TSVarListTemplate     ?? FallbackTemplate!,
-            C.ActionTypes.Preflight     => PreflightTemplate     ?? FallbackTemplate!,
-            C.ActionTypes.UserInput     => InputTemplate         ?? FallbackTemplate!,
+            C.ActionTypes.TSVar         => TSVarTemplate          ?? FallbackTemplate!,
+            C.ActionTypes.ExternalCall  => ExternalCallTemplate   ?? FallbackTemplate!,
+            C.ActionTypes.DefaultValues => DefaultValuesTemplate  ?? FallbackTemplate!,
+            C.ActionTypes.RandomString  => RandomStringTemplate   ?? FallbackTemplate!,
+            C.ActionTypes.FileRead      => FileReadTemplate       ?? FallbackTemplate!,
+            C.ActionTypes.Vars          => VarsTemplate           ?? FallbackTemplate!,
+            C.ActionTypes.FromJson      => FromJsonTemplate       ?? FallbackTemplate!,
+            C.ActionTypes.Rest          => RestTemplate           ?? FallbackTemplate!,
+            C.ActionTypes.SaveItems     => SaveItemsTemplate      ?? FallbackTemplate!,
+            C.ActionTypes.ToJson        => ToJsonTemplate         ?? FallbackTemplate!,
+            C.ActionTypes.TSVarList     => TSVarListTemplate      ?? FallbackTemplate!,
+            C.ActionTypes.Preflight     => PreflightTemplate      ?? FallbackTemplate!,
+            C.ActionTypes.UserInput     => InputTemplate          ?? FallbackTemplate!,
+            C.ActionTypes.UserInfo      => InfoTemplate           ?? FallbackTemplate!,
+            C.ActionTypes.UserInfoFull  => InfoFullScreenTemplate ?? FallbackTemplate!,
+            C.ActionTypes.ErrorInfo     => ErrorInfoTemplate      ?? FallbackTemplate!,
+            C.ActionTypes.RegRead       => RegReadTemplate        ?? FallbackTemplate!,
+            C.ActionTypes.RegWrite      => RegWriteTemplate       ?? FallbackTemplate!,
+            C.ActionTypes.AppTree       => AppTreeTemplate        ?? FallbackTemplate!,
+            C.ActionTypes.WmiRead       => WmiReadTemplate        ?? FallbackTemplate!,
+            C.ActionTypes.WmiWrite      => WmiWriteTemplate       ?? FallbackTemplate!,
+            C.ActionTypes.UserAuth      => UserAuthTemplate       ?? FallbackTemplate!,
+            C.ActionTypes.SoftwareDisc  => SoftwareDiscTemplate   ?? FallbackTemplate!,
+            C.ActionTypes.Switch        => SwitchTemplate         ?? FallbackTemplate!,
+            C.ActionTypes.Tpm           => TpmTemplate            ?? FallbackTemplate!,
             _                           => FallbackTemplate!,
         };
     }

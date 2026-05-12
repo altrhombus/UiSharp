@@ -9,18 +9,18 @@ public sealed partial class FileReadViewModel : ObservableObject, IActionEditor
 {
     private readonly ActionNodeModel _model;
 
-    [ObservableProperty] private string _filename   = string.Empty;
-    [ObservableProperty] private string _variable   = string.Empty;
-    [ObservableProperty] private bool   _deleteLine;
-    [ObservableProperty] private string _condition  = string.Empty;
+    [ObservableProperty] public partial string Filename   { get; set; }
+    [ObservableProperty] public partial string Variable   { get; set; }
+    [ObservableProperty] public partial bool   DeleteLine { get; set; }
+    [ObservableProperty] public partial string Condition  { get; set; }
 
     public FileReadViewModel(ActionNodeModel model)
     {
-        _model      = model;
-        _filename   = Attr(C.Attributes.Filename) ?? string.Empty;
-        _variable   = Attr(C.Attributes.Variable) ?? string.Empty;
-        _deleteLine = BoolAttr(C.Attributes.DeleteLine);
-        _condition  = Attr(C.Attributes.Condition) ?? string.Empty;
+        _model     = model;
+        Filename   = Attr(C.Attributes.Filename) ?? string.Empty;
+        Variable   = Attr(C.Attributes.Variable) ?? string.Empty;
+        DeleteLine = BoolAttr(C.Attributes.DeleteLine);
+        Condition  = Attr(C.Attributes.Condition) ?? string.Empty;
     }
 
     public void FlushToNode()
