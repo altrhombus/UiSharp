@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="RegWrite" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Writes a value to the Windows registry, creating the key path if it does not exist. The data is the element value and supports variable substitution."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Hive">
             <ComboBox ItemsSource="{Binding HiveOptions}" SelectedItem="{Binding Hive, Mode=TwoWay}" HorizontalAlignment="Stretch" />
         </local:LabeledField>

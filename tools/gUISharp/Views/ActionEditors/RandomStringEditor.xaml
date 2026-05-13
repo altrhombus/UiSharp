@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="RandomString" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Generates a random string and stores it in a variable. Configure the length and the set of allowed characters."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Variable">
             <TextBox Text="{Binding Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
@@ -12,7 +16,8 @@
             <TextBox Text="{Binding Length, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
         <local:LabeledField Label="Allowed Characters">
-            <TextBox Text="{Binding AllowedChars, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Text="{Binding AllowedChars, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     PlaceholderText="abcdefghijklmnopqrstuvwxyz0123456789" />
         </local:LabeledField>
         <local:LabeledField Label="Condition">
             <TextBox Text="{Binding Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />

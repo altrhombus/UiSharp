@@ -8,33 +8,33 @@
 
     <Page.Resources>
         <!-- Per-type editor DataTemplates -->
-        <DataTemplate x:Key="TSVarTemplate"         x:DataType="vm:ActionNodeViewModel"><editors:TSVarEditor         DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="ExternalCallTemplate"  x:DataType="vm:ActionNodeViewModel"><editors:ExternalCallEditor  DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="DefaultValuesTemplate" x:DataType="vm:ActionNodeViewModel"><editors:DefaultValuesEditor DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="RandomStringTemplate"  x:DataType="vm:ActionNodeViewModel"><editors:RandomStringEditor  DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="FileReadTemplate"      x:DataType="vm:ActionNodeViewModel"><editors:FileReadEditor      DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="VarsTemplate"          x:DataType="vm:ActionNodeViewModel"><editors:VarsEditor          DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="FromJsonTemplate"      x:DataType="vm:ActionNodeViewModel"><editors:FromJsonEditor      DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="RestTemplate"          x:DataType="vm:ActionNodeViewModel"><editors:RestEditor          DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="SaveItemsTemplate"     x:DataType="vm:ActionNodeViewModel"><editors:SaveItemsEditor     DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="ToJsonTemplate"        x:DataType="vm:ActionNodeViewModel"><editors:ToJsonEditor        DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="TSVarListTemplate"     x:DataType="vm:ActionNodeViewModel"><editors:TSVarListEditor     DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="PreflightTemplate"     x:DataType="vm:ActionNodeViewModel"><editors:PreflightEditor     DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="InputTemplate"         x:DataType="vm:ActionNodeViewModel"><editors:InputActionEditor   DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="ActionGroupTemplate"   x:DataType="vm:ActionNodeViewModel"><editors:ActionGroupEditor   DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="RawXmlTemplate"        x:DataType="vm:ActionNodeViewModel"><editors:RawXmlEditor        DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="InfoTemplate"           x:DataType="vm:ActionNodeViewModel"><editors:InfoEditor           DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="InfoFullScreenTemplate" x:DataType="vm:ActionNodeViewModel"><editors:InfoFullScreenEditor DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="ErrorInfoTemplate"      x:DataType="vm:ActionNodeViewModel"><editors:ErrorInfoEditor      DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="RegReadTemplate"        x:DataType="vm:ActionNodeViewModel"><editors:RegReadEditor        DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="RegWriteTemplate"       x:DataType="vm:ActionNodeViewModel"><editors:RegWriteEditor       DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="AppTreeTemplate"        x:DataType="vm:ActionNodeViewModel"><editors:AppTreeEditor        DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="WmiReadTemplate"        x:DataType="vm:ActionNodeViewModel"><editors:WmiReadEditor        DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="WmiWriteTemplate"       x:DataType="vm:ActionNodeViewModel"><editors:WmiWriteEditor       DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="UserAuthTemplate"       x:DataType="vm:ActionNodeViewModel"><editors:UserAuthEditor       DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="SoftwareDiscTemplate"   x:DataType="vm:ActionNodeViewModel"><editors:SoftwareDiscEditor   DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="SwitchTemplate"         x:DataType="vm:ActionNodeViewModel"><editors:SwitchEditor         DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
-        <DataTemplate x:Key="TpmTemplate"            x:DataType="vm:ActionNodeViewModel"><editors:TpmEditor            DataContext="{x:Bind EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="TSVarTemplate"         ><editors:TSVarEditor         DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="ExternalCallTemplate"  ><editors:ExternalCallEditor  DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="DefaultValuesTemplate" ><editors:DefaultValuesEditor DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="RandomStringTemplate"  ><editors:RandomStringEditor  DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="FileReadTemplate"      ><editors:FileReadEditor      DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="VarsTemplate"          ><editors:VarsEditor          DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="FromJsonTemplate"      ><editors:FromJsonEditor      DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="RestTemplate"          ><editors:RestEditor          DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="SaveItemsTemplate"     ><editors:SaveItemsEditor     DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="ToJsonTemplate"        ><editors:ToJsonEditor        DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="TSVarListTemplate"     ><editors:TSVarListEditor     DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="PreflightTemplate"     ><editors:PreflightEditor     DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="InputTemplate"         ><editors:InputActionEditor   DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="ActionGroupTemplate"   ><editors:ActionGroupEditor   DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="RawXmlTemplate"        ><editors:RawXmlEditor        DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="InfoTemplate"           ><editors:InfoEditor           DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="InfoFullScreenTemplate" ><editors:InfoFullScreenEditor DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="ErrorInfoTemplate"      ><editors:ErrorInfoEditor      DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="RegReadTemplate"        ><editors:RegReadEditor        DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="RegWriteTemplate"       ><editors:RegWriteEditor       DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="AppTreeTemplate"        ><editors:AppTreeEditor        DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="WmiReadTemplate"        ><editors:WmiReadEditor        DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="WmiWriteTemplate"       ><editors:WmiWriteEditor       DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="UserAuthTemplate"       ><editors:UserAuthEditor       DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="SoftwareDiscTemplate"   ><editors:SoftwareDiscEditor   DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="SwitchTemplate"         ><editors:SwitchEditor         DataContext="{Binding EditorViewModel}" /></DataTemplate>
+        <DataTemplate x:Key="TpmTemplate"            ><editors:TpmEditor            DataContext="{Binding EditorViewModel}" /></DataTemplate>
 
         <local:ActionEditorTemplateSelector x:Key="EditorSelector"
             TSVarTemplate="{StaticResource TSVarTemplate}"
@@ -73,7 +73,7 @@
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
-        <!-- Left panel: action tree + toolbar -->
+        <!-- ── Left panel: action tree ──────────────────────────────────────── -->
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -81,7 +81,6 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Add action split button -->
             <SplitButton Grid.Row="0" Margin="8,8,8,4" HorizontalAlignment="Stretch"
                          Command="{x:Bind ViewModel.ActionList.AddGroupCommand}">
                 <SplitButton.Content>
@@ -133,7 +132,6 @@
                 </SplitButton.Flyout>
             </SplitButton>
 
-            <!-- Action tree -->
             <TreeView Grid.Row="1" x:Name="ActionTreeView"
                       SelectionMode="Single"
                       ItemsSource="{x:Bind ViewModel.ActionList.ActionTree}"
@@ -148,7 +146,6 @@
                 </TreeView.ItemTemplate>
             </TreeView>
 
-            <!-- Move/Remove toolbar -->
             <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="8,4,8,8" Spacing="4">
                 <Button Command="{x:Bind ViewModel.ActionList.MoveUpCommand}" ToolTipService.ToolTip="Move Up">
                     <FontIcon Glyph="&#xE74A;" FontSize="14" />
@@ -164,22 +161,145 @@
             </StackPanel>
         </Grid>
 
-        <!-- Splitter -->
+        <!-- Outer vertical divider -->
         <Border Grid.Column="1" Width="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
 
-        <!-- Right panel: empty state + selected action editor -->
+        <!-- ── Editor area: Guided | Splitter | XML ─────────────────────────── -->
         <Grid Grid.Column="2">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8"
-                        Visibility="{x:Bind ViewModel.ActionList.HasSelection, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
-                <FontIcon Glyph="&#xE8A5;" FontSize="48" Opacity="0.25" HorizontalAlignment="Center" />
-                <TextBlock Text="Select an action to edit" Opacity="0.4" HorizontalAlignment="Center" />
-            </StackPanel>
-            <ScrollViewer Padding="16"
-                          Visibility="{x:Bind ViewModel.ActionList.HasSelection, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                <ContentControl Content="{x:Bind ViewModel.ActionList.SelectedAction, Mode=OneWay}"
-                                ContentTemplateSelector="{StaticResource EditorSelector}"
-                                HorizontalContentAlignment="Stretch" />
-            </ScrollViewer>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="GuidedCol" Width="3*" MinWidth="0" />
+                <ColumnDefinition x:Name="SplitterCol" Width="5" />
+                <ColumnDefinition x:Name="XmlCol" Width="2*" MinWidth="0" />
+            </Grid.ColumnDefinitions>
+
+            <!-- ── Guided panel ────────────────────────────────────────────── -->
+            <Grid Grid.Column="0" x:Name="GuidedPanelGrid" GotFocus="GuidedPanel_GotFocus">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="34" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Guided header -->
+                <Border Grid.Row="0"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                        BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="Guided"
+                                   VerticalAlignment="Center"
+                                   Margin="10,0,0,0"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                        <!-- Expand XML button (shown when XML panel is collapsed) -->
+                        <Button x:Name="ExpandXmlBtn"
+                                Grid.Column="1"
+                                Width="28" Height="28" Padding="0"
+                                Visibility="Collapsed"
+                                Click="ExpandXmlBtn_Click"
+                                ToolTipService.ToolTip="Show XML editor">
+                            <FontIcon Glyph="&#xE76C;" FontSize="11" />
+                        </Button>
+
+                        <!-- Collapse guided -->
+                        <Button x:Name="CollapseGuidedBtn"
+                                Grid.Column="2"
+                                Width="28" Height="28" Padding="0"
+                                Margin="0,0,3,0"
+                                Click="CollapseGuidedBtn_Click"
+                                ToolTipService.ToolTip="Collapse guided panel">
+                            <FontIcon Glyph="&#xE76B;" FontSize="11" />
+                        </Button>
+                    </Grid>
+                </Border>
+
+                <!-- Guided content -->
+                <Grid Grid.Row="1">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8"
+                                Visibility="{x:Bind ViewModel.ActionList.HasSelection, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
+                        <FontIcon Glyph="&#xE8A5;" FontSize="48" Opacity="0.25" HorizontalAlignment="Center" />
+                        <TextBlock Text="Select an action to edit" Opacity="0.4" HorizontalAlignment="Center" />
+                    </StackPanel>
+                    <ScrollViewer x:Name="GuidedScroller" Padding="16"
+                                  Visibility="{x:Bind ViewModel.ActionList.HasSelection, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                        <ContentControl Content="{x:Bind ViewModel.ActionList.SelectedAction, Mode=OneWay}"
+                                        ContentTemplateSelector="{StaticResource EditorSelector}"
+                                        HorizontalContentAlignment="Stretch" />
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+
+            <!-- ── Drag splitter ───────────────────────────────────────────── -->
+            <Border x:Name="DragSplitter"
+                    Grid.Column="1"
+                    Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    PointerEntered="DragSplitter_PointerEntered"
+                    PointerExited="DragSplitter_PointerExited"
+                    PointerPressed="DragSplitter_PointerPressed"
+                    PointerMoved="DragSplitter_PointerMoved"
+                    PointerReleased="DragSplitter_PointerReleased" />
+
+            <!-- ── XML panel ───────────────────────────────────────────────── -->
+            <Grid Grid.Column="2" x:Name="XmlPanelOuter">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="34" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- XML header -->
+                <Border Grid.Row="0"
+                        Background="{ThemeResource LayerFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                        BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <!-- Collapse XML -->
+                        <Button x:Name="CollapseXmlBtn"
+                                Grid.Column="0"
+                                Width="28" Height="28" Padding="0"
+                                Margin="3,0,0,0"
+                                Click="CollapseXmlBtn_Click"
+                                ToolTipService.ToolTip="Collapse XML panel">
+                            <FontIcon Glyph="&#xE76C;" FontSize="11" />
+                        </Button>
+
+                        <!-- Expand Guided button (shown when Guided panel is collapsed) -->
+                        <Button x:Name="ExpandGuidedBtn"
+                                Grid.Column="1"
+                                Width="28" Height="28" Padding="0"
+                                Visibility="Collapsed"
+                                Click="ExpandGuidedBtn_Click"
+                                ToolTipService.ToolTip="Show guided editor">
+                            <FontIcon Glyph="&#xE76B;" FontSize="11" />
+                        </Button>
+
+                        <TextBlock Grid.Column="2"
+                                   Text="XML Editor"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+                </Border>
+
+                <!-- XML editor panel -->
+                <local:XmlEditorPanel x:Name="XmlPanel"
+                                      Grid.Row="1"
+                                      PanelViewModel="{x:Bind ViewModel.ActionList, Mode=OneWay}"
+                                      GotFocus="XmlPanel_GotFocus" />
+            </Grid>
         </Grid>
     </Grid>
 </Page>

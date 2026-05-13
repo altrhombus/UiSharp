@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="REST" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Makes an HTTP request to the specified URL and stores the response in a variable. Supports GET, POST, and other methods with an optional JSON request body."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="URL">
             <TextBox Text="{Binding Url, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>

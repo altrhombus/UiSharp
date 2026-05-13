@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="UserAuth" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Presents a username/password dialog and authenticates against Active Directory. Optionally requires group membership for authorization. Sets XAuthenticatedUser variables on success."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Title">
             <TextBox Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>

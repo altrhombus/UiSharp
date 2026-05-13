@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="SaveItems" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Copies logs, variable dumps, or arbitrary files to a destination path. Items can include UILog, SMSTSLog, TSVariables, and file paths or wildcards."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Path">
             <TextBox Text="{Binding Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>

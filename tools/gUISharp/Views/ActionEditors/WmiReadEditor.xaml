@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="WMIRead" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Reads a property from a WMI class and stores it in a variable. Use Key Qualifier to filter to a specific instance (e.g., Name=&quot;wuauserv&quot;)."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Namespace">
             <TextBox Text="{Binding Namespace, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="root\cimv2" />
         </local:LabeledField>

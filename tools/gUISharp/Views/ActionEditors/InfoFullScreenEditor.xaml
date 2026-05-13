@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="InfoFullScreen" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Preview feature. Shows a full-screen window with an optional image, a single line of text, and an infinite progress bar. Dismiss manually with Ctrl+Alt+F10."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Name">
             <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
         </local:LabeledField>

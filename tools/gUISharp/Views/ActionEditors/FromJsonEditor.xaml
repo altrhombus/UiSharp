@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="FromJSON" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Parses inline JSON and populates variables from its key/value pairs. The JSON content is stored as the element value."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Variable">
             <TextBox Text="{Binding Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>

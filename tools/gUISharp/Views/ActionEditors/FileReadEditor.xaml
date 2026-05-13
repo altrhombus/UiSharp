@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="FileRead" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Reads the first line from a text file into a variable, optionally deleting that line afterward. Useful for generating unique system names from a pre-built list."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Filename">
             <TextBox Text="{Binding Filename, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>

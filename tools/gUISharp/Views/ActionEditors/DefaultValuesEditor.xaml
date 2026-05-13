@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="DefaultValues" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Collects system information and populates pre-defined variables across categories such as Asset, Network, OS, Security, and TPM. Place this near the beginning of the action list."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Value Types">
             <TextBox Text="{Binding ValueTypes, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      PlaceholderText="All, or comma-separated: OS,Asset,VM,Domain,Net,TPM,Security,User,Mgmt" />

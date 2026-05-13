@@ -6,7 +6,15 @@ vcpkg_installed
 # .NET build output
 src/**/bin/
 src/**/obj/
+tools/**/bin/
+tools/**/obj/
+tools/**/*.binlog
+tools/**/xamlcompiler-wrap.cmd
 *.user
+
+# Visual Studio state
+.vs/
+UpgradeLog.htm
 
 # Claude Code local settings
 .claude/

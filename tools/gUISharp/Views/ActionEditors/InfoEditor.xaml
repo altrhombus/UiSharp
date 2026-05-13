@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="Info" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Displays a message to the user. Supports an optional timeout with configurable dismiss behavior: continue to the next action, cancel, or return a custom error code."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Name">
             <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
         </local:LabeledField>

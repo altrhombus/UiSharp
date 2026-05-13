@@ -8,6 +8,8 @@ namespace GUISharp.ViewModels;
 
 public sealed partial class ActionNodeViewModel : ObservableObject
 {
+    private readonly EditorViewModelFactory _factory;
+
     public ActionNodeModel Model { get; }
 
     public string TypeName => Model.TypeName;
@@ -25,6 +27,7 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public ActionNodeViewModel(ActionNodeModel model, EditorViewModelFactory factory)
     {
+        _factory = factory;
         Model = model;
 
         foreach (var child in model.Children)
@@ -37,6 +40,15 @@ public sealed partial class ActionNodeViewModel : ObservableObject
         EditorViewModel = factory.Create(model);
         if (EditorViewModel is not null)
             EditorViewModel.PropertyChanged += (_, _) => Dirtied?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void RefreshEditorViewModel()
+    {
+        var vm = _factory.Create(Model);
+        if (EditorViewModel is IActionEditor old && vm is IActionEditor next)
+            next.CopyUiStateFrom(old);
+        vm.PropertyChanged += (_, _) => Dirtied?.Invoke(this, EventArgs.Empty);
+        EditorViewModel = vm;
     }
 
     public void FlushEditsToNode()
@@ -58,7 +70,7 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
         return TypeName switch
         {
-            C.ActionTypes.TSVar        => $"TSVar: {Attr(C.Attributes.Variable) ?? "?"}",
+            C.ActionTypes.TSVar        => $"TSVar: {Attr(C.Attributes.Variable) ?? Attr(C.Attributes.Name) ?? "?"}",
             C.ActionTypes.ExternalCall => $"ExternalCall: {Model.Node.Value.Trim().Split('\n')[0].Trim()}",
             C.ActionTypes.DefaultValues => $"DefaultValues: {Attr(C.Attributes.DefaultValueTypes) ?? "All"}",
             C.ActionTypes.RandomString => $"RandomString → {Attr(C.Attributes.Variable) ?? "?"}",

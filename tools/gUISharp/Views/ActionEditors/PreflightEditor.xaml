@@ -6,6 +6,10 @@
     xmlns:vm="using:GUISharp.ViewModels.ActionEditors">
     <StackPanel Spacing="12">
         <TextBlock Text="Preflight" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Runs a series of VBScript conditions to validate the system before continuing. If any check fails, the user cannot proceed and UI++ returns error code 21 (ERROR_NOT_READY)."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Title">
             <TextBox Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
@@ -13,7 +17,7 @@
             <TextBox Text="{Binding Timeout, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
         <local:LabeledField Label="Timeout Action">
-            <TextBox Text="{Binding TimeoutAction, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Continue" />
+            <ComboBox ItemsSource="{Binding TimeoutActionOptions}" SelectedItem="{Binding TimeoutAction, Mode=TwoWay}" HorizontalAlignment="Stretch" />
         </local:LabeledField>
         <CheckBox Content="Show On Failure Only" IsChecked="{Binding ShowOnFailureOnly, Mode=TwoWay}" />
         <local:LabeledField Label="Condition">
@@ -21,41 +25,8 @@
         </local:LabeledField>
 
         <StackPanel Spacing="8">
-            <TextBlock Text="Checks" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-            <ListView ItemsSource="{Binding Checks}" SelectionMode="None">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:PreflightCheckItem">
-                        <Expander HorizontalAlignment="Stretch" IsExpanded="False">
-                            <Expander.Header>
-                                <TextBlock Text="{x:Bind Text, Mode=OneWay}" />
-                            </Expander.Header>
-                            <StackPanel Spacing="8" Padding="0,8,0,0">
-                                <local:LabeledField Label="Text">
-                                    <TextBox Text="{x:Bind Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                </local:LabeledField>
-                                <local:LabeledField Label="Description">
-                                    <TextBox Text="{x:Bind Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                </local:LabeledField>
-                                <local:LabeledField Label="Error Description">
-                                    <TextBox Text="{x:Bind ErrorDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                </local:LabeledField>
-                                <local:LabeledField Label="Warn Description">
-                                    <TextBox Text="{x:Bind WarnDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                </local:LabeledField>
-                                <local:LabeledField Label="Check Condition">
-                                    <TextBox Text="{x:Bind CheckCondition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                </local:LabeledField>
-                                <local:LabeledField Label="Warn Condition">
-                                    <TextBox Text="{x:Bind WarnCondition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                                </local:LabeledField>
-                                <local:LabeledField Label="Visibility Condition">
-                                    <TextBox Text="{x:Bind Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
-                                </local:LabeledField>
-                            </StackPanel>
-                        </Expander>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+            <TextBlock Text="Checks" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
+            <StackPanel x:Name="ChecksPanel" Spacing="4" />
             <Button Content="+ Check" Command="{Binding AddCheckCommand}" />
         </StackPanel>
     </StackPanel>

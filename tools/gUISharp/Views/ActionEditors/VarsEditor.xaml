@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="Vars" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Saves current variables to a data file or loads variables from a previously saved file. Useful for persisting values between UI++ executions, such as running before and inside a task sequence."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Direction">
             <ComboBox ItemsSource="{Binding DirectionOptions}"
                       SelectedItem="{Binding Direction, Mode=TwoWay}"

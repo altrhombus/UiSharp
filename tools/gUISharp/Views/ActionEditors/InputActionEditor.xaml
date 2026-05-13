@@ -6,6 +6,10 @@
     xmlns:vm="using:GUISharp.ViewModels.ActionEditors">
     <StackPanel Spacing="12">
         <TextBlock Text="Input" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Displays an interactive dialog with text boxes, dropdowns, checkboxes, or info fields for direct user input. Supports Regular (3), Tall (6), or ExtraTall (9) field capacities."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Title">
             <TextBox Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>

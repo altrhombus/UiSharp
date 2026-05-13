@@ -6,6 +6,10 @@
     xmlns:vm="using:GUISharp.ViewModels.ActionEditors">
     <StackPanel Spacing="12">
         <TextBlock Text="Switch" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Compares a value against a series of regular expression patterns in order; the first match sets the specified variables. Add a Default case to handle values that match no pattern."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="On Value">
             <TextBox Text="{Binding OnValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
@@ -14,7 +18,7 @@
             <TextBox Text="{Binding Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
         </local:LabeledField>
 
-        <TextBlock Text="Cases" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+        <TextBlock Text="Cases" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
         <ListView x:Name="Editor" ItemsSource="{Binding Cases}" SelectionMode="None">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:SwitchCaseItem">
@@ -59,7 +63,7 @@
         </ListView>
         <Button Content="+ Case" Command="{Binding AddCaseCommand}" />
 
-        <TextBlock Text="Default" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+        <TextBlock Text="Default" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
         <ListView ItemsSource="{Binding DefaultVariables}" SelectionMode="None">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:VariableAssignmentItem">

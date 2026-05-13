@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="ErrorInfo" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Displays a final error message to the user. Always includes a cancel button; a back button is optional. Use this to inform the user of a fatal condition before exiting."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Name">
             <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
         </local:LabeledField>

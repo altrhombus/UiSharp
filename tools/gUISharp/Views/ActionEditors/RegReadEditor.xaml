@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="RegRead" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Reads a value from the Windows registry and stores it in a variable. On 64-bit systems, enable the 64-bit option to read from the native registry rather than the WOW64 view."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Hive">
             <ComboBox ItemsSource="{Binding HiveOptions}" SelectedItem="{Binding Hive, Mode=TwoWay}" HorizontalAlignment="Stretch" />
         </local:LabeledField>

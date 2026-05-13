@@ -6,6 +6,10 @@
     xmlns:vm="using:GUISharp.ViewModels.ActionEditors">
     <StackPanel Spacing="12">
         <TextBlock Text="TSVarList" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Creates numbered sequences of variables for ConfigMgr Install Application or Install Package task sequence steps, referencing software items defined in the Software catalog."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Application Variable Base">
             <TextBox Text="{Binding AppVarBase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
@@ -17,8 +21,8 @@
         </local:LabeledField>
 
         <StackPanel Spacing="8">
-            <TextBlock Text="Software References" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-            <ListView ItemsSource="{Binding SoftwareRefs}" SelectionMode="None">
+            <TextBlock Text="Software References" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
+            <ListView x:Name="Editor" ItemsSource="{Binding SoftwareRefs}" SelectionMode="None">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:SoftwareRefItem">
                         <Grid ColumnSpacing="8">
@@ -29,7 +33,11 @@
                             </Grid.ColumnDefinitions>
                             <TextBox Grid.Column="0" Text="{x:Bind Id,        Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Software Id (GUID)" />
                             <TextBox Grid.Column="1" Text="{x:Bind Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Condition (opt)" />
-                            <Button  Grid.Column="2" Content="✕" Command="{Binding RemoveRefCommand, ElementName=Editor}" CommandParameter="{x:Bind}" />
+                            <Button  Grid.Column="2" Content="&#xE74D;"
+                                     FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                     Command="{Binding ElementName=Editor, Path=DataContext.RemoveRefCommand}"
+                                     CommandParameter="{x:Bind}"
+                                     VerticalAlignment="Center" />
                         </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>

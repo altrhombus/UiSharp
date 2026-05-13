@@ -1,0 +1,48 @@
+<UserControl
+    x:Class="GUISharp.Views.ActionEditors.PreflightCheckRow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GUISharp.Views">
+    <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+            BorderThickness="1"
+            CornerRadius="4">
+        <StackPanel>
+            <Button x:Name="HeaderBtn"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Padding="10,8"
+                    Click="HeaderBtn_Click">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon x:Name="CollapseChevron" FontSize="10" Glyph="&#xE76C;" />
+                    <FontIcon x:Name="ExpandChevron"   FontSize="10" Glyph="&#xE70D;" Visibility="Collapsed" />
+                    <TextBlock x:Name="HeaderText" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
+            <StackPanel x:Name="FieldsPanel" Visibility="Collapsed" Spacing="8" Padding="10,4,10,10">
+                <local:LabeledField Label="Text">
+                    <TextBox Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </local:LabeledField>
+                <local:LabeledField Label="Description">
+                    <TextBox Text="{Binding Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </local:LabeledField>
+                <local:LabeledField Label="Error Description">
+                    <TextBox Text="{Binding ErrorDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </local:LabeledField>
+                <local:LabeledField Label="Warn Description">
+                    <TextBox Text="{Binding WarnDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </local:LabeledField>
+                <local:LabeledField Label="Check Condition">
+                    <TextBox Text="{Binding CheckCondition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </local:LabeledField>
+                <local:LabeledField Label="Warn Condition">
+                    <TextBox Text="{Binding WarnCondition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </local:LabeledField>
+                <local:LabeledField Label="Visibility Condition">
+                    <TextBox Text="{Binding Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+                </local:LabeledField>
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

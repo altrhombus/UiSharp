@@ -5,15 +5,19 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="ExternalCall" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Runs a command line. Use this to call scripts or tools that perform actions UI++ cannot do directly, such as web service calls, driver installs, or reboots."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Command Line">
             <TextBox Text="{Binding CommandLine, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      AcceptsReturn="True" MaxHeight="120" TextWrapping="Wrap" />
         </local:LabeledField>
         <local:LabeledField Label="Max Run Time (seconds)">
-            <TextBox Text="{Binding MaxRunTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Text="{Binding MaxRunTime, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional — 0 = no limit" />
         </local:LabeledField>
         <local:LabeledField Label="Exit Code Variable">
-            <TextBox Text="{Binding ExitCodeVariable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox Text="{Binding ExitCodeVariable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
         </local:LabeledField>
         <local:LabeledField Label="Condition">
             <TextBox Text="{Binding Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />

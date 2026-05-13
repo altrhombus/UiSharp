@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="AppTree" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Displays a tree of applications and packages for the user to choose. Sets numbered task sequence variables consumed by Install Application and Install Package steps. Only useful within a task sequence."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Title">
             <TextBox Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>

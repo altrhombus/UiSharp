@@ -6,6 +6,10 @@
 
     <StackPanel Spacing="12">
         <TextBlock Text="TSVar" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Creates a variable with the specified name and value. The value is evaluated as a VBScript expression; enclose in double-quotes or the value may be unexpectedly interpreted."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Variable Name">
             <TextBox Text="{Binding Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>

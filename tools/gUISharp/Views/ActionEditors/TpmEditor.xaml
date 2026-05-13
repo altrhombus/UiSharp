@@ -5,6 +5,10 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="TPM" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Performs a TPM management request (such as clearing or activating the chip) and optionally stores the result in a variable."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Request">
             <TextBox Text="{Binding Request, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>

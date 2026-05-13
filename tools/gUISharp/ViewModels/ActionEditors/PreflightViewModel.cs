@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,6 +18,9 @@ public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
     [ObservableProperty] public partial string Timeout         { get; set; }
     [ObservableProperty] public partial string TimeoutAction   { get; set; }
     [ObservableProperty] public partial string Condition       { get; set; }
+
+    public static IReadOnlyList<string> TimeoutActionOptions { get; } =
+        [C.Values.Continue, C.Values.Cancel];
 
     public ObservableCollection<PreflightCheckItem> Checks { get; } = [];
 
@@ -49,6 +53,18 @@ public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
 
     [RelayCommand]
     private void RemoveCheck(PreflightCheckItem item) => Checks.Remove(item);
+
+    public void CopyUiStateFrom(GUISharp.Services.IActionEditor previous)
+    {
+        if (previous is not PreflightViewModel prev) return;
+        var expanded = prev.Checks
+            .Where(c => c.IsExpanded)
+            .Select(c => c.Text)
+            .ToHashSet(StringComparer.Ordinal);
+        foreach (var c in Checks)
+            if (expanded.Contains(c.Text))
+                c.IsExpanded = true;
+    }
 
     public void FlushToNode()
     {
@@ -98,9 +114,13 @@ public sealed partial class PreflightCheckItem : ObservableObject
     [ObservableProperty] public partial string CheckCondition   { get; set; }
     [ObservableProperty] public partial string WarnCondition    { get; set; }
     [ObservableProperty] public partial string Condition        { get; set; }
+    [ObservableProperty] public partial bool   IsExpanded       { get; set; }
+
+    public ICommand ToggleExpandedCommand { get; }
 
     public PreflightCheckItem()
     {
+        ToggleExpandedCommand = new RelayCommand(() => IsExpanded = !IsExpanded);
         Text             = string.Empty;
         Description      = string.Empty;
         ErrorDescription = string.Empty;
@@ -108,5 +128,6 @@ public sealed partial class PreflightCheckItem : ObservableObject
         CheckCondition   = string.Empty;
         WarnCondition    = string.Empty;
         Condition        = string.Empty;
+        IsExpanded       = false;
     }
 }

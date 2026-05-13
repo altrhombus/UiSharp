@@ -6,6 +6,10 @@
     xmlns:vm="using:GUISharp.ViewModels.ActionEditors">
     <StackPanel Spacing="12">
         <TextBlock Text="WMIWrite" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Writes properties to a WMI class, creating the namespace and class if they do not exist. Mark a property as Key to identify the instance for updates."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Namespace">
             <TextBox Text="{Binding Namespace, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="root\cimv2" />
         </local:LabeledField>
@@ -18,7 +22,7 @@
         <local:LabeledField Label="Condition">
             <TextBox Text="{Binding Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
         </local:LabeledField>
-        <TextBlock Text="Properties" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+        <TextBlock Text="Properties" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
         <ListView x:Name="Editor" ItemsSource="{Binding Properties}" SelectionMode="None">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:WmiPropertyItem">

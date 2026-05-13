@@ -127,6 +127,20 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public void MarkModified() => IsModified = true;
 
+    /// <summary>Saves the current file (prompting for a path if unsaved). Returns true when the caller may proceed.</summary>
+    public async Task<bool> TrySaveAsync()
+    {
+        string? path = CurrentFile;
+        if (path is null)
+        {
+            path = await _fileDialogService.PickSaveFileAsync("UI++.xml");
+            if (path is null) return false;
+            CurrentFile = path;
+        }
+        await SaveToPathAsync(path);
+        return !IsModified;
+    }
+
     private async Task<bool> ConfirmDiscardChangesAsync()
     {
         if (!IsModified) return true;

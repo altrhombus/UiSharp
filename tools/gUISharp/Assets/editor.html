@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>UI++ XML Editor</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100vh; overflow: hidden; background: #1e1e1e; }
+  #app { display: flex; flex-direction: column; height: 100vh; }
+  #error-bar {
+    display: none;
+    background: #5a1d1d;
+    border-bottom: 1px solid #be1100;
+    color: #f48771;
+    font: 12px/1.5 "Cascadia Code", "Cascadia Mono", Consolas, monospace;
+    padding: 5px 12px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 72px;
+    overflow-y: auto;
+  }
+  #error-bar.visible { display: block; }
+  #editor-container { flex: 1; min-height: 0; }
+  .selected-action-highlight { background: rgba(38,79,120,.35); }
+  .selected-action-gutter { background: #4ec9b0; width: 3px !important; margin-left: 2px; }
+  #loading {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: #1e1e1e; color: #858585;
+    font: 13px/1.5 "Cascadia Code", "Cascadia Mono", Consolas, monospace;
+    pointer-events: none; z-index: 10;
+  }
+  #loading.hidden { display: none; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="error-bar"></div>
+  <div id="editor-container"></div>
+</div>
+<div id="loading">Loading editor…</div>
+
+<script>
+// ─── UI++ XML IntelliSense Schema ─────────────────────────────────────────────
+const UIPP = {
+  actionTypes: [
+    'TSVar','ExternalCall','DefaultValues','RandomString','FileRead','Vars',
+    'FromJSON','REST','SaveItems','ToJSON','TSVarList','Preflight','Input',
+    'Info','InfoFullScreen','ErrorInfo','RegRead','RegWrite','AppTree',
+    'WMIRead','WMIWrite','UserAuth','SoftwareDiscovery','Switch','TPM'
+  ],
+  actions: {
+    TSVar:             { doc: 'Sets a Task Sequence variable. Element text content becomes the value; supports %VarName% substitution.', attrs: ['Variable','Condition'] },
+    ExternalCall:      { doc: 'Runs a command line. The element text is the command; MaxRunTime=0 means no timeout.', attrs: ['MaxRunTime','ExitCodeVariable','Condition'] },
+    DefaultValues:     { doc: 'Populates built-in variables for OS, hardware, network, TPM, domain, and more.', attrs: ['ValueTypes','Condition'] },
+    RandomString:      { doc: 'Generates a cryptographically random string and stores it in a variable.', attrs: ['Variable','Length','AllowedChars','ForceCase','Condition'] },
+    FileRead:          { doc: 'Reads the first line of a text file into a variable. Optionally deletes the line after reading.', attrs: ['Filename','Variable','DeleteLine','Condition'] },
+    Vars:              { doc: 'Saves all current variables to a file, or loads from a previously saved file.', attrs: ['Filename','Direction','Condition'] },
+    FromJSON:          { doc: 'Extracts a value from a JSON string using a dot-notation path into a variable.', attrs: ['Variable','JSON','Condition'] },
+    REST:              { doc: 'Makes an HTTP/HTTPS request and stores the response body in a variable.', attrs: ['Url','Method','Variable','Attributes','JSON','Condition'] },
+    SaveItems:         { doc: 'Writes a delimited list of variable name=value pairs to a file.', attrs: ['Path','Items','Condition'] },
+    ToJSON:            { doc: 'Serializes one or more variables into a JSON object string stored in a variable.', attrs: ['Variable','Condition'] },
+    TSVarList:         { doc: 'References a named software list and sets TS variables for each matched item.', attrs: ['Condition'] },
+    Preflight:         { doc: 'Shows a checklist dialog. Each <Check> child passes or fails based on CheckCondition.', attrs: ['Title','Timeout','TimeoutMsg','TimeoutAction','ShowCancel','ShowOnFailureOnly','Condition'] },
+    Input:             { doc: 'Shows a data-entry dialog. Children define text boxes, dropdowns, checkboxes, and info fields.', attrs: ['Title','Timeout','TimeoutMsg','TimeoutAction','ShowCancel','ShowBack','NoDefaultButton','Condition'] },
+    Info:              { doc: 'Shows an informational dialog with optional image, text, and timeout.', attrs: ['Title','Timeout','TimeoutMsg','TimeoutAction','ShowCancel','ShowBack','Condition'] },
+    InfoFullScreen:    { doc: 'Shows a full-screen informational dialog that covers the taskbar.', attrs: ['Title','Timeout','TimeoutMsg','TimeoutAction','ShowCancel','ShowBack','Condition'] },
+    ErrorInfo:         { doc: 'Shows an error dialog to communicate a blocking failure to the user.', attrs: ['Title','Timeout','TimeoutMsg','TimeoutAction','ShowCancel','ShowBack','Condition'] },
+    RegRead:           { doc: 'Reads a Windows Registry value into a variable. Use Reg64=True to bypass WOW64 redirection.', attrs: ['Hive','Key','Property','Variable','Reg64','Condition'] },
+    RegWrite:          { doc: 'Writes a value to the Windows Registry. Creates the key and value name if they do not exist.', attrs: ['Hive','Key','Property','Value','ValueType','Reg64','Condition'] },
+    AppTree:           { doc: 'Shows an application or package selection tree. Selections stored as variables using the base prefix.', attrs: ['Title','PackageVariableBase','ApplicationVariableBase','Timeout','TimeoutMsg','TimeoutAction','Condition'] },
+    WMIRead:           { doc: 'Reads a WMI property or query result into a variable.', attrs: ['Namespace','Class','Property','Variable','Query','Condition'] },
+    WMIWrite:          { doc: 'Writes properties to a WMI class, creating the namespace and class if they do not exist.', attrs: ['Namespace','Class','KeyQualifier','Condition'] },
+    UserAuth:          { doc: 'Shows an authentication dialog and validates credentials against Active Directory.', attrs: ['Title','Domain','DomainController','MaxRetryCount','DoNotFallback','GetGroups','Condition'] },
+    SoftwareDiscovery: { doc: 'Checks Add/Remove Programs. Each <Software> child sets a variable True or False on match.', attrs: ['Condition'] },
+    Switch:            { doc: 'Evaluates a value against regex <Case> patterns in order; sets variables on first match.', attrs: ['OnValue','DontEval','Condition'] },
+    TPM:               { doc: 'Queries or configures TPM state. Sets XTPMEnabled, XTPMActivated, and related variables.', attrs: ['Request','Condition'] },
+  },
+  elements: {
+    Action:       { doc: 'Executes a UI++ action. The Type attribute determines behavior and valid children.', attrs: ['Type','Condition'] },
+    ActionGroup:  { doc: 'Groups related actions under a name. A Condition skips the entire group when false.', attrs: ['Name','Condition'] },
+    Check:        { doc: 'A Preflight check item. Shows pass/warn/fail based on CheckCondition and WarnCondition.', attrs: ['Description','WarnDescription','ErrorDescription','CheckCondition','WarnCondition','Condition'] },
+    Software:     { doc: 'A SoftwareDiscovery match entry. DisplayName is a case-insensitive regex.', attrs: ['DisplayName','Variable','Version','VersionOperator'] },
+    Case:         { doc: 'A Switch case; matched against OnValue using a regular expression.', attrs: ['RegEx'] },
+    Default:      { doc: 'Default Switch branch executed when no Case matches.', attrs: [] },
+    Variable:     { doc: 'Assigns a variable (child of Case or Default).', attrs: ['Name','Value'] },
+    Attribute:    { doc: 'A ToJSON attribute entry.', attrs: ['Name','Value'] },
+    SoftwareListRef: { doc: 'References a named software list for TSVarList.', attrs: ['Id'] },
+    InputText:    { doc: 'A text input field inside an Input action dialog.', attrs: ['Variable','Prompt','Hint','Default','RegEx','Required','Password','ReadOnly','AutoComplete','ForceCase','Size','Label','Condition'] },
+    InputChoice:  { doc: 'A dropdown or radio-button choice field inside an Input action dialog.', attrs: ['Variable','Prompt','Default','Required','OptionList','ValueList','AlternateVariable','AlternateValueList','DropDownSize','Sort','Size','Label','Condition'] },
+    InputCheckbox:{ doc: 'A checkbox field inside an Input action dialog.', attrs: ['Variable','Prompt','Default','CheckedValue','UncheckedValue','Required','Size','Label','Condition'] },
+    InputInfo:    { doc: 'A read-only info text block inside an Input action dialog.', attrs: ['Text','Size','Label','Condition'] },
+    InputBrowse:  { doc: 'A file/folder browser field inside an Input action dialog.', attrs: ['Variable','Prompt','Hint','Default','Required','Size','Label','Condition'] },
+  },
+  attrs: {
+    Type:              { doc: 'The action type. Determines which attributes and child elements are valid.' },
+    Condition:         { doc: 'Boolean expression evaluated at runtime. When false, the action or group is skipped.\n\nExamples:\n  "%XOSBuild% >= 19041"\n  \'%XHWChassisType% = "Laptop"\'\n  "%MyVar% <> \'\'"\n\nPrefix with "vbscript:" for VBScript expressions.' },
+    Variable:          { doc: 'Name of the variable to read from or write to. Use plain names — no percent signs.' },
+    Name:              { doc: 'Display name (for ActionGroup) or variable name (legacy alias for Variable in TSVar).' },
+    Timeout:           { doc: 'Dialog auto-close timeout in seconds. Omit or use 0 for no timeout.' },
+    TimeoutMsg:        { doc: 'Message shown in the countdown area. Supports %VarName% substitution. Default: "Timeout in "' },
+    TimeoutAction:     { doc: 'What happens when the timeout expires.', values: ['Continue','Cancel'] },
+    ShowCancel:        { doc: 'Whether to show a Cancel/Exit button on the dialog.', values: ['True','False'] },
+    ShowBack:          { doc: 'Whether to show a Back button on sequential dialogs.', values: ['True','False'] },
+    ShowProgress:      { doc: 'Whether to show a Task Sequence progress bar in the background.', values: ['True','False'] },
+    ShowOnFailureOnly: { doc: 'Only show the Preflight dialog if at least one check fails.', values: ['True','False'] },
+    NoDefaultButton:   { doc: 'Disables the default OK button so the user must explicitly interact.', values: ['True','False'] },
+    Title:             { doc: 'Title text shown in the dialog header.' },
+    Hive:              { doc: 'Registry hive.', values: ['HKLM','HKCU'] },
+    Key:               { doc: 'Registry key path. Example: SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion' },
+    Property:          { doc: 'Registry value name. Leave empty for the (Default) value.' },
+    Reg64:             { doc: 'Force 64-bit registry access on 64-bit systems (prevents WOW64 redirection).', values: ['True','False'] },
+    ValueType:         { doc: 'Registry value data type.', values: ['REG_SZ','REG_DWORD','REG_BINARY','REG_EXPAND_SZ','REG_MULTI_SZ','REG_QWORD'] },
+    Namespace:         { doc: 'WMI namespace. Default: root\\cimv2' },
+    Class:             { doc: 'WMI class name. Example: Win32_ComputerSystem' },
+    Query:             { doc: 'WQL query for WMI reads. Overrides Class when specified. Example: SELECT * FROM Win32_Processor' },
+    KeyQualifier:      { doc: 'WMI key qualifier attribute name used to identify the instance for WMIWrite updates.' },
+    Direction:         { doc: 'Whether to save variables to file or load them from an existing file.', values: ['Save','Load'] },
+    Filename:          { doc: 'File path. Supports environment variables (%TEMP%) and %VarName% substitution.' },
+    DeleteLine:        { doc: 'Remove the line from the file after reading it.', values: ['True','False'] },
+    Url:               { doc: 'REST endpoint URL. Supports %VarName% substitution.' },
+    Method:            { doc: 'HTTP method for the REST request.', values: ['GET','POST','PUT','DELETE','PATCH'] },
+    JSON:              { doc: 'JSON body for REST POST/PUT, or source JSON string for FromJSON. Supports %VarName% substitution.' },
+    Attributes:        { doc: 'Semicolon-delimited HTTP header name=value pairs for REST requests.' },
+    Path:              { doc: 'File path for SaveItems output.' },
+    Items:             { doc: 'Semicolon-delimited list of variable names to write in the SaveItems file.' },
+    OnValue:           { doc: 'The expression matched against Switch cases. Supports %VarName% substitution.' },
+    DontEval:          { doc: 'Skip expression evaluation on OnValue before pattern matching.', values: ['True','False'] },
+    Length:            { doc: 'Length of the generated random string.' },
+    AllowedChars:      { doc: 'Character pool for the random string generator. Default: ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890' },
+    ForceCase:         { doc: 'Force the random string to uppercase or lowercase after generation.', values: ['Upper','Lower'] },
+    MaxRunTime:        { doc: 'Maximum seconds to wait for ExternalCall to complete. 0 means no limit.' },
+    ExitCodeVariable:  { doc: 'Variable to receive the process exit code after ExternalCall completes.' },
+    ValueTypes:        { doc: 'Comma-separated DefaultValues categories to populate, or "All".', values: ['All','OS','Asset','VM','Domain','Net','TPM','Security','User','Mgmt'] },
+    Request:           { doc: 'TPM operation to perform.', values: ['Enable','Activate','OwnerAuth','EKCert','Clear','TakeOwnership'] },
+    Domain:            { doc: 'Active Directory domain FQDN for UserAuth.' },
+    DomainController:  { doc: 'Specific DC hostname for UserAuth. Leave empty to use auto-discovery.' },
+    MaxRetryCount:     { doc: 'Maximum credential retry attempts for UserAuth.' },
+    DoNotFallback:     { doc: 'Do not fall back to local machine auth if domain auth fails.', values: ['True','False'] },
+    GetGroups:         { doc: 'Populate XAuthenticatedUserGroups with the authenticated user\'s AD group memberships.', values: ['True','False'] },
+    PackageVariableBase:     { doc: 'Variable name prefix for AppTree package selections. E.g. XPackages → XPackages001, XPackages002…' },
+    ApplicationVariableBase: { doc: 'Variable name prefix for AppTree application selections. E.g. XApplications → XApplications001…' },
+    DisplayName:       { doc: 'Case-insensitive regular expression matched against the Add/Remove Programs display name.' },
+    Version:           { doc: 'Version string to compare against the installed software version (optional).' },
+    VersionOperator:   { doc: 'Comparison operator for the Version field.', values: ['>=','<=','>','<','='] },
+    RegEx:             { doc: 'Regular expression pattern for a Switch case.' },
+    CheckCondition:    { doc: 'Condition that must be true for the Preflight check to pass (shown green).' },
+    WarnCondition:     { doc: 'Condition that shows the check as a warning (yellow) instead of pass/fail.' },
+    Description:       { doc: 'Check description shown in the Preflight dialog.' },
+    WarnDescription:   { doc: 'Description shown when the check is in warning state.' },
+    ErrorDescription:  { doc: 'Description shown when the check fails.' },
+    Value:             { doc: 'The value to assign to a variable (in Variable child element or RegWrite).' },
+    Prompt:            { doc: 'Label or prompt text shown above the input field.' },
+    Hint:              { doc: 'Placeholder hint text shown inside an empty text field.' },
+    Default:           { doc: 'Default value pre-filled in the field.' },
+    Required:          { doc: 'Require the user to fill this field before allowing OK.', values: ['True','False'] },
+    Password:          { doc: 'Mask the field as a password entry.', values: ['True','False'] },
+    ReadOnly:          { doc: 'Make the field read-only.', values: ['True','False'] },
+    AutoComplete:      { doc: 'Enable auto-complete suggestions.', values: ['True','False'] },
+    OptionList:        { doc: 'Semicolon-delimited list of choices for InputChoice.' },
+    AlternateVariable: { doc: 'Second variable to receive the alternate value from an InputChoice selection.' },
+    ValueList:         { doc: 'Semicolon-delimited values corresponding to OptionList items.' },
+    AlternateValueList:{ doc: 'Semicolon-delimited alternate values for AlternateVariable.' },
+    DropDownSize:      { doc: 'Number of visible rows in the InputChoice dropdown.' },
+    Sort:              { doc: 'Sort OptionList alphabetically before display.', values: ['True','False'] },
+    CheckedValue:      { doc: 'Value stored in the variable when the checkbox is checked.' },
+    UncheckedValue:    { doc: 'Value stored in the variable when the checkbox is unchecked.' },
+    Text:              { doc: 'Static text content for an InputInfo field.' },
+    Size:              { doc: 'Field height hint.', values: ['Regular','Tall','ExtraTall'] },
+    Label:             { doc: 'Column label for the field in multi-column Input layouts.' },
+    Id:                { doc: 'ID referencing a named software list definition for TSVarList.' },
+  }
+};
+
+// ─── Monaco bootstrap ─────────────────────────────────────────────────────────
+// WebView2 blocks data: URL workers (SecurityError). Use a Blob URL instead.
+window.MonacoEnvironment = {
+  getWorkerUrl: function (workerId, label) {
+    var blob = new Blob(['self.onmessage=function(){};'], { type: 'application/javascript' });
+    return URL.createObjectURL(blob);
+  }
+};
+</script>
+
+<script src="monaco/vs/loader.js"></script>
+<script>
+require.config({ paths: { vs: "monaco/vs" } });
+require.config({ onError: function (err) {
+  document.getElementById("loading").classList.add("hidden");
+  var bar = document.getElementById("error-bar");
+  bar.textContent = "Monaco failed to load: " + (err && err.message || err);
+  bar.classList.add("visible");
+}});
+
+require(["vs/editor/editor.main"], function () {
+  document.getElementById("loading").classList.add("hidden");
+
+  // ─── Editor instance ────────────────────────────────────────────────────────
+  const editor = monaco.editor.create(
+    document.getElementById("editor-container"),
+    {
+      value: "",
+      language: "xml",
+      theme: "vs-dark",
+      automaticLayout: true,
+      minimap: { enabled: false },
+      fontSize: 13,
+      fontFamily: '"Cascadia Code", "Cascadia Mono", Consolas, "Courier New", monospace',
+      fontLigatures: true,
+      wordWrap: "on",
+      scrollBeyondLastLine: false,
+      folding: true,
+      lineNumbers: "on",
+      renderLineHighlight: "line",
+      bracketPairColorization: { enabled: true },
+      guides: { bracketPairs: "active" },
+      quickSuggestions: { other: true, comments: false, strings: true },
+      suggestOnTriggerCharacters: true,
+      tabSize: 2,
+      detectIndentation: false,
+      smoothScrolling: true,
+      cursorBlinking: "smooth",
+      cursorSmoothCaretAnimation: "on",
+      formatOnPaste: true,
+    }
+  );
+
+  // ─── Content change → host ─────────────────────────────────────────────────
+  var suppressNext = false;
+  editor.onDidChangeModelContent(function () {
+    if (suppressNext) { suppressNext = false; return; }
+    postToHost({ type: "contentChanged", content: editor.getValue() });
+  });
+
+  // ─── Cursor position → host (debounced, for guided↔XML sync) ──────────────
+  var _cursorTimer = null;
+  editor.onDidChangeCursorPosition(function (e) {
+    if (_cursorTimer) clearTimeout(_cursorTimer);
+    _cursorTimer = setTimeout(function () {
+      _cursorTimer = null;
+      postToHost({ type: "cursorLine", line: e.position.lineNumber });
+    }, 150);
+  });
+
+  // ─── Host → editor API ────────────────────────────────────────────────────
+  window.setContent = function (xml) {
+    if (editor.getValue() === xml) return;
+    suppressNext = true;
+    editor.setValue(xml);
+    editor.setScrollPosition({ scrollTop: 0 });
+    // Clear stale markers when content is replaced from host
+    monaco.editor.setModelMarkers(editor.getModel(), "uipp", []);
+  };
+
+  window.setTheme = function (t) { monaco.editor.setTheme(t); };
+
+  window.setMarkers = function (markers) {
+    monaco.editor.setModelMarkers(editor.getModel(), "uipp", markers);
+  };
+
+  // ─── WebView2 message bridge ───────────────────────────────────────────────
+  if (window.chrome && window.chrome.webview) {
+    window.chrome.webview.addEventListener("message", function (e) {
+      try {
+        var msg = JSON.parse(e.data);
+        if      (msg.type === "setContent") window.setContent(msg.content);
+        else if (msg.type === "setTheme")   window.setTheme(msg.theme);
+        else if (msg.type === "setMarkers") window.setMarkers(msg.markers);
+      } catch (_) {}
+    });
+    postToHost({ type: "ready" });
+  }
+
+  // ─── Completion provider ───────────────────────────────────────────────────
+  monaco.languages.registerCompletionItemProvider("xml", {
+    triggerCharacters: [" ", '"', "<"],
+    provideCompletionItems: function (model, position) {
+      var before = model.getValueInRange({
+        startLineNumber: 1, startColumn: 1,
+        endLineNumber: position.lineNumber, endColumn: position.column,
+      });
+      var suggestions = [];
+
+      // Inside an open tag?
+      var tagMatch = before.match(/<(\w+)([^<>]*)$/);
+      if (tagMatch) {
+        var tagName = tagMatch[1];
+        var attrsPart = tagMatch[2];
+
+        // Inside attribute value?
+        var inValM = attrsPart.match(/(\w+)="([^"]*)$/);
+        if (inValM) {
+          var vals = getAttrValues(tagName, inValM[1], attrsPart);
+          if (vals) {
+            vals.forEach(function (v) {
+              suggestions.push({ label: v, kind: monaco.languages.CompletionItemKind.EnumMember,
+                insertText: v, range: buildRange(model, position, inValM[2]) });
+            });
+          }
+          return { suggestions: suggestions };
+        }
+
+        // Attribute name completions
+        var attrNames = getAttrNamesForTag(tagName, attrsPart);
+        var already = new Set((attrsPart.match(/(\w+)=/g) || []).map(function (s) { return s.slice(0, -1); }));
+        var pfxM = attrsPart.match(/(\w*)$/);
+        var pfx = pfxM ? pfxM[1] : "";
+        attrNames.filter(function (a) { return !already.has(a); }).forEach(function (a) {
+          var info = UIPP.attrs[a] || {};
+          suggestions.push({
+            label: a,
+            kind: monaco.languages.CompletionItemKind.Property,
+            detail: info.values ? "= " + info.values.slice(0, 3).join(" | ") + (info.values.length > 3 ? " …" : "") : undefined,
+            documentation: { value: "**`" + a + "`** — " + (info.doc || "") },
+            insertText: a + '="$1"$0',
+            insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
+            range: buildRange(model, position, pfx),
+          });
+        });
+        return { suggestions: suggestions };
+      }
+
+      // Element name completions after <
+      var startM = before.match(/<(\w*)$/);
+      if (startM) {
+        var ePfx = startM[1];
+        Object.keys(UIPP.elements).forEach(function (el) {
+          suggestions.push({
+            label: el, kind: monaco.languages.CompletionItemKind.Class,
+            documentation: { value: UIPP.elements[el].doc || "" },
+            insertText: el + " ",
+            range: buildRange(model, position, ePfx),
+          });
+        });
+      }
+      return { suggestions: suggestions };
+    },
+  });
+
+  // ─── Hover provider ───────────────────────────────────────────────────────
+  monaco.languages.registerHoverProvider("xml", {
+    provideHover: function (model, position) {
+      var word = model.getWordAtPosition(position);
+      if (!word) return null;
+      var w = word.word;
+      var contents = [];
+      var el = UIPP.elements[w];
+      var act = UIPP.actions[w];
+      var attr = UIPP.attrs[w];
+      if (el)             contents.push({ value: "**`<" + w + ">`** — " + el.doc });
+      else if (act)       contents.push({ value: "**`Type=\"" + w + "\"`** — " + act.doc });
+      if (attr) {
+        var md = "**`" + w + "`** — " + attr.doc;
+        if (attr.values) md += "\n\nValues: `" + attr.values.join("` · `") + "`";
+        contents.push({ value: md });
+      }
+      if (!contents.length) return null;
+      return {
+        range: new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn),
+        contents: contents,
+      };
+    },
+  });
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+  function getAttrNamesForTag(tagName, attrsPart) {
+    if (tagName === "Action") {
+      var base = ["Type", "Condition"];
+      var typeM = attrsPart.match(/Type="([^"]*)"/);
+      if (typeM && UIPP.actions[typeM[1]])
+        return base.concat(UIPP.actions[typeM[1]].attrs.filter(function (a) { return a !== "Condition"; }));
+      return base.concat(Object.keys(UIPP.attrs).filter(function (a) { return !base.includes(a); }));
+    }
+    if (UIPP.elements[tagName]) return UIPP.elements[tagName].attrs || [];
+    return Object.keys(UIPP.attrs);
+  }
+
+  function getAttrValues(tagName, attrName, attrsPart) {
+    if (attrName === "Type") return UIPP.actionTypes;
+    var info = UIPP.attrs[attrName];
+    return (info && info.values) ? info.values : null;
+  }
+
+  function buildRange(model, position, prefix) {
+    var col = position.column;
+    return {
+      startLineNumber: position.lineNumber, endLineNumber: position.lineNumber,
+      startColumn: col - (prefix ? prefix.length : 0), endColumn: col,
+    };
+  }
+
+  function postToHost(obj) {
+    if (window.chrome && window.chrome.webview)
+      window.chrome.webview.postMessage(JSON.stringify(obj));
+  }
+
+  // ─── Selection highlight ─────────────────────────────────────────────────
+  var _decoIds = [];
+
+  window.setDecoration = function (startLine, endLine) {
+    _decoIds = editor.deltaDecorations(_decoIds, [{
+      range: new monaco.Range(startLine, 1, endLine, Number.MAX_SAFE_INTEGER),
+      options: {
+        isWholeLine: true,
+        className: "selected-action-highlight",
+        linesDecorationsClassName: "selected-action-gutter",
+        overviewRuler: { color: "#4ec9b0", position: monaco.editor.OverviewRulerLane.Full },
+      },
+    }]);
+    editor.revealRangeInCenterIfOutsideViewport(
+      new monaco.Range(startLine, 1, endLine, 1),
+      monaco.editor.ScrollType.Smooth
+    );
+  };
+
+  window.clearDecoration = function () {
+    _decoIds = editor.deltaDecorations(_decoIds, []);
+  };
+});
+</script>
+</body>
+</html>

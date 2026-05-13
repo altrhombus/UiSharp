@@ -5,14 +5,15 @@
     xmlns:local="using:GUISharp.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="Action Group" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <TextBlock Text="Groups related actions under a shared name. Use a Condition to skip the entire group when criteria are not met. Child actions appear nested in the tree on the left."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Name">
             <TextBox Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
         <local:LabeledField Label="Condition">
             <TextBox Text="{Binding Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
         </local:LabeledField>
-        <TextBlock Text="Child actions are shown in the tree on the left."
-                   Style="{ThemeResource CaptionTextBlockStyle}"
-                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
     </StackPanel>
 </UserControl>
