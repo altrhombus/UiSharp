@@ -1,10 +1,15 @@
-# UiSharp
+# UiSharp + gUI#
 
 A C# (.NET 10 / WinForms) port of [UI++](https://github.com/jason4tw/UIPlusPlus) — the ConfigMgr task-sequence front-end originally written in C++17/MFC by Jason Sandys.
 
-## What is UI++?
+## What is gUI#?
+gUI# is a graphical tool for creating and modifying UI++/UiSharp XML files. A guided view shows configuration settings and stays in sync with the built-in XML editor that checks for valid XML and includes IntelliSense-like capabilities for the UI++ actions.
 
-UI++ displays a customizable WinForms UI during OS deployments driven by Microsoft Configuration Manager (SCCM/ConfigMgr). It reads an XML configuration file and presents input dialogs, info screens, and pre-flight checks, then writes the collected values back as task-sequence variables that the rest of the deployment can consume.
+<img width="1482" height="850" alt="image" src="https://github.com/user-attachments/assets/dc0ac82c-d51e-4f9e-af2b-5b73204b5d42" />
+
+## What is UiSharp?
+
+UiSharp displays a customizable WinForms UI during OS deployments driven by Microsoft Configuration Manager (SCCM/ConfigMgr). It reads an XML configuration file and presents input dialogs, info screens, and pre-flight checks, then writes the collected values back as task-sequence variables that the rest of the deployment can consume.
 
 ## Why a C# port?
 
@@ -12,6 +17,7 @@ UI++ displays a customizable WinForms UI during OS deployments driven by Microso
 - Unit-testable pure logic (conditions, variable substitution, XML parsing)
 - Single-file self-contained publish with .NET 10
 - Retains WinPE compatibility via Windows Forms (.NET 10-windows)
+
 
 ## Solution structure
 
