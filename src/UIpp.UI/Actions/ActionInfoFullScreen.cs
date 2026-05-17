@@ -19,24 +19,12 @@ public sealed class ActionInfoFullScreen(ActionData data) : ActionBase(data)
         var timeoutSec = int.TryParse(Attr(XmlConstants.Attributes.Timeout), out var t2) ? t2 : 0;
         var timeoutAct = Attr(XmlConstants.Attributes.TimeoutAction);
 
-        ActionResult result = ActionResult.Next;
-
-        var thread = new Thread(() =>
-        {
-            Application.EnableVisualStyles();
-            using var dlg = new DlgInfoFullScreen(Data.GlobalDialogTraits, Data.TsEnv, title, subtitle,
-                                                   infoText, showBack, showCancel);
-            if (timeoutSec > 0)
-                dlg.EnableTimeout(timeoutSec, DialogHelpers.MapTimeoutAction(timeoutAct));
-
-            dlg.ShowDialog();
-            result = dlg.Result;
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-
-        return result;
+        using var dlg = new DlgInfoFullScreen(Data.GlobalDialogTraits, Data.TsEnv, title, subtitle,
+                                               infoText, showBack, showCancel);
+        if (timeoutSec > 0)
+            dlg.EnableTimeout(timeoutSec, DialogHelpers.MapTimeoutAction(timeoutAct));
+        dlg.ShowDialog();
+        return dlg.Result;
     }
 
 }

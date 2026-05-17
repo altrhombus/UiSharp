@@ -30,44 +30,35 @@ public sealed class ActionUserAuth(ActionData data) : ActionBase(data)
 
         var (usernameSpec, passwordSpec, domainSpec) = ParseFieldSpecs(Data.ActionNode);
 
-        ActionResult result = ActionResult.Next;
+        using var dlg = new DlgUserAuth(
+            Data.GlobalDialogTraits,
+            Data.TsEnv,
+            title,
+            domain,
+            requiredGroup,
+            ldapAttribute,
+            getGroups,
+            showBack,
+            disableCancel,
+            maxRetry,
+            domainController,
+            Data.Ldap,
+            usernameSpec,
+            passwordSpec,
+            domainSpec);
 
-        var thread = new Thread(() =>
+        dlg.ShowDialog();
+        var result = dlg.Result;
+
+        if (result == ActionResult.Next)
         {
-            Application.EnableVisualStyles();
-            using var dlg = new DlgUserAuth(
-                Data.GlobalDialogTraits,
-                Data.TsEnv,
-                title,
-                domain,
-                requiredGroup,
-                ldapAttribute,
-                getGroups,
-                showBack,
-                disableCancel,
-                maxRetry,
-                domainController,
-                Data.Ldap,
-                usernameSpec,
-                passwordSpec,
-                domainSpec);
+            Data.TsEnv.Set(XmlConstants.Variables.AuthUser,       dlg.AuthenticatedUser);
+            Data.TsEnv.Set(XmlConstants.Variables.AuthUserDomain, dlg.AuthenticatedDomain);
+            Data.TsEnv.Set(XmlConstants.Variables.AuthUserGroups, dlg.AuthUserGroups);
 
-            dlg.ShowDialog();
-            result = dlg.Result;
-
-            if (result == ActionResult.Next)
-            {
-                Data.TsEnv.Set(XmlConstants.Variables.AuthUser,       dlg.AuthenticatedUser);
-                Data.TsEnv.Set(XmlConstants.Variables.AuthUserDomain, dlg.AuthenticatedDomain);
-                Data.TsEnv.Set(XmlConstants.Variables.AuthUserGroups, dlg.AuthUserGroups);
-
-                if (!string.IsNullOrWhiteSpace(ldapAttribute))
-                    Data.TsEnv.Set(XmlConstants.Variables.AuthUserAttr, dlg.AuthUserAttr);
-            }
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
+            if (!string.IsNullOrWhiteSpace(ldapAttribute))
+                Data.TsEnv.Set(XmlConstants.Variables.AuthUserAttr, dlg.AuthUserAttr);
+        }
 
         return result;
     }

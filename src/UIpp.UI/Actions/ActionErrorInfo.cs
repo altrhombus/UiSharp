@@ -20,17 +20,12 @@ public sealed class ActionErrorInfo(ActionData data) : ActionBase(data)
         // C++: if (!includeCancel && inWinPE) dlg.ShowRestartButton()
         var showRestart = Data.InWinPE && !showCancel;
 
-        ActionResult dialogResult = ActionResult.Cancel;
-        var thread = new Thread(() =>
+        ActionResult dialogResult;
+        using (var dlg = new DlgErrorInfo(Data.GlobalDialogTraits, Data.TsEnv, title, infoText, showBack, showRestart))
         {
-            Application.EnableVisualStyles();
-            using var dlg = new DlgErrorInfo(Data.GlobalDialogTraits, Data.TsEnv, title, infoText, showBack, showRestart);
             dlg.ShowDialog();
             dialogResult = dlg.Result;
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
+        }
 
         // C++: if (!includeCancel && result == ERROR_CANCELLED && inWinPE) → terminate winpeshl.exe
         if (showRestart && dialogResult == ActionResult.Cancel)

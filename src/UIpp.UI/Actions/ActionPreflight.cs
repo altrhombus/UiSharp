@@ -28,21 +28,15 @@ public sealed class ActionPreflight(ActionData data) : ActionBase(data)
         if (showOnFailOnly && !anyFail)
             return ActionResult.Next;
 
-        ActionResult result = ActionResult.Next;
-
-        var thread = new Thread(() =>
+        ActionResult result;
+        using (var dlg = new DlgPreflight(Data.GlobalDialogTraits, Data.TsEnv, title, subtitle,
+                                           results, showBack, showCancel, anyFail))
         {
-            Application.EnableVisualStyles();
-            using var dlg = new DlgPreflight(Data.GlobalDialogTraits, Data.TsEnv, title, subtitle,
-                                              results, showBack, showCancel, anyFail);
             if (timeoutSec > 0)
                 dlg.EnableTimeout(timeoutSec, DialogHelpers.MapTimeoutAction(timeoutAct));
             dlg.ShowDialog();
             result = dlg.Result;
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
+        }
 
         // If user clicked Next but checks failed, return Cancel so the processor exits.
         if (result == ActionResult.Next && anyFail)

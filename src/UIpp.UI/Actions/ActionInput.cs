@@ -22,28 +22,14 @@ public sealed class ActionInput(ActionData data) : ActionBase(data)
 
         var fields = InputFieldParser.Parse(Data.ActionNode, Data.TsEnv, Data.Conditions);
 
-        ActionResult result = ActionResult.Next;
-        DlgInput? dlgRef    = null;
-
-        var thread = new Thread(() =>
-        {
-            Application.EnableVisualStyles();
-            using var dlg = new DlgInput(Data.GlobalDialogTraits, Data.TsEnv, title, subtitle, fields,
-                                          showBack, showCancel);
-            if (timeoutSec > 0)
-                dlg.EnableTimeout(timeoutSec, DialogHelpers.MapTimeoutAction(timeoutAct));
-
-            dlgRef = dlg;
-            dlg.ShowDialog();
-            result = dlg.Result;
-
-            if (result == ActionResult.Next)
-                dlg.CommitValues(Data.TsEnv);
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
-
+        using var dlg = new DlgInput(Data.GlobalDialogTraits, Data.TsEnv, title, subtitle, fields,
+                                      showBack, showCancel);
+        if (timeoutSec > 0)
+            dlg.EnableTimeout(timeoutSec, DialogHelpers.MapTimeoutAction(timeoutAct));
+        dlg.ShowDialog();
+        var result = dlg.Result;
+        if (result == ActionResult.Next)
+            dlg.CommitValues(Data.TsEnv);
         return result;
     }
 

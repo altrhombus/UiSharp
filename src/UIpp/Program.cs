@@ -16,7 +16,7 @@ internal static class Program
     private const int ExitBadConfig  = 2;
 
     [STAThread]
-    private static async Task<int> Main(string[] args)
+    private static int Main(string[] args)
     {
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
@@ -34,7 +34,7 @@ internal static class Program
         LoadedConfig config;
         try
         {
-            config = await LoadConfig(opts, log);
+            config = LoadConfig(opts, log);
         }
         catch (Exception ex)
         {
@@ -93,15 +93,17 @@ internal static class Program
         };
     }
 
-    private static async Task<LoadedConfig> LoadConfig(CliOptions opts, ICMLog log)
+    private static LoadedConfig LoadConfig(CliOptions opts, ICMLog log)
     {
         if (IsHttpUrl(opts.ConfigPath))
         {
-            return await ConfigLoader.LoadAsync(
+            // Run async HTTP fetch on thread pool — safe to block here since no message loop
+            // is running yet and there is no SynchronizationContext to deadlock against.
+            return Task.Run(() => ConfigLoader.LoadAsync(
                 opts.ConfigPath,
                 opts.ConfigFallback,
                 opts.ConfigRetry,
-                CancellationToken.None);
+                CancellationToken.None)).GetAwaiter().GetResult();
         }
 
         return ConfigLoader.Load(opts.ConfigPath);

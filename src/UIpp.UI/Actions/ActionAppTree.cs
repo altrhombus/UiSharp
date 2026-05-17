@@ -30,28 +30,16 @@ public sealed class ActionAppTree(ActionData data) : ActionBase(data)
         if (!HasAnyLeaf(nodes))
             return ActionResult.Next;
 
-        ActionResult result = ActionResult.Next;
-        IReadOnlyList<ISoftware>? checkedItems = null;
-
-        var thread = new Thread(() =>
+        ActionResult result;
+        IReadOnlyList<ISoftware> checkedItems;
+        using (var dlg = new DlgAppTree(Data.GlobalDialogTraits, Data.TsEnv, title, nodes, showBack))
         {
-            System.Windows.Forms.Application.EnableVisualStyles();
-            using var dlg = new DlgAppTree(
-                Data.GlobalDialogTraits,
-                Data.TsEnv,
-                title,
-                nodes,
-                showBack);
-
             dlg.ShowDialog();
             result       = dlg.Result;
             checkedItems = dlg.GetCheckedItems();
-        });
-        thread.SetApartmentState(ApartmentState.STA);
-        thread.Start();
-        thread.Join();
+        }
 
-        if (result == ActionResult.Next && checkedItems is not null)
+        if (result == ActionResult.Next)
         {
             int appCount = 0, pkgCount = 0;
 
