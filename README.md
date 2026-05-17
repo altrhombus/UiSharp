@@ -35,7 +35,7 @@ UiSharp displays a customizable WinForms UI during OS deployments driven by Micr
 
 ```bash
 dotnet build
-dotnet test src/UIpp.Core.Tests        # 252 tests — pure logic, runs on any OS
+dotnet test src/UIpp.Core.Tests        # 254 tests — pure logic, runs on any OS
 dotnet test src/UIpp.Windows.Tests     # 49 tests  — registry/WMI, Windows only
 ```
 
@@ -76,6 +76,29 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 - **Drag splitter** — resize the guided and XML panels by dragging; collapse either panel entirely
 - **Unsaved-changes detection** — title bar marks modified files with `*`; closing with unsaved changes prompts Save / Don't Save / Cancel
 - **Open / Save / Save As** — standard file operations via the toolbar
+
+## Command-line arguments
+
+| Argument | Purpose |
+|---|---|
+| `/Config:<path\|URL>` | XML config file path or HTTP/HTTPS URL. Default: `UI++.xml` in the current directory. |
+| `/ConfigFallback:<path>` | Local file to use if the URL download fails after all retries. |
+| `/ConfigRetry:<n>` | Number of download attempts before falling back (default: 3). |
+| `/DisableTSVarEditor` | Prevents the Ctrl+F2 task-sequence variable editor from opening during dialogs. |
+| `/conditionengine:native\|vbscript` | Override the condition evaluator. Default: `native`. `vbscript` logs a warning and falls back to native (VBScript evaluator not yet implemented). |
+
+## Differences from the original C++ UI++
+
+These are the only intentional behavioral changes:
+
+| Area | Original UI++ | UiSharp |
+|---|---|---|
+| `<Action Type="Vars">` save format | MFC `CArchive` binary (`.dat`) | JSON — existing `.dat` files are not readable |
+| `<Action Type="RandomString">` output variable | Always writes to `Random` regardless of the `Variable` attribute (C++ bug) | Correctly uses the `Variable` attribute |
+| VBScript condition engine | Fully supported via `IActiveScript` COM | Not implemented; native evaluator handles all common condition patterns |
+| WinPE optional components | `WinPE-WMI` + `WinPE-Scripting` required | `WinPE-WMI` only — `WinPE-Scripting` is no longer needed |
+
+All other XML attributes, variable names, dialog behavior, and output formats are identical to the C++ original. Existing XML config files work without modification.
 
 ## Original project
 
