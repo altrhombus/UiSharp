@@ -29,16 +29,26 @@ UiSharp displays a customizable WinForms UI during OS deployments driven by Micr
 | `UIpp` | net10.0-windows | Entry point, single-file publish target |
 | `tools/gUISharp` | net10.0-windows10.0.22621.0 | WinUI 3 visual XML editor for UiSharp configuration files |
 
-Only `UIpp.Core` is currently implemented. It builds and its full test suite runs on macOS and Linux.
-
 ## Building
 
-**Requirements:** .NET 10 SDK
+**Requirements:** .NET 10 SDK (Windows required for `UIpp.Windows`, `UIpp.UI`, and `UIpp`)
 
 ```bash
 dotnet build
-dotnet test src/UIpp.Core.Tests
+dotnet test src/UIpp.Core.Tests        # 252 tests — pure logic, runs on any OS
+dotnet test src/UIpp.Windows.Tests     # 49 tests  — registry/WMI, Windows only
 ```
+
+## Deploying to WinPE
+
+Publish as a single self-contained executable — no .NET runtime or redistributable needed in the WinPE image:
+
+```powershell
+dotnet publish src/UIpp/UIpp.csproj -r win-x64 --self-contained true `
+    -p:PublishSingleFile=true -p:TrimMode=partial -c Release
+```
+
+Copy the output `UIpp.exe` into your WinPE image in place of the original `UI++.exe`. No other changes to the image are required.
 
 ## Building gUI#
 
