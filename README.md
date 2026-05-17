@@ -73,7 +73,10 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 - **Monaco XML editor** — full syntax highlighting, error squiggles, and keyboard shortcuts powered by Monaco Editor 0.52.2 (the VS Code editor engine) hosted in WebView2
 - **Guided form** — structured fields for every UI++ action type, kept in bidirectional sync with the XML panel
 - **All action types** — TSVar, ExternalCall, DefaultValues, RandomString, FileRead, Vars, FromJson, Rest, SaveItems, ToJson, TSVarList, Preflight, UserInput, UserInfo (normal and full-screen), ErrorInfo, RegRead, RegWrite, AppTree, WmiRead, WmiWrite, UserAuth, SoftwareDiscovery, Switch, TPM
-- **Preflight checks** — expandable/collapsible per-check rows with full field editing (display text, description, error/warn description, check condition, warn condition, visibility condition)
+- **Input action field editors** — structured per-field mini-editors for all input types (Text, Choice, Checkbox, Info); each field expands to show its specific controls rather than raw XML
+- **Preflight checks** — expandable per-check rows split into two sections: Display Text (title, pass/warn/fail descriptions) and Logic (check condition, warn condition, visibility condition) with an outcome legend
+- **Regex helper** — any regex field has a `.*` helper button that opens a flyout with live pattern testing against a sample value, 13 IT-deployment presets (computer names, site code groups, locale codes, GUIDs, etc.), and a quick-reference grid
+- **Info markup editor** — message fields for Info actions include a formatting toolbar (Bold, Italic, Color, Line Break), a raw edit box, and a live preview that renders the supported `<b>`, `<i>`, `<color>`, `<br>` tag subset and highlights `%Variable%` references
 - **Drag splitter** — resize the guided and XML panels by dragging; collapse either panel entirely
 - **Unsaved-changes detection** — title bar marks modified files with `*`; closing with unsaved changes prompts Save / Don't Save / Cancel
 - **Open / Save / Save As** — standard file operations via the toolbar
