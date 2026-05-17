@@ -1,0 +1,48 @@
+using UIpp.Core.Actions;
+using UIpp.Core.Configuration;
+using UIpp.UI.Dialogs;
+
+namespace UIpp.UI.Actions;
+
+[ActionType(XmlConstants.ActionTypes.UserInfoFull)]
+public sealed class ActionInfoFullScreen(ActionData data) : ActionBase(data)
+{
+    public override bool IsGuiAction => true;
+
+    public override ActionResult Go()
+    {
+        var title      = SubstAttr(XmlConstants.Attributes.Title)    is { Length: > 0 } t ? t : null;
+        var subtitle   = SubstAttr(XmlConstants.Attributes.Subtitle) is { Length: > 0 } s ? s : null;
+        var infoText = Data.TsEnv.Substitute(Data.ActionNode.Value.Trim());
+        var showBack   = BoolAttr(XmlConstants.Attributes.ShowBack);
+        var showCancel = BoolAttr(XmlConstants.Attributes.ShowCancel);
+        var timeoutSec = int.TryParse(Attr(XmlConstants.Attributes.Timeout), out var t2) ? t2 : 0;
+        var timeoutAct = Attr(XmlConstants.Attributes.TimeoutAction);
+
+        ActionResult result = ActionResult.Next;
+
+        var thread = new Thread(() =>
+        {
+            Application.EnableVisualStyles();
+            using var dlg = new DlgInfoFullScreen(Data.GlobalDialogTraits, Data.TsEnv, title, subtitle,
+                                                   infoText, showBack, showCancel);
+            if (timeoutSec > 0)
+                dlg.EnableTimeout(timeoutSec, MapTimeoutAction(timeoutAct));
+
+            dlg.ShowDialog();
+            result = dlg.Result;
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
+
+        return result;
+    }
+
+    private static ActionResult MapTimeoutAction(string act) => act.ToLowerInvariant() switch
+    {
+        "cancel" => ActionResult.Cancel,
+        "back"   => ActionResult.Back,
+        _        => ActionResult.Next,
+    };
+}

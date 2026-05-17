@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/UIpp.Core.Tests/UIpp.Core.Tests.csproj" />
     <Project Path="src/UIpp.Core/UIpp.Core.csproj" />
+    <Project Path="src/UIpp.Windows/UIpp.Windows.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/gUISharp/gUISharp.csproj" />
