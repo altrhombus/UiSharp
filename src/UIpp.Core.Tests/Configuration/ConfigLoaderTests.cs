@@ -134,4 +134,28 @@ public class ConfigLoaderTests
         var cfg = LoadXml("<UIpp><Actions /></UIpp>");
         Assert.Empty(cfg.Software);
     }
+
+    [Fact]
+    public void Load_Messages_Null_WhenAbsent()
+    {
+        var cfg = LoadXml("<UIpp />");
+        Assert.Null(cfg.Messages);
+    }
+
+    [Fact]
+    public void Load_Messages_ReturnedWhenPresent()
+    {
+        const string xml = """
+            <UIpp>
+              <Messages>
+                <Message Id="MSG001">Hello world</Message>
+              </Messages>
+            </UIpp>
+            """;
+        var cfg = LoadXml(xml);
+        Assert.NotNull(cfg.Messages);
+        var msg = cfg.Messages!.Elements().FirstOrDefault(e => (string?)e.Attribute("Id") == "MSG001");
+        Assert.NotNull(msg);
+        Assert.Equal("Hello world", msg!.Value);
+    }
 }

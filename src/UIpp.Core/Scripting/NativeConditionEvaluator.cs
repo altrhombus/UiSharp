@@ -203,14 +203,14 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
 
         private Value ParseCompare()
         {
-            var left = ParseAtom();
+            var left = ParseMod();
             var op   = _lex.Kind;
             if (op is not (TokenKind.Eq or TokenKind.Ne or TokenKind.Lt
                           or TokenKind.Gt or TokenKind.Le or TokenKind.Ge))
                 return left;
 
             _lex.Advance();
-            var right = ParseAtom();
+            var right = ParseMod();
 
             // Prefer numeric comparison when both sides parse as numbers
             if (left.TryGetDouble(out var ln) && right.TryGetDouble(out var rn))
@@ -239,6 +239,23 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                 TokenKind.Ge => cmp >= 0,
                 _            => false,
             });
+        }
+
+        // VBScript Mod operator: left Mod right → left % right (integer modulo)
+        private Value ParseMod()
+        {
+            var left = ParseAtom();
+            while (_lex.Kind == TokenKind.Ident &&
+                   string.Equals(_lex.Text, "Mod", StringComparison.OrdinalIgnoreCase))
+            {
+                _lex.Advance();
+                var right = ParseAtom();
+                if (left.TryGetDouble(out var ln) && right.TryGetDouble(out var rn) && rn != 0)
+                    left = Value.FromNumber(Math.Truncate(ln) % Math.Truncate(rn));
+                else
+                    left = Value.FromNumber(0);
+            }
+            return left;
         }
 
         private Value ParseAtom()
@@ -321,7 +338,14 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                 "CINT"       => args.Count > 0 && args[0].TryGetDouble(out var ci) ? Value.FromNumber(Math.Round(ci)) : Value.FromNumber(0),
                 "CDBL"       => args.Count > 0 && args[0].TryGetDouble(out var cd) ? Value.FromNumber(cd) : Value.FromNumber(0),
                 "REPLACE"    => Builtin_Replace(args),
-                "SPLIT"      => Value.FromString(""),   // unsupported in simple evaluator
+                "SPLIT"      => Value.FromString(""),   // array unsupported; Split() alone rarely appears in conditions
+                "NOW"        => Value.FromString(DateTime.Now.ToString("M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture)),
+                "DATE"       => Value.FromString(DateTime.Today.ToString("M/d/yyyy", CultureInfo.InvariantCulture)),
+                "TIME"       => Value.FromString(DateTime.Now.ToString("h:mm:ss tt", CultureInfo.InvariantCulture)),
+                "YEAR"       => args.Count > 0 ? Value.FromNumber(ParseVbDate(args[0].AsString()).Year)   : Value.FromNumber(DateTime.Now.Year),
+                "MONTH"      => args.Count > 0 ? Value.FromNumber(ParseVbDate(args[0].AsString()).Month)  : Value.FromNumber(DateTime.Now.Month),
+                "DAY"        => args.Count > 0 ? Value.FromNumber(ParseVbDate(args[0].AsString()).Day)    : Value.FromNumber(DateTime.Now.Day),
+                "WEEKDAY"    => args.Count > 0 ? Value.FromNumber((int)ParseVbDate(args[0].AsString()).DayOfWeek + 1) : Value.FromNumber((int)DateTime.Now.DayOfWeek + 1),
                 _            => Value.FromString(""),
             };
         }
@@ -425,5 +449,9 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
             if (find.Length == 0) return Value.FromString(s);
             return Value.FromString(s.Replace(find, repl, StringComparison.OrdinalIgnoreCase));
         }
+
+        private static DateTime ParseVbDate(string s) =>
+            DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
+                ? dt : DateTime.Now;
     }
 }

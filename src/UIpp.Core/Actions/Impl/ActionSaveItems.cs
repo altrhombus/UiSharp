@@ -43,17 +43,49 @@ public sealed class ActionSaveItems(ActionData data) : ActionBase(data)
             }
             else if (token.Equals("SMSTSLOG", StringComparison.OrdinalIgnoreCase))
             {
-                // ConfigMgr smsts*.log — skip on non-Windows; on Windows the caller
-                // can locate logs via %_SMSTSLogPath%.
-                Data.Log.Write("SaveItems: SMSTSLOG not implemented in UIpp.Core.", LogSeverity.Warning);
+                // Copy smsts*.log from the ConfigMgr log path (%_SMSTSLogPath%).
+                var logPath = Data.TsEnv.Substitute("%_SMSTSLogPath%");
+                if (string.IsNullOrWhiteSpace(logPath) || !Directory.Exists(logPath))
+                {
+                    Data.Log.Write(
+                        "SaveItems: SMSTSLOG — %_SMSTSLogPath% is not set or directory does not exist.",
+                        LogSeverity.Warning);
+                }
+                else
+                {
+                    foreach (var f in Directory.GetFiles(logPath, "smsts*.log",
+                                 SearchOption.TopDirectoryOnly))
+                        TryCopy(f, destPath);
+                }
             }
             else
             {
-                TryCopy(Environment.ExpandEnvironmentVariables(token), destPath);
+                // Support wildcard patterns like "%temp%\*.log".
+                TryCopyGlob(token, destPath);
             }
         }
 
         return ActionResult.Next;
+    }
+
+    private void TryCopyGlob(string srcPattern, string destDir)
+    {
+        var expanded = Environment.ExpandEnvironmentVariables(srcPattern);
+        var dir      = Path.GetDirectoryName(expanded);
+        var pattern  = Path.GetFileName(expanded);
+
+        if (string.IsNullOrEmpty(pattern)) return;
+
+        if (pattern.Contains('*') || pattern.Contains('?'))
+        {
+            if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) return;
+            foreach (var f in Directory.GetFiles(dir, pattern, SearchOption.TopDirectoryOnly))
+                TryCopy(f, destDir);
+        }
+        else
+        {
+            TryCopy(expanded, destDir);
+        }
     }
 
     private void TryCopy(string? src, string destDir)

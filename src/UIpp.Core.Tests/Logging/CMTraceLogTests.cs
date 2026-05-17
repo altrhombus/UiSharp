@@ -6,6 +6,14 @@ public class CMTraceLogTests
 {
     private static string TempPath() => Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
 
+    // Helper: write entries, dispose (flush), then return file contents.
+    private static string WriteAndRead(string path, Action<CMTraceLog> act)
+    {
+        using (var log = new CMTraceLog(path))
+            act(log);
+        return File.ReadAllText(path);
+    }
+
     [Fact]
     public void Write_CreatesFile()
     {
@@ -23,12 +31,7 @@ public class CMTraceLogTests
     public void Write_ContainsMessage()
     {
         var path = TempPath();
-        try
-        {
-            using var log = new CMTraceLog(path);
-            log.Write("hello world");
-            Assert.Contains("hello world", File.ReadAllText(path));
-        }
+        try { Assert.Contains("hello world", WriteAndRead(path, l => l.Write("hello world"))); }
         finally { File.Delete(path); }
     }
 
@@ -38,9 +41,7 @@ public class CMTraceLogTests
         var path = TempPath();
         try
         {
-            using var log = new CMTraceLog(path);
-            log.Write("msg");
-            var text = File.ReadAllText(path);
+            var text = WriteAndRead(path, l => l.Write("msg"));
             Assert.Contains("<![LOG[", text);
             Assert.Contains("]LOG]!>", text);
         }
@@ -51,12 +52,7 @@ public class CMTraceLogTests
     public void Write_InfoSeverity_TypeOne()
     {
         var path = TempPath();
-        try
-        {
-            using var log = new CMTraceLog(path);
-            log.Write("msg", LogSeverity.Info);
-            Assert.Contains("type=\"1\"", File.ReadAllText(path));
-        }
+        try { Assert.Contains("type=\"1\"", WriteAndRead(path, l => l.Write("msg", LogSeverity.Info))); }
         finally { File.Delete(path); }
     }
 
@@ -64,12 +60,7 @@ public class CMTraceLogTests
     public void Write_WarningSeverity_TypeTwo()
     {
         var path = TempPath();
-        try
-        {
-            using var log = new CMTraceLog(path);
-            log.Write("msg", LogSeverity.Warning);
-            Assert.Contains("type=\"2\"", File.ReadAllText(path));
-        }
+        try { Assert.Contains("type=\"2\"", WriteAndRead(path, l => l.Write("msg", LogSeverity.Warning))); }
         finally { File.Delete(path); }
     }
 
@@ -77,12 +68,7 @@ public class CMTraceLogTests
     public void Write_ErrorSeverity_TypeThree()
     {
         var path = TempPath();
-        try
-        {
-            using var log = new CMTraceLog(path);
-            log.Write("msg", LogSeverity.Error);
-            Assert.Contains("type=\"3\"", File.ReadAllText(path));
-        }
+        try { Assert.Contains("type=\"3\"", WriteAndRead(path, l => l.Write("msg", LogSeverity.Error))); }
         finally { File.Delete(path); }
     }
 
@@ -90,12 +76,7 @@ public class CMTraceLogTests
     public void Write_CustomComponent_AppearsInLog()
     {
         var path = TempPath();
-        try
-        {
-            using var log = new CMTraceLog(path);
-            log.Write("msg", LogSeverity.Info, "MyComp");
-            Assert.Contains("component=\"MyComp\"", File.ReadAllText(path));
-        }
+        try { Assert.Contains("component=\"MyComp\"", WriteAndRead(path, l => l.Write("msg", LogSeverity.Info, "MyComp"))); }
         finally { File.Delete(path); }
     }
 
@@ -105,10 +86,7 @@ public class CMTraceLogTests
         var path = TempPath();
         try
         {
-            using var log = new CMTraceLog(path);
-            log.Write("first");
-            log.Write("second");
-            var text = File.ReadAllText(path);
+            var text = WriteAndRead(path, l => { l.Write("first"); l.Write("second"); });
             Assert.Contains("first",  text);
             Assert.Contains("second", text);
         }
@@ -136,10 +114,7 @@ public class CMTraceLogTests
         var path = TempPath();
         try
         {
-            using var log = new CMTraceLog(path);
-            log.Write("line1\nline2");
-            var text = File.ReadAllText(path);
-            // newline inside the LOG[...] section must not appear — should be replaced by space
+            var text = WriteAndRead(path, l => l.Write("line1\nline2"));
             var logContent = text[text.IndexOf("<![LOG[", StringComparison.Ordinal)..
                                   text.IndexOf("]LOG]!>", StringComparison.Ordinal)];
             Assert.DoesNotContain('\n', logContent);

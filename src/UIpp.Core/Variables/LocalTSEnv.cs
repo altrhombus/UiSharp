@@ -17,6 +17,8 @@ public sealed class LocalTSEnv : ITSEnv
     public bool InTS => false;
     public string? LogPath => null;
 
+    public IReadOnlyDictionary<string, string> GetAll() => _vars;
+
     public string Get(string name) =>
         _vars.TryGetValue(name, out var v) ? v : string.Empty;
 
@@ -33,14 +35,23 @@ public sealed class LocalTSEnv : ITSEnv
         if (string.IsNullOrWhiteSpace(input) || !input.Contains('%'))
             return input;
 
-        return SubstPattern.Replace(input, m =>
+        // Multi-pass: handles %var1%%var2% where var1/var2 themselves contain references.
+        // Cap at 10 to prevent runaway on circular references.
+        string current = input;
+        for (int pass = 0; pass < 10; pass++)
         {
-            var key = m.Groups[1].Value;
-            if (_vars.TryGetValue(key, out var val))
-                return val;
-            var env = Environment.GetEnvironmentVariable(key);
-            return env ?? m.Value;
-        });
+            var next = SubstPattern.Replace(current, m =>
+            {
+                var key = m.Groups[1].Value;
+                if (_vars.TryGetValue(key, out var val)) return val;
+                var env = Environment.GetEnvironmentVariable(key);
+                return env ?? m.Value;
+            });
+            if (next == current) break;
+            current = next;
+            if (!current.Contains('%')) break;
+        }
+        return current;
     }
 
     // Variables starting with 'X' or '_' are excluded from save/load (matches C++ behaviour).

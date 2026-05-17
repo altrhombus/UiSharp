@@ -23,9 +23,15 @@ public static class XmlConstants
         public const string Default         = "Default";        // Switch default
         public const string Attribute       = "Attribute";      // ToJSON attribute child
         public const string SoftwareListRef = "SoftwareListRef"; // TSVarList reference
+        public const string SoftwareSets  = "SoftwareSets";    // AppTree container
+        public const string SoftwareSet   = "Set";             // AppTree conditional set
+        public const string SoftwareRef   = "SoftwareRef";     // AppTree leaf reference
+        public const string SoftwareGroup = "SoftwareGroup";   // AppTree group node
         public const string Choice          = "Choice";         // child of InputChoice
         public const string ChoiceList      = "ChoiceList";     // child of InputChoice (delimited lists)
         public const string PreflightCheck  = "Check";          // child of Preflight action
+        public const string Property        = "Property";        // child of WmiWrite action
+        public const string Field           = "Field";           // child of UserAuth action
     }
 
     public static class Attributes
@@ -94,6 +100,9 @@ public static class XmlConstants
         public const string WarnCondition       = "WarnCondition";
         public const string Expanded            = "Expanded";
         public const string Reg64               = "Reg64";
+        public const string RegData             = "RegData";
+        public const string PropertyKey         = "Key";      // WmiWrite <Property Key="True"/>
+        public const string PropertyType        = "Type";     // WmiWrite <Property Type="CIM_STRING"/>
         public const string ShowCancel          = "ShowCancel";
         public const string DisableCancel       = "DisableCancel";
         public const string ShowBack            = "ShowBack";

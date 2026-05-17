@@ -183,4 +183,45 @@ public class NativeConditionEvaluatorTests
     public void RealWorld_NumericMemoryCheck() =>
         // %XHWMemory% substituted to 16384 (MB)
         Assert.True(Eval("16384 >= 8192"));
+
+    // ----------------------------------------------------------
+    // Mod operator
+    // ----------------------------------------------------------
+
+    [Theory]
+    [InlineData("10 Mod 3 = 1",   true)]
+    [InlineData("10 Mod 5 = 0",   true)]
+    [InlineData("7 Mod 4 = 3",    true)]
+    [InlineData("10 Mod 3 = 0",   false)]
+    public void Mod_Basic(string expr, bool expected) =>
+        Assert.Equal(expected, Eval(expr));
+
+    [Fact]
+    public void Mod_DivideByZero_ReturnsZero() =>
+        Assert.True(Eval("5 Mod 0 = 0"));
+
+    [Fact]
+    public void Mod_InCompoundExpression() =>
+        // Typical use: check if memory is even multiple of 1024
+        Assert.True(Eval("16384 Mod 1024 = 0 AND 16384 >= 8192"));
+
+    // ----------------------------------------------------------
+    // Date / Time built-ins (smoke tests — exact values vary)
+    // ----------------------------------------------------------
+
+    [Fact]
+    public void Now_ReturnsNonEmpty() =>
+        Assert.True(Eval("Len(Now()) > 0"));
+
+    [Fact]
+    public void Date_ReturnsNonEmpty() =>
+        Assert.True(Eval("Len(Date()) > 0"));
+
+    [Fact]
+    public void Year_ReturnsCurrentYear() =>
+        Assert.True(Eval($"Year(Now()) = {DateTime.Now.Year}"));
+
+    [Fact]
+    public void Month_InRange() =>
+        Assert.True(Eval("Month(Now()) >= 1 AND Month(Now()) <= 12"));
 }

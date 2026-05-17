@@ -10,7 +10,9 @@ public sealed class CMTraceLog : ICMLog, IDisposable
 
     public CMTraceLog(string path)
     {
-        _writer = new StreamWriter(path, append: true, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
+        // FileShare.ReadWrite so CMTrace.exe (and tests) can read the log while it's open.
+        var fs = new FileStream(path, FileMode.Append, FileAccess.Write, FileShare.ReadWrite);
+        _writer = new StreamWriter(fs, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
         {
             AutoFlush = true,
         };

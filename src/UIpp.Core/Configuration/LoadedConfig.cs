@@ -9,4 +9,5 @@ public sealed record LoadedConfig(
     DialogTraits                           GlobalTraits,
     IReadOnlyDictionary<string, ISoftware> Software,
     string                                 ConditionEngine,
-    int?                                   SchemaVersion);
+    int?                                   SchemaVersion,
+    XElement?                              Messages);

@@ -80,6 +80,33 @@ public class LocalTSEnvTests
     }
 
     [Fact]
+    public void Substitute_NestedVars_MultiPass()
+    {
+        // var1="A", var2="B", KEY="var1" → %KEY% → "var1" → no further substitution needed
+        // More concrete: Prefix="Hello", Full="%Prefix% World" → %Full% → "Hello World"
+        var env = Make(("Prefix", "Hello"), ("Full", "%Prefix% World"));
+        Assert.Equal("Hello World", env.Substitute("%Full%"));
+    }
+
+    [Fact]
+    public void Substitute_CircularReference_DoesNotHang()
+    {
+        // Circular: A=%B%, B=%A% — should terminate without infinite loop
+        var env = Make(("A", "%B%"), ("B", "%A%"));
+        var result = env.Substitute("%A%");
+        // Result will be either %A% or %B% (unresolved), not an infinite loop
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public void Substitute_ConcatenatedVars()
+    {
+        // %A%%B% should expand to "12"
+        var env = Make(("A", "1"), ("B", "2"));
+        Assert.Equal("12", env.Substitute("%A%%B%"));
+    }
+
+    [Fact]
     public void SaveLoad_RoundTrip()
     {
         var path = Path.GetTempFileName();
