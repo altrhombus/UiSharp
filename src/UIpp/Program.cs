@@ -5,6 +5,7 @@ using UIpp.Core.Dialogs;
 using UIpp.Core.Logging;
 using UIpp.Core.Scripting;
 using UIpp.Windows.Ldap;
+using UIpp.Windows.Scripting;
 using UIpp.Windows.Variables;
 
 namespace UIpp;
@@ -75,12 +76,14 @@ internal static class Program
             return ExitSuccess;
         }
 
-        // CLI /conditionengine: overrides the XML ConditionEngine attribute; VBScript not implemented.
+        // CLI /conditionengine: overrides the XML ConditionEngine attribute.
         var engineName = opts.ConditionEngine ?? config.ConditionEngine;
-        if (engineName.Equals(XmlConstants.Values.ConditionEngineVbscript, StringComparison.OrdinalIgnoreCase))
-            log.Write("VBScript condition engine is not yet implemented; using native evaluator.", LogSeverity.Warning);
+        IConditionEvaluator evaluator = engineName.Equals(
+            XmlConstants.Values.ConditionEngineVbscript, StringComparison.OrdinalIgnoreCase)
+            ? new VBScriptConditionEvaluator()
+            : new NativeConditionEvaluator();
 
-        var processor = new ActionProcessor(factory, new NativeConditionEvaluator());
+        var processor = new ActionProcessor(factory, evaluator);
         var result    = processor.Run(actionsEl, defaultAction);
 
         log.Write($"UIpp finished. Result: {result}");

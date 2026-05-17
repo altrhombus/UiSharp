@@ -95,8 +95,8 @@ These are the only intentional behavioral changes:
 |---|---|---|
 | `<Action Type="Vars">` save format | MFC `CArchive` binary (`.dat`) | JSON — existing `.dat` files are not readable |
 | `<Action Type="RandomString">` output variable | Always writes to `Random` regardless of the `Variable` attribute (C++ bug) | Correctly uses the `Variable` attribute |
-| VBScript condition engine | Fully supported via `IActiveScript` COM | Not implemented; native evaluator handles all common condition patterns |
-| WinPE optional components | `WinPE-WMI` + `WinPE-Scripting` required | `WinPE-WMI` only — `WinPE-Scripting` is no longer needed |
+| VBScript condition engine | Fully supported via `IActiveScript` COM | Supported — select with `ConditionEngine="vbscript"` or `/conditionengine:vbscript`. Requires `WinPE-Scripting` in WinPE; default engine is `native` which needs no extra component. |
+| WinPE optional components | `WinPE-WMI` + `WinPE-Scripting` required | `WinPE-WMI` always; `WinPE-Scripting` only when using the vbscript engine |
 
 All other XML attributes, variable names, dialog behavior, and output formats are identical to the C++ original. Existing XML config files work without modification.
 
