@@ -15,6 +15,11 @@ internal static partial class HtmlMarkupRenderer
         rtb.SuspendLayout();
         rtb.Clear();
 
+        // Pre-create font variants so Flush() doesn't allocate a new GDI Font per segment.
+        using var fontBold       = new Font(baseFont, FontStyle.Bold);
+        using var fontItalic     = new Font(baseFont, FontStyle.Italic);
+        using var fontBoldItalic = new Font(baseFont, FontStyle.Bold | FontStyle.Italic);
+
         bool bold   = false;
         bool italic = false;
         var  color  = baseColor;
@@ -23,10 +28,13 @@ internal static partial class HtmlMarkupRenderer
         void Flush()
         {
             if (sb.Length == 0) return;
-            var style = FontStyle.Regular;
-            if (bold)   style |= FontStyle.Bold;
-            if (italic) style |= FontStyle.Italic;
-            rtb.SelectionFont  = new Font(baseFont, style);
+            rtb.SelectionFont = (bold, italic) switch
+            {
+                (true,  true)  => fontBoldItalic,
+                (true,  false) => fontBold,
+                (false, true)  => fontItalic,
+                _              => baseFont,
+            };
             rtb.SelectionColor = color;
             rtb.AppendText(sb.ToString());
             sb.Clear();

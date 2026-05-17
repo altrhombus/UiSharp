@@ -67,9 +67,8 @@ public sealed class ActionTpm(ActionData data) : ActionBase(data)
         {
             using var outParams = tpm.InvokeMethod(methodName, null, null);
             if (outParams is null) return false;
-            // Methods return isEnabled/isActivated/isOwned boolean out params.
-            var key = methodName[2..]; // "IsEnabled" → "is" + "Enabled" → look for "isEnabled"
-            var boolKey = char.ToLowerInvariant(key[0]) + key[1..];
+            // Win32_Tpm out param names are camelCase of the method: "IsEnabled" → "isEnabled".
+            var boolKey = char.ToLowerInvariant(methodName[0]) + methodName[1..];
             return outParams[boolKey] is true;
         }
         catch { return false; }

@@ -405,20 +405,31 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
         ManagementObject? best = null;
         foreach (var obj in col.Cast<ManagementObject>())
         {
-            if ((obj["DefaultIPGateway"] as string[])?.Length > 0) { best = obj; break; }
-            best ??= obj;
+            if ((obj["DefaultIPGateway"] as string[])?.Length > 0)
+            {
+                best?.Dispose(); // discard any previously selected gateway-less adapter
+                best = obj;
+                break;
+            }
+            if (best is null)
+                best = obj;
+            else
+                obj.Dispose(); // adapter with no gateway and we already have a candidate
         }
 
         if (best is not null)
         {
-            env.Set(XmlConstants.Variables.IpAddress,
-                (best["IPAddress"] as string[])?.FirstOrDefault(a => !a.Contains(':')) ?? string.Empty);
-            env.Set(XmlConstants.Variables.IpSubnetMask,
-                (best["IPSubnet"] as string[])?.FirstOrDefault() ?? string.Empty);
-            env.Set(XmlConstants.Variables.IpGateway,
-                (best["DefaultIPGateway"] as string[])?.FirstOrDefault() ?? string.Empty);
-            env.Set(XmlConstants.Variables.MacAddress,
-                best["MACAddress"]?.ToString() ?? string.Empty);
+            using (best)
+            {
+                env.Set(XmlConstants.Variables.IpAddress,
+                    (best["IPAddress"] as string[])?.FirstOrDefault(a => !a.Contains(':')) ?? string.Empty);
+                env.Set(XmlConstants.Variables.IpSubnetMask,
+                    (best["IPSubnet"] as string[])?.FirstOrDefault() ?? string.Empty);
+                env.Set(XmlConstants.Variables.IpGateway,
+                    (best["DefaultIPGateway"] as string[])?.FirstOrDefault() ?? string.Empty);
+                env.Set(XmlConstants.Variables.MacAddress,
+                    best["MACAddress"]?.ToString() ?? string.Empty);
+            }
         }
 
         var nics     = NetworkInterface.GetAllNetworkInterfaces();
@@ -447,10 +458,11 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
             scope.Connect();
             using var s = new ManagementObjectSearcher(scope,
                 new ObjectQuery("SELECT * FROM Win32_Tpm"));
-            var instances = s.Get().Cast<ManagementObject>().ToList();
+            using var results = s.Get();
+            using var tpm    = results.Cast<ManagementObject>().FirstOrDefault();
 
-            env.Set(XmlConstants.Variables.TpmAvailable, Bool(instances.Count > 0));
-            if (instances.Count == 0)
+            env.Set(XmlConstants.Variables.TpmAvailable, Bool(tpm is not null));
+            if (tpm is null)
             {
                 env.Set(XmlConstants.Variables.TpmEnabled,     XmlConstants.Values.False);
                 env.Set(XmlConstants.Variables.TpmActivated,   XmlConstants.Values.False);
@@ -458,8 +470,6 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
                 env.Set(XmlConstants.Variables.TpmSpecVersion, string.Empty);
                 return;
             }
-
-            using var tpm = instances[0];
             env.Set(XmlConstants.Variables.TpmSpecVersion, tpm["SpecVersion"]?.ToString() ?? string.Empty);
             env.Set(XmlConstants.Variables.TpmEnabled,   TpmBool(tpm, "IsEnabled"));
             env.Set(XmlConstants.Variables.TpmActivated, TpmBool(tpm, "IsActivated"));
@@ -476,7 +486,8 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
         try
         {
             using var r  = tpm.InvokeMethod(method, null, null);
-            var key = char.ToLowerInvariant(method[2]) + method[3..]; // "IsEnabled" → "isEnabled"
+            // Win32_Tpm out param names are camelCase of the method: "IsEnabled" → "isEnabled".
+            var key = char.ToLowerInvariant(method[0]) + method[1..];
             return Bool(r?[key] is true);
         }
         catch { return XmlConstants.Values.False; }
@@ -497,9 +508,9 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
             var sysRoot = (Path.GetPathRoot(Environment.SystemDirectory) ?? "C:\\").TrimEnd('\\');
             using var s = new ManagementObjectSearcher(scope,
                 new ObjectQuery($"SELECT ProtectionStatus FROM Win32_EncryptableVolume WHERE DriveLetter='{sysRoot}'"));
-            var status = s.Get().Cast<ManagementObject>()
-                .Select(o => Convert.ToInt32(o["ProtectionStatus"] ?? 0))
-                .FirstOrDefault();
+            using var vols   = s.Get();
+            using var vol    = vols.Cast<ManagementObject>().FirstOrDefault();
+            var status = vol is not null ? Convert.ToInt32(vol["ProtectionStatus"] ?? 0) : 0;
             env.Set(XmlConstants.Variables.SystemDriveBitlocker, status.ToString());
         });
 
@@ -513,7 +524,7 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
             scope.Connect();
             using var s = new ManagementObjectSearcher(scope,
                 new ObjectQuery("SELECT * FROM MSFT_MpComputerStatus"));
-            var mp = s.Get().Cast<ManagementObject>().FirstOrDefault();
+            using var mp = s.Get().Cast<ManagementObject>().FirstOrDefault();
             if (mp is null) return;
             env.Set(XmlConstants.Variables.DefenderAvEnabled,   Bool(Convert.ToBoolean(mp["AntivirusEnabled"]   ?? false)));
             env.Set(XmlConstants.Variables.DefenderAsEnabled,   Bool(Convert.ToBoolean(mp["AntispywareEnabled"] ?? false)));
@@ -597,6 +608,10 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
         TryRun(() =>
             env.Set(XmlConstants.Variables.WuServer,
                 RegValue<string?>(@"SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate", "WUServer") ?? string.Empty));
+
+        // XWindowsUpdateDefaultService (WuDefaultService) is intentionally not set here.
+        // C++ uses COM IUpdateServiceManager2.QueryServiceRegistration to enumerate AU services
+        // and identify the default; there is no WMI or registry equivalent.
     }
 
     // Sets XServiceState{DisplayName} and XServiceStartMode{DisplayName} for the named service.
@@ -607,7 +622,7 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
         {
             using var s = new ManagementObjectSearcher(C,
                 $"SELECT DisplayName,State,StartMode FROM Win32_Service WHERE Name='{serviceName}'");
-            var svc = s.Get().Cast<ManagementObject>().FirstOrDefault();
+            using var svc = s.Get().Cast<ManagementObject>().FirstOrDefault();
             if (svc is null) return;
             var displayName = (svc["DisplayName"]?.ToString() ?? string.Empty)
                 .Replace(" ", string.Empty);
@@ -657,7 +672,7 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
             var scope = new ManagementScope(@"root\ccm");
             scope.Connect();
             using var cls  = new ManagementClass(scope, new ManagementPath("SMS_Client"), null);
-            var inst = cls.GetInstances().Cast<ManagementObject>().FirstOrDefault();
+            using var inst = cls.GetInstances().Cast<ManagementObject>().FirstOrDefault();
             if (inst is null) return;
             env.Set(XmlConstants.Variables.CmAgentVersion, inst["ClientVersion"]?.ToString() ?? string.Empty);
             using var r = inst.InvokeMethod("GetAssignedSite", null, null);
@@ -670,7 +685,7 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
             scope.Connect();
             using var s = new ManagementObjectSearcher(scope,
                 new ObjectQuery("SELECT * FROM SMS_Authority"));
-            var auth = s.Get().Cast<ManagementObject>().FirstOrDefault();
+            using var auth = s.Get().Cast<ManagementObject>().FirstOrDefault();
             env.Set(XmlConstants.Variables.CmCurrentMp, auth?["CurrentManagementPoint"]?.ToString() ?? string.Empty);
         });
 
@@ -686,7 +701,7 @@ public sealed class WindowsDefaultValueProvider : IDefaultValueProvider
             scope.Connect();
             using var s = new ManagementObjectSearcher(scope,
                 new ObjectQuery("SELECT * FROM MDM_MgmtAuthority"));
-            var auth = s.Get().Cast<ManagementObject>().FirstOrDefault();
+            using var auth = s.Get().Cast<ManagementObject>().FirstOrDefault();
             env.Set(XmlConstants.Variables.MdmAuthorityName, auth?["AuthorityName"]?.ToString() ?? string.Empty);
         });
     }

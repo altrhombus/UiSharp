@@ -50,7 +50,14 @@ public sealed class ConfigMgrTSEnv : ITSEnv
         return !string.IsNullOrEmpty(value) || Exists(name);
     }
 
-    public bool Exists(string name) => !string.IsNullOrEmpty(Get(name));
+    public bool Exists(string name)
+    {
+        // COM (live TS): SMS_TSEnvironment returns "" for both absent and empty-string variables,
+        // so we can't reliably distinguish them — use the non-empty check as the best available signal.
+        if (_com is not null) return !string.IsNullOrEmpty(Get(name));
+        // Local fallback: ContainsKey correctly handles variables set to "".
+        return _local.ContainsKey(name);
+    }
 
     public void Set(string name, string value)
     {

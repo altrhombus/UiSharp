@@ -31,7 +31,7 @@ public sealed class ActionExternalCall(ActionData data) : ActionBase(data)
         var uiThread = new Thread(() =>
         {
             System.Windows.Forms.Application.EnableVisualStyles();
-            var dlg = new DlgProgress(Data.GlobalDialogTraits, title);
+            using var dlg = new DlgProgress(Data.GlobalDialogTraits, title);
             dlg.Shown += (_, _) => { progressDlg = dlg; dlgShown.Set(); };
             System.Windows.Forms.Application.Run(dlg);
         });

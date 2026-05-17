@@ -36,7 +36,7 @@ public sealed class ActionPreflight(ActionData data) : ActionBase(data)
             using var dlg = new DlgPreflight(Data.GlobalDialogTraits, Data.TsEnv, title, subtitle,
                                               results, showBack, showCancel, anyFail);
             if (timeoutSec > 0)
-                dlg.EnableTimeout(timeoutSec, MapTimeoutAction(timeoutAct));
+                dlg.EnableTimeout(timeoutSec, DialogHelpers.MapTimeoutAction(timeoutAct));
             dlg.ShowDialog();
             result = dlg.Result;
         });
@@ -51,10 +51,4 @@ public sealed class ActionPreflight(ActionData data) : ActionBase(data)
         return result;
     }
 
-    private static ActionResult MapTimeoutAction(string? act) => act?.ToLowerInvariant() switch
-    {
-        "cancel" => ActionResult.Cancel,
-        "back"   => ActionResult.Back,
-        _        => ActionResult.Next,
-    };
 }

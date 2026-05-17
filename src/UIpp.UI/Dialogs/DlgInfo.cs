@@ -5,6 +5,8 @@ namespace UIpp.UI.Dialogs;
 
 public sealed class DlgInfo : DlgBase
 {
+    private Image? _image;
+
     public DlgInfo(
         DialogTraits traits,
         ITSEnv env,
@@ -25,9 +27,10 @@ public sealed class DlgInfo : DlgBase
         {
             try
             {
+                _image = Image.FromFile(imagePath);
                 var pb = new PictureBox
                 {
-                    Image    = Image.FromFile(imagePath),
+                    Image    = _image,
                     SizeMode = PictureBoxSizeMode.AutoSize,
                     Location = new Point(16, topOffset),
                 };
@@ -53,5 +56,11 @@ public sealed class DlgInfo : DlgBase
         HtmlMarkupRenderer.Apply(rtb, infoText, rtb.Font, rtb.ForeColor);
 
         ContentPanel.Controls.Add(rtb);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing) _image?.Dispose();
+        base.Dispose(disposing);
     }
 }

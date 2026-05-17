@@ -1,27 +1,27 @@
-using System.DirectoryServices;
+using System.DirectoryServices.Protocols;
+using System.Net;
 using UIpp.Core.Ldap;
 
 namespace UIpp.Windows.Ldap;
 
-// ILdap implementation backed by System.DirectoryServices (ADSI).
-// Works against on-premises Active Directory from both WinPE and full OS.
+// ILdap implementation using System.DirectoryServices.Protocols (raw LDAP, no ADSI).
+// System.DirectoryServices.Protocols does not depend on adsldp.dll, making it compatible
+// with WinPE environments that lack the ADSI COM infrastructure.
 public sealed class WindowsLdap : ILdap
 {
     public bool Authenticate(string username, string password, string domain,
                              string? domainController = null)
     {
-        var path = domainController is not null
-            ? $"LDAP://{domainController}"
-            : $"LDAP://{domain}";
-
+        var host = domainController ?? domain;
         try
         {
-            using var entry = new DirectoryEntry(path,
-                $"{domain}\\{username}", password,
-                AuthenticationTypes.Secure);
-
-            // Accessing NativeObject forces the bind — throws on bad credentials.
-            _ = entry.NativeObject;
+            var id   = new LdapDirectoryIdentifier(host, 389);
+            var cred = new NetworkCredential($"{domain}\\{username}", password);
+            using var conn = new LdapConnection(id, cred, AuthType.Ntlm)
+            {
+                Timeout = TimeSpan.FromSeconds(30),
+            };
+            conn.Bind();
             return true;
         }
         catch { return false; }
@@ -32,21 +32,24 @@ public sealed class WindowsLdap : ILdap
         var groups = new List<string>();
         try
         {
-            using var root     = new DirectoryEntry($"LDAP://{domain}");
-            using var searcher = new DirectorySearcher(root)
-            {
-                Filter = $"(&(objectClass=user)(sAMAccountName={EscapeLdap(username)}))",
-            };
-            searcher.PropertiesToLoad.Add("memberOf");
+            using var conn = OpenAnonymous(domain);
+            var request = new SearchRequest(
+                DomainToDn(domain),
+                $"(&(objectClass=user)(sAMAccountName={EscapeLdap(username)}))",
+                SearchScope.Subtree,
+                "memberOf");
 
-            var result = searcher.FindOne();
-            if (result is null) return groups;
+            if (conn.SendRequest(request) is not SearchResponse response) return groups;
 
-            foreach (var obj in result.Properties["memberOf"])
+            foreach (SearchResultEntry entry in response.Entries)
             {
-                var cn = ExtractCn(obj?.ToString() ?? string.Empty);
-                if (!string.IsNullOrEmpty(cn))
-                    groups.Add(cn);
+                if (!entry.Attributes.Contains("memberOf")) continue;
+                foreach (object val in entry.Attributes["memberOf"].GetValues(typeof(string)))
+                {
+                    var cn = ExtractCn(val?.ToString() ?? string.Empty);
+                    if (!string.IsNullOrEmpty(cn))
+                        groups.Add(cn);
+                }
             }
         }
         catch { /* domain unreachable or user not found */ }
@@ -57,18 +60,38 @@ public sealed class WindowsLdap : ILdap
     {
         try
         {
-            using var root     = new DirectoryEntry($"LDAP://{domain}");
-            using var searcher = new DirectorySearcher(root)
-            {
-                Filter = $"(&(objectClass=user)(sAMAccountName={EscapeLdap(username)}))",
-            };
-            searcher.PropertiesToLoad.Add(attribute);
+            using var conn = OpenAnonymous(domain);
+            var request = new SearchRequest(
+                DomainToDn(domain),
+                $"(&(objectClass=user)(sAMAccountName={EscapeLdap(username)}))",
+                SearchScope.Subtree,
+                attribute);
 
-            var result = searcher.FindOne();
-            return result?.Properties[attribute]?[0]?.ToString();
+            if (conn.SendRequest(request) is not SearchResponse response) return null;
+            if (response.Entries.Count == 0) return null;
+
+            var entry = response.Entries[0];
+            if (!entry.Attributes.Contains(attribute)) return null;
+
+            var vals = entry.Attributes[attribute].GetValues(typeof(string));
+            return vals.Length > 0 ? vals[0]?.ToString() : null;
         }
         catch { return null; }
     }
+
+    // Opens an unauthenticated connection for directory searches.
+    // Many AD configurations allow anonymous reads of memberOf and user attributes.
+    private static LdapConnection OpenAnonymous(string domain)
+    {
+        var id   = new LdapDirectoryIdentifier(domain, 389);
+        var conn = new LdapConnection(id) { Timeout = TimeSpan.FromSeconds(30) };
+        conn.SessionOptions.ProtocolVersion = 3;
+        return conn;
+    }
+
+    // Converts a DNS domain name to an LDAP base DN: "corp.example.com" → "DC=corp,DC=example,DC=com"
+    private static string DomainToDn(string domain) =>
+        string.Join(",", domain.Split('.').Select(part => $"DC={part}"));
 
     // Escapes special characters per RFC 4515 for use in LDAP filter values.
     private static string EscapeLdap(string input) =>

@@ -32,6 +32,8 @@ public static class ConfigLoader
 
     // -------------------------------------------------------------------------
 
+    private static readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(30) };
+
     private static bool IsHttpUrl(string path) =>
         path.StartsWith("http://",  StringComparison.OrdinalIgnoreCase) ||
         path.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
@@ -42,14 +44,13 @@ public static class ConfigLoader
         int maxRetries,
         CancellationToken ct)
     {
-        using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
 
         Exception? lastEx = null;
         for (int attempt = 0; attempt <= maxRetries; attempt++)
         {
             try
             {
-                return await client.GetStringAsync(url, ct);
+                return await _httpClient.GetStringAsync(url, ct);
             }
             catch (Exception ex) when (!ct.IsCancellationRequested)
             {
@@ -186,6 +187,12 @@ public static class ConfigLoader
     // UI++ config files commonly contain unescaped < in Condition attribute values
     // (e.g. VBScript operators: <>, <=). This walks the raw text character by character,
     // escaping < only when inside a quoted attribute value, leaving tag structure intact.
+    //
+    // The inner loop has two branches guarded by quoteChar == '\0':
+    //   Outside quotes: '>' ends the tag (break); quote chars open a quoted section.
+    //   Inside quotes:  '<' is escaped to &lt;; the closing quote char exits the section.
+    // A '>' that appears inside a quoted value (e.g. Condition="A &gt; B") does NOT hit
+    // the break — it falls through to the final else{Append} branch instead.
     private static string EscapeAttributeLt(string xml)
     {
         var sb = new System.Text.StringBuilder(xml.Length);

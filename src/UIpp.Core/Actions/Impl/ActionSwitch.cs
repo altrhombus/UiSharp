@@ -18,7 +18,7 @@ public sealed class ActionSwitch(ActionData data) : ActionBase(data)
             var ignoreCase = BoolAttr(caseEl, XmlConstants.Attributes.CaseInsensitive);
             var options    = ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None;
 
-            if (!Regex.IsMatch(onValue, pattern, options)) continue;
+            if (!Regex.IsMatch(onValue, pattern, options, TimeSpan.FromSeconds(1))) continue;
 
             SetVariables(caseEl);
             return ActionResult.Next;

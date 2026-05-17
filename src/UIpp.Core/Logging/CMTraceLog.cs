@@ -31,7 +31,9 @@ public sealed class CMTraceLog : ICMLog, IDisposable
         };
 
         var line = $"<![LOG[{message.Replace('\n', ' ')}]LOG]!>" +
-                   $"<time=\"{now:HH:mm:ss.fff}+{_tzOffsetMinutes}\"" +
+                   // _tzOffsetMinutes is negative for UTC+ zones (CMTrace convention: positive = west of UTC).
+                   // The :+0;-0;+0 format emits the sign explicitly for all values, e.g. -120 for UTC+2.
+                   $"<time=\"{now:HH:mm:ss.fff}{_tzOffsetMinutes:+0;-0;+0}\"" +
                    $" date=\"{now:MM-dd-yyyy}\"" +
                    $" component=\"{component}\"" +
                    $" context=\"\"" +

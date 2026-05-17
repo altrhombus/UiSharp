@@ -142,13 +142,13 @@ public sealed class ActionAppTree(ActionData data) : ActionBase(data)
     private HashSet<string> LoadExistingSelections(string appBase, string pkgBase)
     {
         var values = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        for (int i = 1; ; i++)
+        for (int i = 1; i <= 99; i++)
         {
             var v = Data.TsEnv.Get($"{appBase}{i:D2}");
             if (string.IsNullOrEmpty(v)) break;
             values.Add(v);
         }
-        for (int i = 1; ; i++)
+        for (int i = 1; i <= 999; i++)
         {
             var v = Data.TsEnv.Get($"{pkgBase}{i:D3}");
             if (string.IsNullOrEmpty(v)) break;

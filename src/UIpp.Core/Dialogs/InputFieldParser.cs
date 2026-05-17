@@ -75,8 +75,13 @@ public static class InputFieldParser
     private static string Attr(XElement el, string name, string def = "") =>
         (string?)el.Attribute(name) ?? def;
 
-    private static bool BoolAttr(XElement el, string name, bool def = false) =>
-        Attr(el, name, def ? "True" : "False").Equals("True", StringComparison.OrdinalIgnoreCase);
+    private static bool BoolAttr(XElement el, string name, bool def = false)
+    {
+        var v = Attr(el, name, def ? "True" : "False");
+        return v.Equals("True", StringComparison.OrdinalIgnoreCase)
+            || v.Equals("yes",  StringComparison.OrdinalIgnoreCase)
+            || v.Equals("1",    StringComparison.Ordinal);
+    }
 
     private static string ResolveDefault(XElement el, string variable, ITSEnv env)
     {

@@ -31,7 +31,7 @@ public sealed class ActionInput(ActionData data) : ActionBase(data)
             using var dlg = new DlgInput(Data.GlobalDialogTraits, Data.TsEnv, title, subtitle, fields,
                                           showBack, showCancel);
             if (timeoutSec > 0)
-                dlg.EnableTimeout(timeoutSec, MapTimeoutAction(timeoutAct));
+                dlg.EnableTimeout(timeoutSec, DialogHelpers.MapTimeoutAction(timeoutAct));
 
             dlgRef = dlg;
             dlg.ShowDialog();
@@ -47,10 +47,4 @@ public sealed class ActionInput(ActionData data) : ActionBase(data)
         return result;
     }
 
-    private static ActionResult MapTimeoutAction(string act) => act.ToLowerInvariant() switch
-    {
-        "cancel" => ActionResult.Cancel,
-        "back"   => ActionResult.Back,
-        _        => ActionResult.Next,
-    };
 }

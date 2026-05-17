@@ -7,7 +7,7 @@ namespace UIpp.Core.Actions.Impl;
 [ActionType(XmlConstants.ActionTypes.Rest)]
 public sealed class ActionRest(ActionData data) : ActionBase(data)
 {
-    private static readonly HttpClient Http = new();
+    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(30) };
 
     public override ActionResult Go()
     {
@@ -25,7 +25,8 @@ public sealed class ActionRest(ActionData data) : ActionBase(data)
             };
 
             using var response = Http.Send(request);
-            var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+            using var reader   = new System.IO.StreamReader(response.Content.ReadAsStream());
+            var body           = reader.ReadToEnd();
 
             Data.TsEnv.Set(variable, body);
             Data.Log.Write($"REST: POST {url} → HTTP {(int)response.StatusCode}");

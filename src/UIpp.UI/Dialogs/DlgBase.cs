@@ -108,7 +108,7 @@ public class DlgBase : Form
         BtnBack.Visible    = false;
         BtnRefresh.Visible = false;
 
-        ResumeLayout(false);
+        ResumeLayout(true);
     }
 
     private static Button Btn(string text, Point loc) =>
@@ -116,7 +116,7 @@ public class DlgBase : Form
 
     protected virtual bool ValidateInput() => true;
 
-    private void Finish(ActionResult result)
+    protected void Finish(ActionResult result)
     {
         Result = result;
         _timer?.Stop();

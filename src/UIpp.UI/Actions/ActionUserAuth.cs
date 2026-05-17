@@ -24,7 +24,6 @@ public sealed class ActionUserAuth(ActionData data) : ActionBase(data)
         var getGroups         = BoolAttr(XmlConstants.Attributes.GetGroups);
         var ldapAttribute     = Attr(XmlConstants.Attributes.RestAttributes); // "Attributes" in C++
         var disableCancel     = BoolAttr(XmlConstants.Attributes.DisableCancel);
-        var doNotFallback     = BoolAttr(XmlConstants.Attributes.DoNotFallback);
         var domainController  = SubstAttr(XmlConstants.Attributes.DomainController);
         var maxRetryStr       = Attr(XmlConstants.Attributes.MaxRetry) ?? XmlConstants.Defaults.MaxRetry;
         int maxRetry          = int.TryParse(maxRetryStr, out var mr) ? mr : 5;
@@ -48,7 +47,6 @@ public sealed class ActionUserAuth(ActionData data) : ActionBase(data)
                 disableCancel,
                 maxRetry,
                 domainController,
-                doNotFallback,
                 Data.Ldap,
                 usernameSpec,
                 passwordSpec,

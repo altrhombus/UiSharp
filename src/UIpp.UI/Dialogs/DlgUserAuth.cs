@@ -1,3 +1,4 @@
+using UIpp.Core.Actions;
 using UIpp.Core.Dialogs;
 using UIpp.Core.Ldap;
 using UIpp.Core.Variables;
@@ -23,7 +24,7 @@ public sealed class DlgUserAuth : DlgBase
     private readonly string   _ldapAttribute;
     private readonly bool     _getGroups;
     private readonly string?  _domainController;
-    private readonly bool     _doNotFallback;
+    private readonly bool     _disableCancel;
     private readonly int      _maxRetry;
     private int               _attempts;
 
@@ -47,7 +48,6 @@ public sealed class DlgUserAuth : DlgBase
         bool                disableCancel,
         int                 maxRetry,
         string?             domainController,
-        bool                doNotFallback,
         ILdap?              ldap,
         UserAuthFieldSpec?  usernameSpec  = null,
         UserAuthFieldSpec?  passwordSpec  = null,
@@ -60,7 +60,7 @@ public sealed class DlgUserAuth : DlgBase
         _ldapAttribute    = ldapAttribute;
         _getGroups        = getGroups;
         _domainController = domainController;
-        _doNotFallback    = doNotFallback;
+        _disableCancel    = disableCancel;
         _maxRetry         = maxRetry;
         BtnBack.Visible   = showBack;
         BtnCancel.Enabled = !disableCancel;
@@ -171,48 +171,76 @@ public sealed class DlgUserAuth : DlgBase
             domain = parts[1];
         }
 
-        if (_ldap is not null)
+        if (_ldap is null)
         {
-            if (!_ldap.Authenticate(user, password, domain, _domainController))
-            {
-                _attempts++;
-                if (_maxRetry > 0 && _attempts >= _maxRetry)
-                {
-                    // Max retries exceeded — close with Cancel result.
-                    DialogResult = System.Windows.Forms.DialogResult.Cancel;
-                    Close();
-                    return false;
-                }
+            AuthenticatedUser   = user;
+            AuthenticatedDomain = domain;
+            return true;
+        }
 
-                MessageBox.Show("Authentication failed. Please check your credentials.",
-                    "Authentication", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                _tbPassword.Clear();
-                _tbPassword.Focus();
-                return false;
-            }
+        // LDAP calls can block for seconds — run them off the UI thread.
+        BtnNext.Enabled   = false;
+        BtnCancel.Enabled = false;
+        Task.Run(() => DoAuth(user, password, domain));
+        return false;
+    }
 
+    private void DoAuth(string user, string password, string domain)
+    {
+        string? failMsg     = null;
+        bool    cancelRetry = false;
+        string  groups      = string.Empty;
+        string  attrVal     = string.Empty;
+
+        if (!_ldap!.Authenticate(user, password, domain, _domainController))
+        {
+            _attempts++;
+            cancelRetry = _maxRetry > 0 && _attempts >= _maxRetry;
+            if (!cancelRetry)
+                failMsg = "Authentication failed. Please check your credentials.";
+        }
+        else
+        {
             if (!string.IsNullOrWhiteSpace(_requiredGroup))
             {
-                var groups = _ldap.GetGroupMembership(user, domain);
-                if (!groups.Any(g => g.Equals(_requiredGroup, StringComparison.OrdinalIgnoreCase)))
-                {
-                    MessageBox.Show($"You are not a member of the required group '{_requiredGroup}'.",
-                        "Authentication", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
-                }
-                AuthUserGroups = string.Join(",", groups);
+                var memberOf = _ldap.GetGroupMembership(user, domain);
+                if (!memberOf.Any(g => g.Equals(_requiredGroup, StringComparison.OrdinalIgnoreCase)))
+                    failMsg = $"You are not a member of the required group '{_requiredGroup}'.";
+                else
+                    groups = string.Join(",", memberOf);
             }
             else if (_getGroups)
             {
-                AuthUserGroups = string.Join(",", _ldap.GetGroupMembership(user, domain));
+                groups = string.Join(",", _ldap.GetGroupMembership(user, domain));
             }
 
-            if (!string.IsNullOrWhiteSpace(_ldapAttribute))
-                AuthUserAttr = _ldap.GetAttribute(user, domain, _ldapAttribute) ?? string.Empty;
+            if (failMsg is null && !string.IsNullOrWhiteSpace(_ldapAttribute))
+                attrVal = _ldap.GetAttribute(user, domain, _ldapAttribute) ?? string.Empty;
         }
 
-        AuthenticatedUser   = user;
-        AuthenticatedDomain = domain;
-        return true;
+        Invoke(() =>
+        {
+            if (cancelRetry)
+            {
+                Finish(ActionResult.Cancel);
+                return;
+            }
+
+            if (failMsg is not null)
+            {
+                BtnNext.Enabled   = true;
+                BtnCancel.Enabled = !_disableCancel;
+                MessageBox.Show(failMsg, "Authentication", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                _tbPassword.Clear();
+                _tbPassword.Focus();
+                return;
+            }
+
+            AuthenticatedUser   = user;
+            AuthenticatedDomain = domain;
+            AuthUserGroups      = groups;
+            AuthUserAttr        = attrVal;
+            Finish(ActionResult.Next);
+        });
     }
 }

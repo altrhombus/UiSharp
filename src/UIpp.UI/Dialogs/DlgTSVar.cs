@@ -113,7 +113,11 @@ public sealed class DlgTSVar : Form
         // LocalTSEnv exposes GetAll; ConfigMgrTSEnv enumerates via GetVariables.
         // Use the common ITSEnv.GetAll() if available, otherwise skip enumeration.
         if (_env is not UIpp.Core.Variables.LocalTSEnv local)
+        {
+            _editableGrid.Rows.Add("(info)",
+                "Variable enumeration is not available inside a running task sequence.");
             return;
+        }
 
         foreach (var kv in local.GetAll().OrderBy(k => k.Key))
         {

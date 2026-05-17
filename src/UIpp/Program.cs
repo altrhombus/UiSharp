@@ -16,7 +16,7 @@ internal static class Program
     private const int ExitBadConfig  = 2;
 
     [STAThread]
-    private static int Main(string[] args)
+    private static async Task<int> Main(string[] args)
     {
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
@@ -34,7 +34,7 @@ internal static class Program
         LoadedConfig config;
         try
         {
-            config = LoadConfig(opts, log);
+            config = await LoadConfig(opts, log);
         }
         catch (Exception ex)
         {
@@ -75,6 +75,11 @@ internal static class Program
             return ExitSuccess;
         }
 
+        // CLI /conditionengine: overrides the XML ConditionEngine attribute; VBScript not implemented.
+        var engineName = opts.ConditionEngine ?? config.ConditionEngine;
+        if (engineName.Equals(XmlConstants.Values.ConditionEngineVbscript, StringComparison.OrdinalIgnoreCase))
+            log.Write("VBScript condition engine is not yet implemented; using native evaluator.", LogSeverity.Warning);
+
         var processor = new ActionProcessor(factory, new NativeConditionEvaluator());
         var result    = processor.Run(actionsEl, defaultAction);
 
@@ -88,17 +93,15 @@ internal static class Program
         };
     }
 
-    private static LoadedConfig LoadConfig(CliOptions opts, ICMLog log)
+    private static async Task<LoadedConfig> LoadConfig(CliOptions opts, ICMLog log)
     {
         if (IsHttpUrl(opts.ConfigPath))
         {
-            return Task.Run(() =>
-                ConfigLoader.LoadAsync(
-                    opts.ConfigPath,
-                    opts.ConfigFallback,
-                    opts.ConfigRetry,
-                    CancellationToken.None))
-                .GetAwaiter().GetResult();
+            return await ConfigLoader.LoadAsync(
+                opts.ConfigPath,
+                opts.ConfigFallback,
+                opts.ConfigRetry,
+                CancellationToken.None);
         }
 
         return ConfigLoader.Load(opts.ConfigPath);
@@ -115,7 +118,8 @@ internal static class Program
         string ConfigPath,
         string? ConfigFallback,
         int ConfigRetry,
-        bool DisableTsVarEditor);
+        bool DisableTsVarEditor,
+        string? ConditionEngine);
 
     private static CliOptions ParseArgs(string[] args)
     {
@@ -123,12 +127,14 @@ internal static class Program
         string? configFallback     = null;
         int     configRetry        = 3;
         bool    disableTsVarEditor = false;
+        string? conditionEngine    = null;
 
         foreach (var arg in args)
         {
-            if (TrySwitch(arg, "/config:",         out var v)) { configPath     = v; continue; }
-            if (TrySwitch(arg, "/configfallback:",  out v))    { configFallback = v; continue; }
-            if (TrySwitch(arg, "/configretry:",     out v))
+            if (TrySwitch(arg, "/config:",           out var v)) { configPath      = v; continue; }
+            if (TrySwitch(arg, "/configfallback:",    out v))    { configFallback  = v; continue; }
+            if (TrySwitch(arg, "/conditionengine:",   out v))    { conditionEngine = v; continue; }
+            if (TrySwitch(arg, "/configretry:",       out v))
             {
                 if (int.TryParse(v, out var n)) configRetry = n;
                 continue;
@@ -143,7 +149,7 @@ internal static class Program
                 configPath = arg;
         }
 
-        return new CliOptions(configPath, configFallback, configRetry, disableTsVarEditor);
+        return new CliOptions(configPath, configFallback, configRetry, disableTsVarEditor, conditionEngine);
     }
 
     private static bool TrySwitch(string arg, string prefix, out string value)

@@ -85,7 +85,7 @@ public static class XmlConstants
         public const string GetGroups           = "GetGroups";
         public const string GetGroupsForUser    = "GetGroupsForUser";
         public const string Label               = "Label";
-        public const string AppName             = "Name";
+        public const string AppName             = "Name"; // <Application Name="..."> — same XML attribute name as Attributes.Name but used only on <Application> elements in <Software>
         public const string PkgId              = "PkgID";
         public const string SoftwareInfo        = "Info";
         public const string ProgramName         = "ProgramName";

@@ -158,4 +158,22 @@ public class ConfigLoaderTests
         Assert.NotNull(msg);
         Assert.Equal("Hello world", msg!.Value);
     }
+
+    // EscapeAttributeLt must not treat '>' inside a quoted attribute as the end-of-tag sentinel.
+    // XML with Condition="A > B" would be malformed if that '>' were interpreted as closing the tag.
+    [Fact]
+    public void Load_ConditionWithGtInQuotedAttribute_ParsesWithoutError()
+    {
+        const string xml = """<UIpp><Actions><TSVar Name="X" Condition="1 > 0">val</TSVar></Actions></UIpp>""";
+        var cfg = LoadXml(xml);
+        Assert.NotNull(cfg.Document.Root);
+    }
+
+    [Fact]
+    public void Load_ConditionWithLtInQuotedAttribute_EscapedAndParsesWithoutError()
+    {
+        const string xml = """<UIpp><Actions><TSVar Name="X" Condition="1 < 2">val</TSVar></Actions></UIpp>""";
+        var cfg = LoadXml(xml);
+        Assert.NotNull(cfg.Document.Root);
+    }
 }
