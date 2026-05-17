@@ -85,7 +85,7 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 | `/ConfigFallback:<path>` | Local file to use if the URL download fails after all retries. |
 | `/ConfigRetry:<n>` | Number of download attempts before falling back (default: 3). |
 | `/DisableTSVarEditor` | Prevents the Ctrl+F2 task-sequence variable editor from opening during dialogs. |
-| `/conditionengine:native\|vbscript` | Override the condition evaluator. Default: `native`. `vbscript` logs a warning and falls back to native (VBScript evaluator not yet implemented). |
+| `/conditionengine:native\|vbscript` | Override the condition evaluator. Default: `native`. `vbscript` uses the Windows `IActiveScript` COM host; requires `WinPE-Scripting` in WinPE. |
 
 ## Differences from the original C++ UI++
 
