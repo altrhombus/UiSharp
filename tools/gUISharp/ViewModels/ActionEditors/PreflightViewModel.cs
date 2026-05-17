@@ -23,6 +23,7 @@ public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
         [C.Values.Continue, C.Values.Cancel];
 
     public ObservableCollection<PreflightCheckItem> Checks { get; } = [];
+    public bool HasChecks => Checks.Count > 0;
 
     public PreflightViewModel(ActionNodeModel model)
     {
@@ -32,6 +33,8 @@ public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
         Timeout          = Attr(C.Attributes.Timeout)        ?? string.Empty;
         TimeoutAction    = Attr(C.Attributes.TimeoutAction)  ?? C.Defaults.TimeoutAction;
         Condition        = Attr(C.Attributes.Condition)      ?? string.Empty;
+
+        Checks.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasChecks));
 
         foreach (var el in model.Node.Elements(C.Elements.PreflightCheck))
         {

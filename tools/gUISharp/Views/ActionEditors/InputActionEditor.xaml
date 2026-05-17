@@ -3,7 +3,274 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:GUISharp.Views"
+    xmlns:editors="using:GUISharp.Views.ActionEditors"
     xmlns:vm="using:GUISharp.ViewModels.ActionEditors">
+
+    <UserControl.Resources>
+
+        <!-- ── InputText template ──────────────────────────────────────────── -->
+        <DataTemplate x:Key="TextFieldTemplate" x:DataType="vm:InputTextViewModel">
+            <Grid Margin="0,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Expander Grid.Column="0" HorizontalAlignment="Stretch"
+                          IsExpanded="{x:Bind IsExpanded, Mode=TwoWay}">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Text"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind Variable, Mode=OneWay}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Expander.Header>
+                    <StackPanel Spacing="8" Padding="4,8,4,8">
+                        <local:LabeledField Label="Variable">
+                            <TextBox Text="{x:Bind Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Question / Label">
+                            <TextBox Text="{x:Bind Question, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Default">
+                            <TextBox Text="{x:Bind Default, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Hint">
+                            <TextBox Text="{x:Bind Hint, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional help text below the field" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Prompt">
+                            <TextBox Text="{x:Bind Prompt, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional short label" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Validation Regex">
+                            <local:RegexInputBox Text="{x:Bind RegEx, Mode=TwoWay}"
+                                                 PlaceholderText="Optional — e.g. ^[A-Z0-9]{3,15}$" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Force Case">
+                            <ComboBox ItemsSource="{x:Bind ForceCaseOptions}"
+                                      SelectedItem="{x:Bind ForceCase, Mode=TwoWay}"
+                                      HorizontalAlignment="Stretch" />
+                        </local:LabeledField>
+                        <CheckBox Content="Required" IsChecked="{x:Bind Required, Mode=TwoWay}" />
+                        <CheckBox Content="Password (mask input)" IsChecked="{x:Bind Password, Mode=TwoWay}" />
+                        <CheckBox Content="Read Only" IsChecked="{x:Bind ReadOnly, Mode=TwoWay}" />
+                        <local:LabeledField Label="Condition">
+                            <TextBox Text="{x:Bind Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+                        </local:LabeledField>
+                    </StackPanel>
+                </Expander>
+                <Button Grid.Column="1" Content="&#xE74D;"
+                        FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                        Command="{Binding ElementName=FieldsListView, Path=DataContext.RemoveFieldCommand}"
+                        CommandParameter="{x:Bind}"
+                        Width="32" Height="32" Padding="0"
+                        VerticalAlignment="Top" Margin="4,2,0,0" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- ── InputChoice template ────────────────────────────────────────── -->
+        <DataTemplate x:Key="ChoiceFieldTemplate" x:DataType="vm:InputChoiceViewModel">
+            <Grid Margin="0,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Expander Grid.Column="0" HorizontalAlignment="Stretch"
+                          IsExpanded="{x:Bind IsExpanded, Mode=TwoWay}">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Choice"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind Variable, Mode=OneWay}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Expander.Header>
+                    <StackPanel Spacing="8" Padding="4,8,4,8">
+                        <local:LabeledField Label="Variable">
+                            <TextBox Text="{x:Bind Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Question / Label">
+                            <TextBox Text="{x:Bind Question, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Default">
+                            <TextBox Text="{x:Bind Default, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Alternate Variable">
+                            <TextBox Text="{x:Bind AlternateVariable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+                        </local:LabeledField>
+                        <CheckBox Content="Required" IsChecked="{x:Bind Required, Mode=TwoWay}" />
+                        <CheckBox Content="Sort alphabetically" IsChecked="{x:Bind Sort, Mode=TwoWay}" />
+                        <CheckBox Content="AutoComplete" IsChecked="{x:Bind AutoComplete, Mode=TwoWay}" />
+                        <local:LabeledField Label="Condition">
+                            <TextBox Text="{x:Bind Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+                        </local:LabeledField>
+
+                        <TextBlock Text="Options"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                   Margin="0,4,0,0" />
+                        <TextBlock Text="Option is what the user sees; Value is what gets stored in the variable."
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+
+                        <ListView x:Name="ChoicesList" ItemsSource="{x:Bind Choices}" SelectionMode="None">
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="vm:ChoiceItemViewModel">
+                                    <Grid ColumnSpacing="8" Padding="0,2">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0"
+                                                 Text="{x:Bind Option, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 PlaceholderText="Display text" />
+                                        <TextBox Grid.Column="1"
+                                                 Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 PlaceholderText="Stored value" />
+                                        <Button Grid.Column="2" Content="&#xE74D;"
+                                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                                Command="{Binding ElementName=ChoicesList, Path=DataContext.RemoveChoiceCommand}"
+                                                CommandParameter="{x:Bind}"
+                                                VerticalAlignment="Center" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        <Button Content="+ Option" Command="{x:Bind AddChoiceCommand}" />
+                    </StackPanel>
+                </Expander>
+                <Button Grid.Column="1" Content="&#xE74D;"
+                        FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                        Command="{Binding ElementName=FieldsListView, Path=DataContext.RemoveFieldCommand}"
+                        CommandParameter="{x:Bind}"
+                        Width="32" Height="32" Padding="0"
+                        VerticalAlignment="Top" Margin="4,2,0,0" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- ── InputCheckbox template ──────────────────────────────────────── -->
+        <DataTemplate x:Key="CheckboxFieldTemplate" x:DataType="vm:InputCheckboxViewModel">
+            <Grid Margin="0,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Expander Grid.Column="0" HorizontalAlignment="Stretch"
+                          IsExpanded="{x:Bind IsExpanded, Mode=TwoWay}">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Checkbox"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind Variable, Mode=OneWay}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+                    </Expander.Header>
+                    <StackPanel Spacing="8" Padding="4,8,4,8">
+                        <local:LabeledField Label="Variable">
+                            <TextBox Text="{x:Bind Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Question / Label">
+                            <TextBox Text="{x:Bind Question, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Default">
+                            <TextBox Text="{x:Bind Default, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Checked Value">
+                            <TextBox Text="{x:Bind CheckedValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Unchecked Value">
+                            <TextBox Text="{x:Bind UncheckedValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Condition">
+                            <TextBox Text="{x:Bind Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+                        </local:LabeledField>
+                    </StackPanel>
+                </Expander>
+                <Button Grid.Column="1" Content="&#xE74D;"
+                        FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                        Command="{Binding ElementName=FieldsListView, Path=DataContext.RemoveFieldCommand}"
+                        CommandParameter="{x:Bind}"
+                        Width="32" Height="32" Padding="0"
+                        VerticalAlignment="Top" Margin="4,2,0,0" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- ── InputInfo template ──────────────────────────────────────────── -->
+        <DataTemplate x:Key="InfoFieldTemplate" x:DataType="vm:InputInfoViewModel">
+            <Grid Margin="0,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Expander Grid.Column="0" HorizontalAlignment="Stretch"
+                          IsExpanded="{x:Bind IsExpanded, Mode=TwoWay}">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <TextBlock Text="Info"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind Text, Mode=OneWay}"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"
+                                       MaxWidth="260" />
+                        </StackPanel>
+                    </Expander.Header>
+                    <StackPanel Spacing="8" Padding="4,8,4,8">
+                        <local:InfoMarkupEditor Text="{x:Bind Text, Mode=TwoWay}" />
+                        <local:LabeledField Label="Color (hex)">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0"
+                                         Text="{x:Bind Color, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         PlaceholderText="Optional — e.g. #882222" />
+                                <Border Grid.Column="1"
+                                        Width="36" Height="32" CornerRadius="4"
+                                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        Background="{x:Bind Color, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
+                                        ToolTipService.ToolTip="Color preview" />
+                            </Grid>
+                        </local:LabeledField>
+                        <local:LabeledField Label="Condition">
+                            <TextBox Text="{x:Bind Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+                        </local:LabeledField>
+                    </StackPanel>
+                </Expander>
+                <Button Grid.Column="1" Content="&#xE74D;"
+                        FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                        Command="{Binding ElementName=FieldsListView, Path=DataContext.RemoveFieldCommand}"
+                        CommandParameter="{x:Bind}"
+                        Width="32" Height="32" Padding="0"
+                        VerticalAlignment="Top" Margin="4,2,0,0" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- ── Template selector ───────────────────────────────────────────── -->
+        <editors:InputFieldTemplateSelector x:Key="FieldSelector"
+            TextTemplate="{StaticResource TextFieldTemplate}"
+            ChoiceTemplate="{StaticResource ChoiceFieldTemplate}"
+            CheckboxTemplate="{StaticResource CheckboxFieldTemplate}"
+            InfoTemplate="{StaticResource InfoFieldTemplate}" />
+
+    </UserControl.Resources>
+
     <StackPanel Spacing="12">
         <TextBlock Text="Input" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Displays an interactive dialog with text boxes, dropdowns, checkboxes, or info fields for direct user input. Supports Regular (3), Tall (6), or ExtraTall (9) field capacities."
@@ -22,32 +289,36 @@
         </local:LabeledField>
 
         <StackPanel Spacing="8">
-            <TextBlock Text="Input Fields" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-            <TextBlock Text="Fields are shown as raw XML. Edit the XML directly or use Add buttons to append new fields."
-                       Style="{ThemeResource CaptionTextBlockStyle}"
-                       TextWrapping="Wrap"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBlock Text="Input Fields" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
 
-            <ListView x:Name="FieldsListView" ItemsSource="{Binding Fields}" SelectionMode="None">
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:InputFieldItem">
-                        <Expander HorizontalAlignment="Stretch" IsExpanded="False">
-                            <Expander.Header>
-                                <TextBlock Text="{x:Bind ElementName, Mode=OneWay}" />
-                            </Expander.Header>
-                            <StackPanel Spacing="6" Padding="0,4,0,4">
-                                <TextBox Text="{x:Bind RawXml, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                         AcceptsReturn="True" MaxHeight="200"
-                                         FontFamily="Cascadia Mono, Consolas"
-                                         TextWrapping="Wrap" />
-                                <Button Content="Remove Field"
-                                        Command="{Binding ElementName=FieldsListView, Path=DataContext.RemoveFieldCommand}"
-                                        CommandParameter="{x:Bind}"
-                                        Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
-                            </StackPanel>
-                        </Expander>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
+            <!-- Empty state -->
+            <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="4" Padding="20,24"
+                    Visibility="{Binding HasFields, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <StackPanel HorizontalAlignment="Center" Spacing="6">
+                    <FontIcon Glyph="&#xE8A5;" FontSize="20" Opacity="0.4" HorizontalAlignment="Center" />
+                    <TextBlock Text="No fields added yet"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}"
+                               HorizontalAlignment="Center" Opacity="0.6" />
+                    <TextBlock Text="Use the buttons below to add text boxes, dropdowns, checkboxes, or info fields."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               TextWrapping="Wrap" HorizontalAlignment="Center"
+                               Opacity="0.6" MaxWidth="240" TextAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <!-- Fields list -->
+            <ListView x:Name="FieldsListView"
+                      ItemsSource="{Binding Fields}"
+                      SelectionMode="None"
+                      ItemTemplateSelector="{StaticResource FieldSelector}"
+                      Visibility="{Binding HasFields, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
             </ListView>
 
             <StackPanel Orientation="Horizontal" Spacing="4">

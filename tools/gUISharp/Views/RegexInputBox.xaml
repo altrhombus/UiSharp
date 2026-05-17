@@ -1,0 +1,131 @@
+<UserControl
+    x:Class="GUISharp.Views.RegexInputBox"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GUISharp.Views">
+
+    <Grid ColumnSpacing="4">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <TextBox x:Name="PatternBox"
+                 Grid.Column="0"
+                 TextChanged="PatternBox_TextChanged" />
+
+        <Button Grid.Column="1"
+                Width="36" Height="32" Padding="4,0"
+                VerticalAlignment="Center"
+                ToolTipService.ToolTip="Regex helper — test patterns and browse common presets">
+            <TextBlock Text=".*" FontFamily="Consolas" FontSize="11"
+                       VerticalAlignment="Center" HorizontalAlignment="Center" />
+            <Button.Flyout>
+                <Flyout x:Name="HelperFlyout" Placement="BottomEdgeAlignedRight">
+                    <ScrollViewer MaxHeight="580" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="12" Width="360" Padding="0,0,4,4">
+
+                            <TextBlock Text="Regex Helper" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                            <!-- Live test area -->
+                            <StackPanel Spacing="4">
+                                <TextBlock Text="Test a value"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBox x:Name="TestValueBox"
+                                         PlaceholderText="Enter a sample to check against the pattern…"
+                                         TextChanged="TestValueBox_TextChanged" />
+                                <TextBlock x:Name="MatchResultText"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           FontWeight="SemiBold"
+                                           Visibility="Collapsed" />
+                            </StackPanel>
+
+                            <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                    BorderThickness="0,1,0,0" />
+
+                            <!-- Preset patterns -->
+                            <TextBlock Text="Common patterns — click to insert"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ItemsRepeater ItemsSource="{x:Bind Presets}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Spacing="2" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="local:RegexPreset">
+                                        <Button HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Left"
+                                                Padding="8,6"
+                                                Tag="{x:Bind}"
+                                                Click="UsePreset_Click">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{x:Bind Label}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                                <TextBlock Text="{x:Bind Pattern}"
+                                                           FontFamily="Consolas" FontSize="11"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+
+                            <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                    BorderThickness="0,1,0,0" />
+
+                            <!-- Quick reference -->
+                            <TextBlock Text="Quick reference"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Grid ColumnSpacing="12" RowSpacing="3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="44" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" MinWidth="44" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition /><RowDefinition /><RowDefinition />
+                                    <RowDefinition /><RowDefinition /><RowDefinition />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="." FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="Any character" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="^" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="0" Grid.Column="3" Text="Start of string" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="*" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="0 or more" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="$" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="1" Grid.Column="3" Text="End of string" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="+" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="1 or more" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="\b" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="2" Grid.Column="3" Text="Word boundary" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="?" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="0 or 1" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="3" Grid.Column="2" Text="\d" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="3" Grid.Column="3" Text="Digit (0–9)" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="{}{n,m}" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="n to m times" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="4" Grid.Column="2" Text="\w" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="4" Grid.Column="3" Text="Word char" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="5" Grid.Column="0" Text="(a|b)" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="5" Grid.Column="1" Text="a or b" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="5" Grid.Column="2" Text="[A-Z]" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="5" Grid.Column="3" Text="Character range" FontSize="11" VerticalAlignment="Center" />
+                            </Grid>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Flyout>
+            </Button.Flyout>
+        </Button>
+    </Grid>
+</UserControl>

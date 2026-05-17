@@ -18,10 +18,12 @@ public sealed partial class SwitchViewModel : ObservableObject, IActionEditor
 
     public ObservableCollection<SwitchCaseItem> Cases { get; } = [];
     public ObservableCollection<VariableAssignmentItem> DefaultVariables { get; } = [];
+    public bool HasCases => Cases.Count > 0;
 
     public SwitchViewModel(ActionNodeModel model)
     {
         _model    = model;
+        Cases.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasCases));
         OnValue   = Attr(C.Attributes.OnValue)   ?? string.Empty;
         DontEval  = BoolAttr(C.Attributes.DontEval);
         Condition = Attr(C.Attributes.Condition) ?? string.Empty;

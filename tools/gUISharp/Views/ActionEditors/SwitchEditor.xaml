@@ -19,45 +19,77 @@
         </local:LabeledField>
 
         <TextBlock Text="Cases" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
-        <ListView x:Name="Editor" ItemsSource="{Binding Cases}" SelectionMode="None">
+
+        <!-- Empty state for cases -->
+        <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                BorderThickness="1" CornerRadius="4" Padding="20,24"
+                Visibility="{Binding HasCases, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+            <StackPanel HorizontalAlignment="Center" Spacing="6">
+                <FontIcon Glyph="&#xE748;" FontSize="20" Opacity="0.4" HorizontalAlignment="Center" />
+                <TextBlock Text="No cases added yet"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}"
+                           HorizontalAlignment="Center" Opacity="0.6" />
+                <TextBlock Text="Add a case with a regex pattern to match against the On Value."
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           TextWrapping="Wrap" HorizontalAlignment="Center"
+                           Opacity="0.6" MaxWidth="240" TextAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- Cases list -->
+        <ListView x:Name="Editor"
+                  ItemsSource="{Binding Cases}"
+                  SelectionMode="None"
+                  Visibility="{Binding HasCases, Converter={StaticResource BoolToVisibilityConverter}}">
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:SwitchCaseItem">
-                    <Expander x:Name="CaseExpander" HorizontalAlignment="Stretch" IsExpanded="True" Margin="0,2">
-                        <Expander.Header>
-                            <TextBox Text="{x:Bind RegEx, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     PlaceholderText="RegEx pattern"
-                                     HorizontalAlignment="Stretch" MinWidth="200" />
-                        </Expander.Header>
-                        <StackPanel Spacing="8" Padding="0,4,0,4">
-                            <ListView ItemsSource="{x:Bind Variables}" SelectionMode="None">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate x:DataType="vm:VariableAssignmentItem">
-                                        <Grid ColumnSpacing="8" Padding="0,2">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBox Grid.Column="0" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Variable" />
-                                            <TextBox Grid.Column="1" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Value" />
-                                            <Button Grid.Column="2" Content="&#xE74D;"
-                                                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                                                    Command="{Binding ElementName=CaseExpander, Path=DataContext.RemoveVariableCommand}"
-                                                    CommandParameter="{x:Bind}"
-                                                    VerticalAlignment="Center" />
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                            </ListView>
-                            <StackPanel Orientation="Horizontal" Spacing="4">
+                    <!-- Grid wrapper keeps remove button always visible alongside the Expander -->
+                    <Grid Margin="0,2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Expander x:Name="CaseExpander" Grid.Column="0"
+                                  HorizontalAlignment="Stretch" IsExpanded="True">
+                            <Expander.Header>
+                                <local:RegexInputBox Text="{x:Bind RegEx, Mode=TwoWay}"
+                                                     PlaceholderText="RegEx pattern"
+                                                     HorizontalAlignment="Stretch" />
+                            </Expander.Header>
+                            <StackPanel Spacing="8" Padding="0,4,0,4">
+                                <ListView ItemsSource="{x:Bind Variables}" SelectionMode="None">
+                                    <ListView.ItemTemplate>
+                                        <DataTemplate x:DataType="vm:VariableAssignmentItem">
+                                            <Grid ColumnSpacing="8" Padding="0,2">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBox Grid.Column="0" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Variable" />
+                                                <TextBox Grid.Column="1" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Value" />
+                                                <Button Grid.Column="2" Content="&#xE74D;"
+                                                        FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                                        Command="{Binding ElementName=CaseExpander, Path=DataContext.RemoveVariableCommand}"
+                                                        CommandParameter="{x:Bind}"
+                                                        VerticalAlignment="Center" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ListView.ItemTemplate>
+                                </ListView>
                                 <Button Content="+ Variable" Command="{x:Bind AddVariableCommand}" />
-                                <Button Content="Remove Case"
-                                        Command="{Binding ElementName=Editor, Path=DataContext.RemoveCaseCommand}"
-                                        CommandParameter="{x:Bind}"
-                                        Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
                             </StackPanel>
-                        </StackPanel>
-                    </Expander>
+                        </Expander>
+                        <!-- Remove button: always visible in the row header area -->
+                        <Button Grid.Column="1"
+                                Content="&#xE74D;"
+                                FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                Command="{Binding ElementName=Editor, Path=DataContext.RemoveCaseCommand}"
+                                CommandParameter="{x:Bind}"
+                                Width="32" Height="32" Padding="0"
+                                VerticalAlignment="Top" Margin="4,2,0,0" />
+                    </Grid>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>

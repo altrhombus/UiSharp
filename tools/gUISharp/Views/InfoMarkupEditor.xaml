@@ -1,0 +1,72 @@
+<UserControl
+    x:Class="GUISharp.Views.InfoMarkupEditor"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <StackPanel Spacing="6">
+
+        <!-- Formatting toolbar -->
+        <StackPanel Orientation="Horizontal" Spacing="2">
+            <Button Click="Bold_Click" Width="32" Height="28" Padding="0"
+                    ToolTipService.ToolTip="Bold — wraps selection in &lt;b&gt;&lt;/b&gt;">
+                <TextBlock Text="B" FontWeight="Bold" FontSize="13"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Button>
+            <Button Click="Italic_Click" Width="32" Height="28" Padding="0"
+                    ToolTipService.ToolTip="Italic — wraps selection in &lt;i&gt;&lt;/i&gt;">
+                <TextBlock Text="I" FontStyle="Italic" FontSize="13"
+                           HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Button>
+            <Button Height="28" Padding="6,0"
+                    ToolTipService.ToolTip="Colored text — pick a color and wrap selection in &lt;color&gt;&lt;/color&gt;">
+                <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                    <Border x:Name="ColorSwatch" Width="11" Height="11" CornerRadius="2"
+                            VerticalAlignment="Center" />
+                    <TextBlock Text="Color" FontSize="11" VerticalAlignment="Center" />
+                </StackPanel>
+                <Button.Flyout>
+                    <Flyout x:Name="ColorFlyout" Placement="BottomEdgeAlignedLeft">
+                        <StackPanel Spacing="10">
+                            <ColorPicker x:Name="ColorPickerCtrl"
+                                         ColorSpectrumShape="Ring"
+                                         IsMoreButtonVisible="False"
+                                         IsAlphaEnabled="False"
+                                         ColorChanged="ColorPicker_ColorChanged" />
+                            <Button Content="Wrap selection"
+                                    Click="InsertColor_Click"
+                                    HorizontalAlignment="Right" />
+                        </StackPanel>
+                    </Flyout>
+                </Button.Flyout>
+            </Button>
+            <Button Click="Break_Click" Height="28" Padding="6,0"
+                    ToolTipService.ToolTip="Insert a line break (&lt;br&gt;) at the cursor position">
+                <TextBlock Text="↵ Break" FontSize="11" VerticalAlignment="Center" />
+            </Button>
+        </StackPanel>
+
+        <!-- Raw editor -->
+        <TextBox x:Name="EditBox"
+                 AcceptsReturn="True"
+                 MinHeight="72"
+                 MaxHeight="200"
+                 TextWrapping="Wrap"
+                 TextChanged="EditBox_TextChanged"
+                 PlaceholderText="Message text. Use &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;br&gt; for line breaks, and %VariableName% for variables." />
+
+        <!-- Preview -->
+        <TextBlock Text="Preview"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                   Margin="0,4,0,2" />
+        <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                BorderThickness="1" CornerRadius="4" Padding="10,8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+            <RichTextBlock x:Name="PreviewBlock"
+                           TextWrapping="Wrap"
+                           IsTextSelectionEnabled="False"
+                           MinHeight="20" />
+        </Border>
+
+    </StackPanel>
+</UserControl>

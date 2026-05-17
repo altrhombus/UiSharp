@@ -18,6 +18,30 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public string DisplayLabel => BuildDisplayLabel();
 
+    // Segoe MDL2 / Fluent glyph per action category, for the tree icon column.
+    public string ActionIcon => IsGroup ? "" : TypeName switch
+    {
+        // Variables / data
+        C.ActionTypes.TSVar or C.ActionTypes.TSVarList or C.ActionTypes.DefaultValues or
+        C.ActionTypes.Switch or C.ActionTypes.RandomString or C.ActionTypes.Vars or
+        C.ActionTypes.ToJson or C.ActionTypes.FromJson => "",
+
+        // User-facing dialogs
+        C.ActionTypes.UserInput or C.ActionTypes.Preflight or C.ActionTypes.UserInfo or
+        C.ActionTypes.UserInfoFull or C.ActionTypes.ErrorInfo or
+        C.ActionTypes.UserAuth or C.ActionTypes.AppTree => "",
+
+        // Registry / WMI
+        C.ActionTypes.RegRead or C.ActionTypes.RegWrite or
+        C.ActionTypes.WmiRead or C.ActionTypes.WmiWrite => "",
+
+        // Network / external execution
+        C.ActionTypes.Rest or C.ActionTypes.ExternalCall => "",
+
+        // Files, software, utilities
+        _ => "",
+    };
+
     public ObservableCollection<ActionNodeViewModel> Children { get; } = [];
 
     [ObservableProperty]

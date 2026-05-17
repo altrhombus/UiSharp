@@ -15,10 +15,7 @@
         <local:LabeledField Label="Title">
             <TextBox Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
-        <local:LabeledField Label="Message">
-            <TextBox Text="{Binding MessageText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                     AcceptsReturn="True" MaxHeight="120" TextWrapping="Wrap" />
-        </local:LabeledField>
+        <local:InfoMarkupEditor Text="{Binding MessageText, Mode=TwoWay}" />
         <CheckBox Content="Show Cancel Button" IsChecked="{Binding ShowCancel, Mode=TwoWay}" />
         <local:LabeledField Label="Timeout (seconds)">
             <TextBox Text="{Binding Timeout, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />

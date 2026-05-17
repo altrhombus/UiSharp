@@ -139,9 +139,18 @@
                       Margin="4,0">
                 <TreeView.ItemTemplate>
                     <DataTemplate x:DataType="vm:ActionNodeViewModel">
-                        <TreeViewItem ItemsSource="{x:Bind Children}"
-                                      Content="{x:Bind DisplayLabel}"
-                                      IsExpanded="True" />
+                        <TreeViewItem ItemsSource="{x:Bind Children}" IsExpanded="True">
+                            <TreeViewItem.Content>
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <FontIcon Glyph="{x:Bind ActionIcon}"
+                                              FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                              FontSize="14"
+                                              VerticalAlignment="Center"
+                                              Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock Text="{x:Bind DisplayLabel}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </TreeViewItem.Content>
+                        </TreeViewItem>
                     </DataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>

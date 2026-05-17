@@ -26,7 +26,119 @@
 
         <StackPanel Spacing="8">
             <TextBlock Text="Checks" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
-            <StackPanel x:Name="ChecksPanel" Spacing="4" />
+
+            <!-- Empty state -->
+            <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="4" Padding="20,24"
+                    Visibility="{Binding HasChecks, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <StackPanel HorizontalAlignment="Center" Spacing="6">
+                    <FontIcon Glyph="&#xE9D5;" FontSize="20" Opacity="0.4" HorizontalAlignment="Center" />
+                    <TextBlock Text="No checks added yet"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}"
+                               HorizontalAlignment="Center" Opacity="0.6" />
+                    <TextBlock Text="Add a check to validate system state before continuing."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               TextWrapping="Wrap" HorizontalAlignment="Center"
+                               Opacity="0.6" MaxWidth="240" TextAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <!-- Checks list -->
+            <ItemsControl x:Name="ChecksList"
+                          ItemsSource="{Binding Checks}"
+                          Visibility="{Binding HasChecks, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PreflightCheckItem">
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Expander Grid.Column="0"
+                                      HorizontalAlignment="Stretch"
+                                      IsExpanded="{x:Bind IsExpanded, Mode=TwoWay}">
+                                <Expander.Header>
+                                    <TextBlock Text="{x:Bind Text, Mode=OneWay}"
+                                               VerticalAlignment="Center"
+                                               TextTrimming="CharacterEllipsis" />
+                                </Expander.Header>
+                                <StackPanel Spacing="12" Padding="4,8,4,8">
+                                    <!-- Section A: Display Text -->
+                                    <TextBlock Text="DISPLAY TEXT"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               CharacterSpacing="50" />
+                                    <local:LabeledField Label="Text">
+                                        <TextBox Text="{x:Bind Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </local:LabeledField>
+                                    <local:LabeledField Label="Description (pass)">
+                                        <TextBox Text="{x:Bind Description, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </local:LabeledField>
+                                    <local:LabeledField Label="Warn Description">
+                                        <TextBox Text="{x:Bind WarnDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </local:LabeledField>
+                                    <local:LabeledField Label="Error Description">
+                                        <TextBox Text="{x:Bind ErrorDescription, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </local:LabeledField>
+
+                                    <Border Height="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" Margin="0,4" />
+
+                                    <!-- Section B: Logic -->
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0"
+                                                   Text="LOGIC"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   CharacterSpacing="50"
+                                                   VerticalAlignment="Center" />
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <Ellipse Width="8" Height="8" Fill="#2CB67D" />
+                                                <TextBlock Text="Pass" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <Ellipse Width="8" Height="8" Fill="#F59E0B" />
+                                                <TextBlock Text="Warn" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                                <Ellipse Width="8" Height="8" Fill="#EF4444" />
+                                                <TextBlock Text="Fail" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+                                        </StackPanel>
+                                    </Grid>
+                                    <local:LabeledField Label="Check Condition">
+                                        <TextBox Text="{x:Bind CheckCondition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </local:LabeledField>
+                                    <local:LabeledField Label="Warn Condition">
+                                        <TextBox Text="{x:Bind WarnCondition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                                    </local:LabeledField>
+                                    <local:LabeledField Label="Visibility Condition">
+                                        <TextBox Text="{x:Bind Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+                                    </local:LabeledField>
+                                </StackPanel>
+                            </Expander>
+                            <Button Grid.Column="1"
+                                    Content="&#xE74D;"
+                                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                    Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                    Command="{Binding ElementName=ChecksList, Path=DataContext.RemoveCheckCommand}"
+                                    CommandParameter="{x:Bind}"
+                                    Width="32" Height="32" Padding="0"
+                                    VerticalAlignment="Top" Margin="4,2,0,0" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="4" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
             <Button Content="+ Check" Command="{Binding AddCheckCommand}" />
         </StackPanel>
     </StackPanel>
