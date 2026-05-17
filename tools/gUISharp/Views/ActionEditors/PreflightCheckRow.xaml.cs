@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Windows.Input;
 using GUISharp.ViewModels.ActionEditors;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -7,6 +8,15 @@ namespace GUISharp.Views.ActionEditors;
 
 public sealed partial class PreflightCheckRow : UserControl
 {
+    public static readonly DependencyProperty RemoveCommandProperty =
+        DependencyProperty.Register(nameof(RemoveCommand), typeof(ICommand), typeof(PreflightCheckRow), new PropertyMetadata(null));
+
+    public ICommand? RemoveCommand
+    {
+        get => (ICommand?)GetValue(RemoveCommandProperty);
+        set => SetValue(RemoveCommandProperty, value);
+    }
+
     private PreflightCheckItem? _item;
 
     public PreflightCheckRow()

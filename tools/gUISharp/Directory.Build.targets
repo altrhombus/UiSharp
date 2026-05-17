@@ -5,4 +5,19 @@
   <PropertyGroup>
     <XamlCompilerExePath>$(MSBuildProjectDirectory)\xamlcompiler-wrap.cmd</XamlCompilerExePath>
   </PropertyGroup>
+
+  <!-- WebView2Loader.dll ships in runtimes/win-<arch>/native/ but the OS DLL loader only
+       searches the exe directory. Copy the correct architecture slice next to the exe so
+       EnsureCoreWebView2Async can find it at runtime.
+       This only runs when Platform is set explicitly (x64/x86/arm64); AnyCPU builds skip it. -->
+  <Target Name="CopyWebView2Loader" AfterTargets="Build"
+          Condition="'$(PlatformTarget)' != '' And '$(PlatformTarget)' != 'AnyCPU'">
+    <PropertyGroup>
+      <_WV2NativeDir>$(OutDir)runtimes\win-$(PlatformTarget)\native\</_WV2NativeDir>
+    </PropertyGroup>
+    <Copy SourceFiles="$(_WV2NativeDir)WebView2Loader.dll"
+          DestinationFolder="$(OutDir)"
+          SkipUnchangedFiles="true"
+          Condition="Exists('$(_WV2NativeDir)WebView2Loader.dll')" />
+  </Target>
 </Project>

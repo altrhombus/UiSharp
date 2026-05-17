@@ -37,6 +37,6 @@ public sealed partial class PreflightEditor : UserControl
         ChecksPanel.Children.Clear();
         if (_vm is null) return;
         foreach (var item in _vm.Checks)
-            ChecksPanel.Children.Add(new PreflightCheckRow { DataContext = item });
+            ChecksPanel.Children.Add(new PreflightCheckRow { DataContext = item, RemoveCommand = _vm.RemoveCheckCommand });
     }
 }

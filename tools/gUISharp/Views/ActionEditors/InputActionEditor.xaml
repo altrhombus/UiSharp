@@ -28,17 +28,23 @@
                        TextWrapping="Wrap"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
-            <ListView ItemsSource="{Binding Fields}" SelectionMode="None">
+            <ListView x:Name="FieldsListView" ItemsSource="{Binding Fields}" SelectionMode="None">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:InputFieldItem">
                         <Expander HorizontalAlignment="Stretch" IsExpanded="False">
                             <Expander.Header>
                                 <TextBlock Text="{x:Bind ElementName, Mode=OneWay}" />
                             </Expander.Header>
-                            <TextBox Text="{x:Bind RawXml, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                     AcceptsReturn="True" MaxHeight="200"
-                                     FontFamily="Cascadia Mono, Consolas"
-                                     TextWrapping="Wrap" />
+                            <StackPanel Spacing="6" Padding="0,4,0,4">
+                                <TextBox Text="{x:Bind RawXml, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         AcceptsReturn="True" MaxHeight="200"
+                                         FontFamily="Cascadia Mono, Consolas"
+                                         TextWrapping="Wrap" />
+                                <Button Content="Remove Field"
+                                        Command="{Binding ElementName=FieldsListView, Path=DataContext.RemoveFieldCommand}"
+                                        CommandParameter="{x:Bind}"
+                                        Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                            </StackPanel>
                         </Expander>
                     </DataTemplate>
                 </ListView.ItemTemplate>
