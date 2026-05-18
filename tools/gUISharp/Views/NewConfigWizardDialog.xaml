@@ -1,0 +1,98 @@
+<ContentDialog
+    x:Class="GUISharp.Views.NewConfigWizardDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GUISharp.Views"
+    Title="New Configuration"
+    PrimaryButtonText="Next"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary"
+    PrimaryButtonClick="Dialog_PrimaryButtonClick"
+    SecondaryButtonText="Back"
+    IsSecondaryButtonEnabled="False"
+    SecondaryButtonClick="Dialog_SecondaryButtonClick">
+
+    <StackPanel Width="480" Spacing="0">
+
+        <!-- ── Step 1: Choose scenario ───────────────────────────────────── -->
+        <StackPanel x:Name="Step1Panel" Spacing="12">
+            <TextBlock Text="Choose a starting point for your configuration."
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <RadioButton x:Name="RadioStandardOsd"
+                         GroupName="Scenario" IsChecked="True"
+                         HorizontalAlignment="Stretch"
+                         Padding="12,10">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Standard OSD" FontWeight="SemiBold" />
+                    <TextBlock Text="Computer naming prompt followed by application and package selection. The standard starting point for OSD task sequences."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </RadioButton>
+
+            <RadioButton x:Name="RadioSoftwareOnly"
+                         GroupName="Scenario"
+                         HorizontalAlignment="Stretch"
+                         Padding="12,10">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Software Selection" FontWeight="SemiBold" />
+                    <TextBlock Text="Application and package selection only. Use in existing deployments that already handle computer naming."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </RadioButton>
+
+            <RadioButton x:Name="RadioUserInfo"
+                         GroupName="Scenario"
+                         HorizontalAlignment="Stretch"
+                         Padding="12,10">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="User Info Capture" FontWeight="SemiBold" />
+                    <TextBlock Text="Collect user-provided information via a guided input dialog. Suitable for pre-staging or enrollment flows."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </RadioButton>
+
+            <RadioButton x:Name="RadioBlank"
+                         GroupName="Scenario"
+                         HorizontalAlignment="Stretch"
+                         Padding="12,10">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Blank" FontWeight="SemiBold" />
+                    <TextBlock Text="Start with an empty configuration and build from scratch."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+            </RadioButton>
+        </StackPanel>
+
+        <!-- ── Step 2: Configure settings ───────────────────────────────── -->
+        <StackPanel x:Name="Step2Panel" Visibility="Collapsed" Spacing="12">
+            <TextBlock x:Name="Step2Subtitle"
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <local:LabeledField Label="Configuration Title">
+                <TextBox x:Name="TitleBox" PlaceholderText="e.g. Operating System Deployment" />
+            </local:LabeledField>
+
+            <!-- AppTree variable base fields (shown for OSD and Software Selection) -->
+            <StackPanel x:Name="AppTreeSettings" Spacing="12">
+                <local:LabeledField Label="Application Variable Base">
+                    <TextBox x:Name="AppVarBaseBox" Text="XApplications" />
+                </local:LabeledField>
+                <local:LabeledField Label="Package Variable Base">
+                    <TextBox x:Name="PkgVarBaseBox" Text="XPackages" />
+                </local:LabeledField>
+            </StackPanel>
+        </StackPanel>
+
+    </StackPanel>
+</ContentDialog>

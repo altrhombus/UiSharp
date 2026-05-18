@@ -18,10 +18,15 @@ public sealed partial class WmiWriteViewModel : ObservableObject, IActionEditor
     [ObservableProperty] public partial string Condition    { get; set; }
 
     public ObservableCollection<WmiPropertyItem> Properties { get; } = [];
+    public bool HasProperties => Properties.Count > 0;
+
+    public static IReadOnlyList<string> CimTypeOptions { get; } =
+        ["CIM_STRING", "CIM_UINT32", "CIM_SINT32", "CIM_BOOLEAN", "CIM_REAL64", "CIM_DATETIME"];
 
     public WmiWriteViewModel(ActionNodeModel model)
     {
         _model       = model;
+        Properties.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasProperties));
         Namespace    = Attr(C.Attributes.Namespace)    ?? C.Defaults.Namespace;
         Class        = Attr(C.Attributes.Class)        ?? string.Empty;
         KeyQualifier = Attr(C.Attributes.KeyQualifier) ?? string.Empty;

@@ -14,4 +14,7 @@ public sealed class ConfigService : IConfigService
     }
 
     public EditorConfig NewConfig() => new();
+
+    public EditorConfig LoadFromXml(string xml) =>
+        EditorConfig.FromLoaded(ConfigLoader.LoadFromXml(xml));
 }

@@ -14,11 +14,13 @@ public abstract partial class InputFieldViewModel : ObservableObject
 {
     [ObservableProperty] public partial string Condition  { get; set; }
     [ObservableProperty] public partial bool   IsExpanded { get; set; }
+    [ObservableProperty] public partial string Comment    { get; set; }
 
     protected InputFieldViewModel()
     {
         Condition  = string.Empty;
         IsExpanded = false;
+        Comment    = string.Empty;
     }
 
     public abstract string ElementName { get; }
@@ -46,9 +48,22 @@ public sealed partial class InputTextViewModel : InputFieldViewModel
     [ObservableProperty] public partial bool   Required  { get; set; }
     [ObservableProperty] public partial bool   Password  { get; set; }
     [ObservableProperty] public partial bool   ReadOnly  { get; set; }
-    [ObservableProperty] public partial string ForceCase { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedForceCaseOption))]
+    public partial string ForceCase { get; set; }
 
-    public IReadOnlyList<string> ForceCaseOptions { get; } = ["", C.Values.Upper, C.Values.Lower];
+    public static IReadOnlyList<ForceCaseOption> ForceCaseOptions { get; } =
+    [
+        new("(none)", ""),
+        new("UPPER",  C.Values.Upper),
+        new("lower",  C.Values.Lower),
+    ];
+
+    public ForceCaseOption SelectedForceCaseOption
+    {
+        get => ForceCaseOptions.FirstOrDefault(o => o.Value == ForceCase) ?? ForceCaseOptions[0];
+        set { ForceCase = value?.Value ?? string.Empty; }
+    }
 
     public InputTextViewModel()
     {
@@ -227,15 +242,27 @@ public sealed partial class InputActionViewModel : ObservableObject, IActionEdit
     private readonly ActionNodeModel _model;
 
     [ObservableProperty] public partial string Title      { get; set; }
-    [ObservableProperty] public partial string Size       { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(SelectedSizeOption))]
+    public partial string Size { get; set; }
     [ObservableProperty] public partial bool   ShowCancel { get; set; }
     [ObservableProperty] public partial string Condition  { get; set; }
 
     public ObservableCollection<InputFieldViewModel> Fields { get; } = [];
     public bool HasFields => Fields.Count > 0;
 
-    public static IReadOnlyList<string> SizeOptions { get; } =
-        [C.Values.SizeRegular, C.Values.SizeTall, C.Values.SizeExtraTall];
+    public static IReadOnlyList<SizeOption> SizeOptions { get; } =
+    [
+        new(C.Values.SizeRegular,    "Regular (3 fields)"),
+        new(C.Values.SizeTall,       "Tall (6 fields)"),
+        new(C.Values.SizeExtraTall,  "ExtraTall (9 fields)"),
+    ];
+
+    public SizeOption SelectedSizeOption
+    {
+        get => SizeOptions.FirstOrDefault(o => o.Value == Size) ?? SizeOptions[0];
+        set { Size = value?.Value ?? C.Values.SizeRegular; }
+    }
 
     public InputActionViewModel(ActionNodeModel model)
     {
@@ -247,15 +274,21 @@ public sealed partial class InputActionViewModel : ObservableObject, IActionEdit
         ShowCancel = BoolAttr(model.Node, C.Attributes.ShowCancel);
         Condition  = Attr(model.Node, C.Attributes.Condition);
 
-        foreach (var el in model.Node.Elements())
+        string? pendingFieldComment = null;
+        foreach (var node in model.Node.Nodes())
         {
-            var localName = el.Name.LocalName;
-            if (!IsInputElement(localName)) continue;
-            var vm = CreateFieldViewModel(el, NormalizeInputName(localName));
-            if (vm is not null)
+            if (node is XComment cmt)
+                pendingFieldComment = pendingFieldComment is null ? cmt.Value.Trim() : pendingFieldComment + "\n" + cmt.Value.Trim();
+            else if (node is XElement el && IsInputElement(el.Name.LocalName))
             {
-                vm.IsExpanded = false;
-                Fields.Add(vm);
+                var vm = CreateFieldViewModel(el, NormalizeInputName(el.Name.LocalName));
+                if (vm is not null)
+                {
+                    vm.Comment    = pendingFieldComment ?? string.Empty;
+                    vm.IsExpanded = false;
+                    Fields.Add(vm);
+                }
+                pendingFieldComment = null;
             }
         }
     }
@@ -282,9 +315,14 @@ public sealed partial class InputActionViewModel : ObservableObject, IActionEdit
         SetBool(C.Attributes.ShowCancel, ShowCancel);
         Set(C.Attributes.Condition,  Condition);
 
+        _model.Node.Nodes().OfType<XComment>().Remove();
         _model.Node.Elements().Where(e => IsInputElement(e.Name.LocalName)).Remove();
         foreach (var field in Fields)
+        {
+            if (!string.IsNullOrEmpty(field.Comment))
+                _model.Node.Add(new XComment(field.Comment));
             _model.Node.Add(field.ToElement());
+        }
     }
 
     // ── Field factory ─────────────────────────────────────────────────────────
@@ -414,4 +452,26 @@ public sealed partial class InputActionViewModel : ObservableObject, IActionEdit
 
     private void SetBool(string name, bool val) =>
         _model.Node.SetAttributeValue(name, val ? C.Values.True : C.Values.False);
+}
+
+public sealed class ForceCaseOption
+{
+    public string Display { get; }
+    public string Value   { get; }
+
+    internal ForceCaseOption(string display, string value)
+        => (Display, Value) = (display, value);
+
+    public override string ToString() => Display;
+}
+
+public sealed class SizeOption
+{
+    public string Value   { get; }
+    public string Display { get; }
+
+    internal SizeOption(string value, string display)
+        => (Value, Display) = (value, display);
+
+    public override string ToString() => Display;
 }

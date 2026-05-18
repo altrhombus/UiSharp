@@ -1,4 +1,5 @@
 <Page
+    x:Name="PageRoot"
     x:Class="GUISharp.Views.ActionListPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -68,14 +69,15 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="280" MinWidth="180" MaxWidth="420" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition x:Name="TreeCol" Width="340" MinWidth="200" />
+            <ColumnDefinition Width="5" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <!-- ── Left panel: action tree ──────────────────────────────────────── -->
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
@@ -132,7 +134,26 @@
                 </SplitButton.Flyout>
             </SplitButton>
 
-            <TreeView Grid.Row="1" x:Name="ActionTreeView"
+            <Grid Grid.Row="1" Margin="8,0,8,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBox Grid.Column="0"
+                         x:Name="SearchBox"
+                         PlaceholderText="Search actions…"
+                         Text="{x:Bind ViewModel.ActionList.FilterText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                         KeyDown="SearchBox_KeyDown" />
+                <TextBlock Grid.Column="1"
+                           VerticalAlignment="Center"
+                           Margin="6,0,0,0"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Text="{x:Bind ViewModel.ActionList.FilterSummary, Mode=OneWay}"
+                           Visibility="{x:Bind ViewModel.ActionList.IsFiltering, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+            </Grid>
+
+            <TreeView Grid.Row="2" x:Name="ActionTreeView"
                       SelectionMode="Single"
                       ItemsSource="{x:Bind ViewModel.ActionList.ActionTree}"
                       SelectedItem="{x:Bind ViewModel.ActionList.SelectedAction, Mode=TwoWay}"
@@ -140,29 +161,96 @@
                 <TreeView.ItemTemplate>
                     <DataTemplate x:DataType="vm:ActionNodeViewModel">
                         <TreeViewItem ItemsSource="{x:Bind Children}" IsExpanded="True">
+                            <TreeViewItem.ContextFlyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Text="Duplicate"
+                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.ActionList.DuplicateActionCommand}">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem Text="Move Up"
+                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.ActionList.MoveUpCommand}">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74A;" /></MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutItem Text="Move Down"
+                                                    Command="{Binding ElementName=PageRoot, Path=ViewModel.ActionList.MoveDownCommand}">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74B;" /></MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem Text="Delete"
+                                                    Click="RemoveAction_Click"
+                                                    Foreground="{ThemeResource SystemFillColorCriticalBrush}">
+                                        <MenuFlyoutItem.Icon>
+                                            <FontIcon Glyph="&#xE74D;" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                                        </MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                </MenuFlyout>
+                            </TreeViewItem.ContextFlyout>
                             <TreeViewItem.Content>
-                                <StackPanel Orientation="Horizontal" Spacing="8">
-                                    <FontIcon Glyph="{x:Bind ActionIcon}"
+                                <Grid Opacity="{x:Bind MatchOpacity, Mode=OneWay}"
+                                      Margin="0,0,10,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <FontIcon Grid.Column="0"
+                                              Glyph="{x:Bind ActionIcon}"
                                               FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                               FontSize="14"
                                               VerticalAlignment="Center"
+                                              Margin="0,0,8,0"
                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <TextBlock Text="{x:Bind DisplayLabel}" VerticalAlignment="Center" />
-                                </StackPanel>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{x:Bind DisplayLabel, Mode=OneWay}"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{x:Bind CommentDisplay, Mode=OneWay}"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                   FontStyle="Italic"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Visibility="{x:Bind HasComment, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    </StackPanel>
+                                    <Border Grid.Column="2"
+                                            CornerRadius="10"
+                                            Padding="7,2"
+                                            Margin="6,0,0,0"
+                                            VerticalAlignment="Center"
+                                            Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                            Visibility="{x:Bind HasSummary, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <TextBlock Text="{x:Bind SummaryLabel, Mode=OneWay}"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Border>
+                                    <FontIcon Grid.Column="3"
+                                              Glyph="&#xE7BA;"
+                                              FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                              FontSize="12"
+                                              VerticalAlignment="Center"
+                                              Margin="4,0,0,0"
+                                              Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                              Visibility="{x:Bind HasWarning, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                              ToolTipService.ToolTip="{x:Bind WarningMessage, Mode=OneWay}" />
+                                </Grid>
                             </TreeViewItem.Content>
                         </TreeViewItem>
                     </DataTemplate>
                 </TreeView.ItemTemplate>
             </TreeView>
 
-            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="8,4,8,8" Spacing="4">
+            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8,4,8,8" Spacing="4">
                 <Button Command="{x:Bind ViewModel.ActionList.MoveUpCommand}" ToolTipService.ToolTip="Move Up">
                     <FontIcon Glyph="&#xE74A;" FontSize="14" />
                 </Button>
                 <Button Command="{x:Bind ViewModel.ActionList.MoveDownCommand}" ToolTipService.ToolTip="Move Down">
                     <FontIcon Glyph="&#xE74B;" FontSize="14" />
                 </Button>
-                <Button Command="{x:Bind ViewModel.ActionList.RemoveActionCommand}"
+                <Button Command="{x:Bind ViewModel.ActionList.DuplicateActionCommand}" ToolTipService.ToolTip="Duplicate Action">
+                    <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                </Button>
+                <Button IsEnabled="{x:Bind ViewModel.ActionList.HasSelection, Mode=OneWay}"
+                        Click="RemoveAction_Click"
                         ToolTipService.ToolTip="Remove Action"
                         Foreground="{ThemeResource SystemFillColorCriticalBrush}">
                     <FontIcon Glyph="&#xE74D;" FontSize="14" />
@@ -170,8 +258,17 @@
             </StackPanel>
         </Grid>
 
-        <!-- Outer vertical divider -->
-        <Border Grid.Column="1" Width="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+        <!-- Tree resize splitter -->
+        <Grid Grid.Column="1"
+              Background="Transparent"
+              PointerEntered="TreeSplitter_PointerEntered"
+              PointerExited="TreeSplitter_PointerExited"
+              PointerPressed="TreeSplitter_PointerPressed"
+              PointerMoved="TreeSplitter_PointerMoved"
+              PointerReleased="TreeSplitter_PointerReleased">
+            <Border Width="1" HorizontalAlignment="Center"
+                    Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+        </Grid>
 
         <!-- ── Editor area: Guided | Splitter | XML ─────────────────────────── -->
         <Grid Grid.Column="2">
@@ -231,17 +328,60 @@
 
                 <!-- Guided content -->
                 <Grid Grid.Row="1">
-                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8"
-                                Visibility="{x:Bind ViewModel.ActionList.HasSelection, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
-                        <FontIcon Glyph="&#xE8A5;" FontSize="48" Opacity="0.25" HorizontalAlignment="Center" />
-                        <TextBlock Text="Select an action to edit" Opacity="0.4" HorizontalAlignment="Center" />
-                    </StackPanel>
-                    <ScrollViewer x:Name="GuidedScroller" Padding="16"
-                                  Visibility="{x:Bind ViewModel.ActionList.HasSelection, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
-                        <ContentControl Content="{x:Bind ViewModel.ActionList.SelectedAction, Mode=OneWay}"
-                                        ContentTemplateSelector="{StaticResource EditorSelector}"
-                                        HorizontalContentAlignment="Stretch" />
-                    </ScrollViewer>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Cascading rename offer (P7) -->
+                    <!--<InfoBar Grid.Row="0"
+                             IsOpen="{x:Bind ViewModel.ActionList.HasPendingRename, Mode=OneWay}"
+                             Severity="Informational"
+                             Title=""
+                             Message="{x:Bind ViewModel.ActionList.PendingRenameMessage, Mode=OneWay}"
+                             IsClosable="True"
+                             Closed="RenameInfoBar_Closed">
+                        <InfoBar.ActionButton>
+                            <Button Content="Update All"
+                                    Command="{x:Bind ViewModel.ActionList.AcceptRenameCommand}" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>-->
+
+                    <!-- Note / XML comment for this action -->
+                    <Border Grid.Row="1" Padding="16,8,16,0"
+                            Visibility="{x:Bind ViewModel.ActionList.HasSelection, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0"
+                                       Text="Note"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,8,0"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBox Grid.Column="1"
+                                     PlaceholderText="XML comment shown in action tree…"
+                                     Text="{x:Bind ViewModel.ActionList.SelectedAction.Comment, Mode=TwoWay, FallbackValue=''}"
+                                     AcceptsReturn="False" />
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="2">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8"
+                                    Visibility="{x:Bind ViewModel.ActionList.HasSelection, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
+                            <FontIcon Glyph="&#xE8A5;" FontSize="48" Opacity="0.25" HorizontalAlignment="Center" />
+                            <TextBlock Text="Select an action to edit" Opacity="0.4" HorizontalAlignment="Center" />
+                        </StackPanel>
+                        <ScrollViewer x:Name="GuidedScroller" Padding="16"
+                                      Visibility="{x:Bind ViewModel.ActionList.HasSelection, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                            <ContentControl Content="{x:Bind ViewModel.ActionList.SelectedAction, Mode=OneWay}"
+                                            ContentTemplateSelector="{StaticResource EditorSelector}"
+                                            HorizontalContentAlignment="Stretch" />
+                        </ScrollViewer>
+                    </Grid>
                 </Grid>
             </Grid>
 

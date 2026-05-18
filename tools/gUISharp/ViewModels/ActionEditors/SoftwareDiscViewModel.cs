@@ -15,13 +15,12 @@ public sealed partial class SoftwareDiscViewModel : ObservableObject, IActionEdi
     [ObservableProperty] public partial string Condition { get; set; }
 
     public ObservableCollection<SoftwareMatchItem> Matches { get; } = [];
-
-    public static IReadOnlyList<string> VersionOperators { get; } =
-        ["eq", "gt", "gte", "lt", "lte", "ne", "re"];
+    public bool HasMatches => Matches.Count > 0;
 
     public SoftwareDiscViewModel(ActionNodeModel model)
     {
         _model    = model;
+        Matches.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasMatches));
         Condition = Attr(C.Attributes.Condition) ?? string.Empty;
 
         foreach (var el in model.Node.Elements("Match"))
@@ -76,6 +75,9 @@ public sealed partial class SoftwareMatchItem : ObservableObject
     [ObservableProperty] public partial string Variable        { get; set; }
     [ObservableProperty] public partial string Version         { get; set; }
     [ObservableProperty] public partial string VersionOperator { get; set; }
+
+    public static IReadOnlyList<string> VersionOperatorOptions { get; } =
+        [">=", "<=", ">", "<", "=", "!="];
 
     public SoftwareMatchItem()
     {

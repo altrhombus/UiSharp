@@ -17,6 +17,9 @@ public sealed partial class ActionListViewModel : ObservableObject
     private bool _updatingFromXml;
     private bool _xmlDirtyForGuided;
     private readonly List<(ActionNodeViewModel Vm, int Start, int End)> _lineRanges = [];
+    private string? _trackedVarName;
+    private string? _pendingRenameFrom;
+    private string? _pendingRenameTo;
 
     public ObservableCollection<ActionNodeViewModel> ActionTree { get; } = [];
 
@@ -30,7 +33,31 @@ public sealed partial class ActionListViewModel : ObservableObject
     [ObservableProperty]
     public partial string? XmlValidationError { get; set; }
 
+    [ObservableProperty]
+    public partial string FilterText { get; set; } = string.Empty;
+
     public bool HasSelection => SelectedAction is not null;
+
+    public bool IsFiltering => FilterText.Length > 0;
+
+    public string FilterSummary
+    {
+        get
+        {
+            if (!IsFiltering) return string.Empty;
+            int matches = CountMatches(ActionTree);
+            int total = CountAll(ActionTree);
+            return $"{matches} of {total}";
+        }
+    }
+
+    [ObservableProperty]
+    public partial bool HasPendingRename { get; private set; }
+
+    [ObservableProperty]
+    public partial string PendingRenameMessage { get; private set; } = string.Empty;
+
+    public IReadOnlyList<VariableEntry> DeclaredVariables { get; private set; } = [];
 
     /// <summary>1-indexed line range of the selected action within <see cref="CurrentXmlText"/>. (-1,-1) when nothing is selected.</summary>
     public (int Start, int End) SelectedLineRange { get; private set; } = (-1, -1);
@@ -50,12 +77,15 @@ public sealed partial class ActionListViewModel : ObservableObject
         ActionTree.Clear();
         foreach (var model in models)
         {
+            AttachLeadingComment(model);
             var vm = new ActionNodeViewModel(model, _factory);
             vm.Dirtied += (_, _) => RaiseDirty();
+            vm.ApplyFilter(FilterText);
             ActionTree.Add(vm);
         }
         SelectedAction = null;
         RefreshXmlFromNode();
+        RefreshVariables();
     }
 
     public List<ActionNodeModel> CollectModels()
@@ -131,18 +161,22 @@ public sealed partial class ActionListViewModel : ObservableObject
         try
         {
             var root = XElement.Parse(xml);
-            var children = root.Elements().ToList();
+            var pairs = ExtractNodePairs(root);
 
-            if (children.Count == ActionTree.Count)
+            if (pairs.Count == ActionTree.Count)
             {
                 // Count unchanged: update each node in-place (preserves VMs and scroll position).
-                for (int i = 0; i < children.Count; i++)
-                    ApplyParsedNode(ActionTree[i].Model.Node, children[i]);
+                for (int i = 0; i < pairs.Count; i++)
+                {
+                    ApplyParsedNode(ActionTree[i].Model.Node, pairs[i].El);
+                    ActionTree[i].Model.Comment = pairs[i].Comment;
+                    ActionTree[i].NotifyCommentChanged();
+                }
             }
             else
             {
-                // Structure changed: rebuild the entire tree from the parsed elements.
-                RebuildTreeFromElements(children);
+                // Structure changed: rebuild the entire tree from the parsed pairs.
+                RebuildTreeFromPairs(pairs);
             }
 
             XmlValidationError = null;
@@ -156,7 +190,7 @@ public sealed partial class ActionListViewModel : ObservableObject
         }
     }
 
-    private void RebuildTreeFromElements(List<XElement> elements)
+    private void RebuildTreeFromPairs(List<(string? Comment, XElement El)> pairs)
     {
         // Remember which index was selected so we can restore the closest match.
         int selectedIdx = SelectedAction is not null ? ActionTree.IndexOf(SelectedAction) : -1;
@@ -167,11 +201,13 @@ public sealed partial class ActionListViewModel : ObservableObject
         SelectedAction = null;
         ActionTree.Clear();
 
-        foreach (var el in elements)
+        foreach (var (comment, el) in pairs)
         {
             var model = BuildModelFromElement(el);
+            model.Comment = comment;
             var vm = new ActionNodeViewModel(model, _factory);
             vm.Dirtied += (_, _) => RaiseDirty();
+            vm.ApplyFilter(FilterText);
             ActionTree.Add(vm);
         }
 
@@ -184,8 +220,12 @@ public sealed partial class ActionListViewModel : ObservableObject
         var model = new ActionNodeModel { Node = el };
         if (model.IsGroup)
         {
-            foreach (var child in el.Elements())
-                model.Children.Add(BuildModelFromElement(child));
+            foreach (var (comment, child) in ExtractNodePairs(el))
+            {
+                var childModel = BuildModelFromElement(child);
+                childModel.Comment = comment;
+                model.Children.Add(childModel);
+            }
         }
         return model;
     }
@@ -226,6 +266,14 @@ public sealed partial class ActionListViewModel : ObservableObject
     {
         foreach (var vm in nodes)
         {
+            if (!string.IsNullOrEmpty(vm.Model.Comment))
+            {
+                var commentXml = "<!--" + vm.Model.Comment + "-->";
+                sb.Append(indent);
+                sb.AppendLine(commentXml);
+                line += commentXml.Count(c => c == '\n') + 1;
+            }
+
             var raw = vm.Model.Node.ToString();
             var rawLines = raw.Split('\n');
             int vmStart = line;
@@ -304,7 +352,9 @@ public sealed partial class ActionListViewModel : ObservableObject
         var model = new ActionNodeModel { Node = node };
         var vm = new ActionNodeViewModel(model, _factory);
         vm.Dirtied += (_, _) => RaiseDirty();
-        ActionTree.Add(vm);
+        vm.ApplyFilter(FilterText);
+        InsertAfterSelection(vm);
+        SelectedAction = vm;
         RaiseDirty();
     }
 
@@ -316,8 +366,22 @@ public sealed partial class ActionListViewModel : ObservableObject
         var model = new ActionNodeModel { Node = node };
         var vm = new ActionNodeViewModel(model, _factory);
         vm.Dirtied += (_, _) => RaiseDirty();
-        ActionTree.Add(vm);
+        vm.ApplyFilter(FilterText);
+        InsertAfterSelection(vm);
+        SelectedAction = vm;
         RaiseDirty();
+    }
+
+    private void InsertAfterSelection(ActionNodeViewModel vm)
+    {
+        if (SelectedAction is null)
+        {
+            ActionTree.Add(vm);
+            return;
+        }
+        var owning = FindOwningList(ActionTree, SelectedAction) ?? ActionTree;
+        int idx = owning.IndexOf(SelectedAction);
+        owning.Insert(idx + 1, vm);
     }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
@@ -347,6 +411,22 @@ public sealed partial class ActionListViewModel : ObservableObject
         if (idx >= 0 && idx < list.Count - 1) { list.Move(idx, idx + 1); RaiseDirty(); }
     }
 
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private void DuplicateAction()
+    {
+        if (SelectedAction is null) return;
+        var copy = new XElement(SelectedAction.Model.Node);
+        var model = BuildModelFromElement(copy);
+        var vm = new ActionNodeViewModel(model, _factory);
+        vm.Dirtied += (_, _) => RaiseDirty();
+        vm.ApplyFilter(FilterText);
+        var owningList = FindOwningList(ActionTree, SelectedAction) ?? ActionTree;
+        int idx = owningList.IndexOf(SelectedAction);
+        owningList.Insert(idx + 1, vm);
+        SelectedAction = vm;
+        RaiseDirty();
+    }
+
     partial void OnSelectedActionChanged(ActionNodeViewModel? value)
     {
         if (_previousSelection is not null)
@@ -359,9 +439,21 @@ public sealed partial class ActionListViewModel : ObservableObject
 
         RefreshXmlFromNode();
 
+        _trackedVarName = value is not null ? GetDeclaredVariable(value) : null;
+        DismissPendingRename();
+
         RemoveActionCommand.NotifyCanExecuteChanged();
         MoveUpCommand.NotifyCanExecuteChanged();
         MoveDownCommand.NotifyCanExecuteChanged();
+        DuplicateActionCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnFilterTextChanged(string value)
+    {
+        foreach (var vm in ActionTree)
+            vm.ApplyFilter(value);
+        OnPropertyChanged(nameof(IsFiltering));
+        OnPropertyChanged(nameof(FilterSummary));
     }
 
     private void OnSelectedDirtied(object? sender, EventArgs e)
@@ -370,11 +462,31 @@ public sealed partial class ActionListViewModel : ObservableObject
         if (SelectedAction?.EditorViewModel is IActionEditor editor)
             editor.FlushToNode();
         RefreshXmlFromNode();
+
+        if (!HasPendingRename && SelectedAction is not null)
+        {
+            string? currentVar = GetDeclaredVariable(SelectedAction);
+            if (currentVar != _trackedVarName
+                && !string.IsNullOrEmpty(_trackedVarName)
+                && !string.IsNullOrEmpty(currentVar))
+            {
+                int count = CountVariableReferences(_trackedVarName!);
+                if (count > 0)
+                    SetPendingRename(_trackedVarName!, currentVar!, count);
+            }
+            _trackedVarName = currentVar;
+        }
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
 
-    private void RaiseDirty() => Dirtied?.Invoke(this, EventArgs.Empty);
+    private void RaiseDirty()
+    {
+        Dirtied?.Invoke(this, EventArgs.Empty);
+        if (IsFiltering)
+            OnPropertyChanged(nameof(FilterSummary));
+        RefreshVariables();
+    }
 
     private void FlushAll()
     {
@@ -403,6 +515,175 @@ public sealed partial class ActionListViewModel : ObservableObject
         return false;
     }
 
+    [RelayCommand]
+    private void AcceptRename()
+    {
+        if (string.IsNullOrEmpty(_pendingRenameFrom) || string.IsNullOrEmpty(_pendingRenameTo)) return;
+        string oldTag = $"%{_pendingRenameFrom}%";
+        string newTag = $"%{_pendingRenameTo}%";
+        OnXmlEdited(CurrentXmlText.Replace(oldTag, newTag, StringComparison.OrdinalIgnoreCase));
+        DismissPendingRename();
+    }
+
+    public void DismissPendingRename()
+    {
+        HasPendingRename = false;
+        PendingRenameMessage = string.Empty;
+        _pendingRenameFrom = null;
+        _pendingRenameTo = null;
+    }
+
+    private void SetPendingRename(string from, string to, int count)
+    {
+        _pendingRenameFrom = from;
+        _pendingRenameTo = to;
+        PendingRenameMessage = $"Found {count} reference(s) to %{from}%. Rename to %{to}%?";
+        HasPendingRename = true;
+    }
+
+    private int CountVariableReferences(string varName)
+        => CountVariableReferences(varName, CurrentXmlText);
+
+    private static int CountVariableReferences(string varName, string xml)
+    {
+        var tag = $"%{varName}%";
+        int count = 0, idx = 0;
+        while ((idx = xml.IndexOf(tag, idx, StringComparison.OrdinalIgnoreCase)) >= 0)
+        {
+            count++;
+            idx += tag.Length;
+        }
+        return count;
+    }
+
+    private static string? GetDeclaredVariable(ActionNodeViewModel vm)
+    {
+        if (vm.IsGroup) return null;
+        return vm.TypeName switch
+        {
+            C.ActionTypes.TSVar or C.ActionTypes.RegRead or C.ActionTypes.WmiRead or
+            C.ActionTypes.FileRead or C.ActionTypes.Rest or C.ActionTypes.FromJson or
+            C.ActionTypes.ToJson or C.ActionTypes.RandomString
+                => (string?)vm.Model.Node.Attribute(C.Attributes.Variable),
+            C.ActionTypes.ExternalCall
+                => (string?)vm.Model.Node.Attribute(C.Attributes.ExitCodeVariable),
+            _ => null
+        };
+    }
+
+    private void RefreshVariables()
+    {
+        var vars = new List<VariableEntry>();
+        int pos = 1;
+        foreach (var vm in ActionTree)
+            CollectVariables(vm, ref pos, vars);
+        var xml = CurrentXmlText;
+        foreach (var v in vars)
+        {
+            v.RefCount = CountVariableReferences(v.Name, xml);
+            var tag = $"%{v.Name}%";
+            int idx = 1;
+            foreach (var vm in ActionTree)
+                ScanForVariableUsages(vm, tag, v.Usages, ref idx);
+        }
+        DeclaredVariables = vars;
+        OnPropertyChanged(nameof(DeclaredVariables));
+    }
+
+    private static void ScanForVariableUsages(
+        ActionNodeViewModel vm, string tag, List<VariableUsage> usages, ref int actionIndex)
+    {
+        // Scan root action attributes
+        foreach (var attr in vm.Model.Node.Attributes())
+        {
+            if (attr.Value.Contains(tag, StringComparison.OrdinalIgnoreCase))
+                usages.Add(new(vm.DisplayLabel, actionIndex, FriendlyAttributeName(attr.Name.LocalName)));
+        }
+        // For leaf actions, scan all descendant elements (Switch cases, Input fields, etc.).
+        // Groups skip this because their child actions are visited as separate vm.Children.
+        if (!vm.IsGroup)
+        {
+            foreach (var descendant in vm.Model.Node.Descendants())
+            {
+                var elName = descendant.Name.LocalName;
+                foreach (var attr in descendant.Attributes())
+                {
+                    if (attr.Value.Contains(tag, StringComparison.OrdinalIgnoreCase))
+                        usages.Add(new(vm.DisplayLabel, actionIndex,
+                            $"{elName} · {FriendlyAttributeName(attr.Name.LocalName)}"));
+                }
+            }
+        }
+        actionIndex++;
+        foreach (var childVm in vm.Children)
+            ScanForVariableUsages(childVm, tag, usages, ref actionIndex);
+    }
+
+    private static string FriendlyAttributeName(string xmlName) => xmlName switch
+    {
+        "Condition"        => "Condition",
+        "OnValue"          => "On Value",
+        "Default"          => "Default",
+        "Variable"         => "Variable",
+        "ExitCodeVariable" => "Exit Code Var",
+        "Title"            => "Title",
+        "Value"            => "Value",
+        "Text"             => "Text",
+        "Description"      => "Description",
+        "WarnDescription"  => "Warn Description",
+        "ErrorDescription" => "Error Description",
+        _                  => xmlName,
+    };
+
+    private static void CollectVariables(ActionNodeViewModel vm, ref int pos, List<VariableEntry> vars)
+    {
+        if (!vm.IsGroup)
+        {
+            var varAttr = (string?)vm.Model.Node.Attribute(C.Attributes.Variable);
+            if (!string.IsNullOrWhiteSpace(varAttr))
+                vars.Add(new(varAttr!, vm.TypeName, pos));
+
+            var exitVar = (string?)vm.Model.Node.Attribute(C.Attributes.ExitCodeVariable);
+            if (!string.IsNullOrWhiteSpace(exitVar))
+                vars.Add(new(exitVar!, vm.TypeName, pos));
+
+            if (vm.TypeName == C.ActionTypes.UserInput)
+            {
+                foreach (var child in vm.Model.Node.Elements())
+                {
+                    var fieldVar = (string?)child.Attribute(C.Attributes.Variable);
+                    if (!string.IsNullOrWhiteSpace(fieldVar))
+                        vars.Add(new(fieldVar!, child.Name.LocalName, pos));
+                }
+            }
+        }
+        pos++;
+        foreach (var child in vm.Children)
+            CollectVariables(child, ref pos, vars);
+    }
+
+    private static int CountMatches(IEnumerable<ActionNodeViewModel> nodes)
+    {
+        int count = 0;
+        foreach (var vm in nodes)
+        {
+            if (vm.IsMatch) count++;
+            count += CountMatches(vm.Children);
+        }
+        return count;
+    }
+
+    private static int CountAll(IEnumerable<ActionNodeViewModel> nodes)
+    {
+        int count = 0;
+        foreach (var vm in nodes)
+        {
+            count++;
+            count += CountAll(vm.Children);
+        }
+        return count;
+    }
+
     private static ObservableCollection<ActionNodeViewModel>? FindOwningList(
         ObservableCollection<ActionNodeViewModel> list, ActionNodeViewModel target)
     {
@@ -414,4 +695,72 @@ public sealed partial class ActionListViewModel : ObservableObject
         }
         return null;
     }
+
+    private static List<(string? Comment, XElement El)> ExtractNodePairs(XElement root)
+    {
+        var result = new List<(string? Comment, XElement El)>();
+        string? pendingComment = null;
+        foreach (var node in root.Nodes())
+        {
+            if (node is XComment comment)
+                pendingComment = pendingComment is null ? comment.Value : pendingComment + "\n" + comment.Value;
+            else if (node is XElement el)
+            {
+                result.Add((pendingComment, el));
+                pendingComment = null;
+            }
+            // Whitespace XText nodes between elements are silently skipped
+        }
+        return result;
+    }
+
+    private static void AttachLeadingComment(ActionNodeModel model)
+    {
+        var comments = new List<string>();
+        var node = model.Node.PreviousNode;
+        while (node is not null)
+        {
+            if (node is XComment comment)
+            {
+                comments.Insert(0, comment.Value);
+                node = node.PreviousNode;
+            }
+            else if (node is XText text && string.IsNullOrWhiteSpace(text.Value))
+                node = node.PreviousNode;
+            else
+                break;
+        }
+        if (comments.Count > 0)
+            model.Comment = string.Join("\n", comments);
+    }
+}
+
+public sealed class VariableEntry
+{
+    public VariableEntry() { }
+
+    public VariableEntry(string name, string sourceType, int index)
+        => (Name, SourceType, Index) = (name, sourceType, index);
+
+    public string Name       { get; set; } = string.Empty;
+    public string SourceType { get; set; } = string.Empty;
+    public int    Index      { get; set; }
+    public int    RefCount   { get; set; }
+    public List<VariableUsage> Usages { get; set; } = [];
+    public string NameLabel  => $"%{Name}%";
+    public string IndexLabel => $"#{Index}";
+    public string RefLabel   => RefCount == 0 ? "unused" : RefCount == 1 ? "1 ref" : $"{RefCount} refs";
+    public bool   IsUnused   => RefCount == 0;
+    public bool   HasRefs    => RefCount > 0;
+}
+
+public sealed class VariableUsage
+{
+    public VariableUsage() { }
+    public VariableUsage(string actionLabel, int actionIndex, string field)
+        => (ActionLabel, ActionIndex, Field) = (actionLabel, actionIndex, field);
+    public string ActionLabel { get; set; } = string.Empty;
+    public int    ActionIndex { get; set; }
+    public string Field       { get; set; } = string.Empty;
+    public string IndexLabel  => $"#{ActionIndex}";
 }

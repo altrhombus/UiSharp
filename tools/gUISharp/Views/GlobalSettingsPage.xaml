@@ -78,7 +78,8 @@
                 <CheckBox Content="Show Icons"   IsChecked="{x:Bind ViewModel.GlobalSettings.ShowIcons,   Mode=TwoWay}" />
                 <CheckBox Content="Show Sidebar" IsChecked="{x:Bind ViewModel.GlobalSettings.ShowSidebar, Mode=TwoWay}" />
                 <CheckBox Content="Always On Top" IsChecked="{x:Bind ViewModel.GlobalSettings.AlwaysOnTop, Mode=TwoWay}" />
-                <CheckBox Content="Flat"          IsChecked="{x:Bind ViewModel.GlobalSettings.Flat,        Mode=TwoWay}" />
+                <CheckBox Content="Flat"          IsChecked="{x:Bind ViewModel.GlobalSettings.Flat,        Mode=TwoWay}"
+                          ToolTipService.ToolTip="Removes rounded corners and drop shadows — use for classic WinPE-style dialogs" />
             </StackPanel>
         </StackPanel>
     </ScrollViewer>

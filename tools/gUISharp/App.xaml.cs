@@ -17,11 +17,30 @@ public partial class App : Application
         this.UnhandledException += (_, e) =>
         {
             e.Handled = true;
-            var msg = $"Unhandled exception:\n{e.Exception}";
-            System.Diagnostics.Debug.WriteLine(msg);
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("=== Unhandled Exception ===");
+            sb.AppendLine($"Type:    {e.Exception.GetType().FullName}");
+            sb.AppendLine($"HResult: 0x{e.Exception.HResult:X8}");
+            sb.AppendLine($"Message: {e.Exception.Message}");
+            sb.AppendLine();
+            sb.AppendLine("Stack trace:");
+            sb.AppendLine(e.Exception.StackTrace);
+            var inner = e.Exception.InnerException;
+            int depth = 0;
+            while (inner is not null && depth++ < 5)
+            {
+                sb.AppendLine($"\n--- Inner ({depth}) ---");
+                sb.AppendLine($"Type:    {inner.GetType().FullName}");
+                sb.AppendLine($"HResult: 0x{inner.HResult:X8}");
+                sb.AppendLine($"Message: {inner.Message}");
+                sb.AppendLine(inner.StackTrace);
+                inner = inner.InnerException;
+            }
+            var text = sb.ToString();
+            System.Diagnostics.Debug.WriteLine(text);
             System.IO.File.WriteAllText(
                 System.IO.Path.Combine(System.IO.Path.GetTempPath(), "guisharp_crash.txt"),
-                msg);
+                text);
         };
     }
 

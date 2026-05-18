@@ -20,14 +20,31 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="8" Spacing="4">
-                <Button Command="{x:Bind ViewModel.Software.AddApplicationCommand}" Content="+ App"     />
-                <Button Command="{x:Bind ViewModel.Software.AddPackageCommand}"     Content="+ Package" />
+            <StackPanel Grid.Row="0" Margin="8" Spacing="4">
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <Button Command="{x:Bind ViewModel.Software.AddApplicationCommand}" Content="+ App"     />
+                    <Button Command="{x:Bind ViewModel.Software.AddPackageCommand}"     Content="+ Package" />
+                </StackPanel>
+                <Button HorizontalAlignment="Stretch"
+                        Content="Import from ConfigMgr…"
+                        Click="ImportFromConfigMgr_Click" />
             </StackPanel>
+
+            <!-- Empty state -->
+            <Border Grid.Row="1" Margin="8"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="4" Padding="20,24"
+                    Visibility="{x:Bind ViewModel.Software.HasItems, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
+                <TextBlock Text="No software items — add an application or package above"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           HorizontalAlignment="Center" Opacity="0.6"
+                           TextWrapping="Wrap" TextAlignment="Center" />
+            </Border>
 
             <ListView Grid.Row="1"
                       ItemsSource="{x:Bind ViewModel.Software.Items}"
-                      SelectedItem="{x:Bind ViewModel.Software.SelectedItem, Mode=TwoWay}">
+                      SelectedItem="{x:Bind ViewModel.Software.SelectedItem, Mode=TwoWay}"
+                      Visibility="{x:Bind ViewModel.Software.HasItems, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:SoftwareItemViewModel">
                         <StackPanel>
@@ -40,9 +57,11 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <Button Grid.Row="2" Margin="8" Command="{x:Bind ViewModel.Software.RemoveItemCommand}"
+            <Button Grid.Row="2" Margin="8"
                     Foreground="{ThemeResource SystemFillColorCriticalBrush}"
-                    HorizontalAlignment="Stretch">
+                    HorizontalAlignment="Stretch"
+                    IsEnabled="{x:Bind ViewModel.Software.HasSelection, Mode=OneWay}"
+                    Click="RemoveItem_Click">
                 Remove Selected
             </Button>
         </Grid>

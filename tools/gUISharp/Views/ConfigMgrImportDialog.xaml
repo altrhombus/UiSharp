@@ -1,0 +1,101 @@
+<ContentDialog
+    x:Class="GUISharp.Views.ConfigMgrImportDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:vm="using:GUISharp.ViewModels"
+    Title="Import from Configuration Manager"
+    PrimaryButtonText="Import Selected"
+    CloseButtonText="Cancel"
+    IsPrimaryButtonEnabled="{x:Bind Vm.HasSelection, Mode=OneWay}"
+    DefaultButton="Primary">
+
+    <StackPanel Width="480" Spacing="12">
+
+        <!-- Connection row -->
+        <Grid ColumnSpacing="6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="76" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBox Grid.Column="0"
+                     PlaceholderText="SMS Provider / server name"
+                     Text="{x:Bind Vm.ServerName, Mode=TwoWay}" />
+            <TextBox Grid.Column="1"
+                     PlaceholderText="Site code"
+                     MaxLength="3"
+                     CharacterCasing="Upper"
+                     Text="{x:Bind Vm.SiteCode, Mode=TwoWay}" />
+            <Button Grid.Column="2"
+                    Content="Connect"
+                    IsEnabled="{x:Bind Vm.CanConnect, Mode=OneWay}"
+                    Click="ConnectButton_Click" />
+            <ProgressRing Grid.Column="3"
+                          Width="20" Height="20"
+                          IsActive="{x:Bind Vm.IsLoading, Mode=OneWay}"
+                          Visibility="{x:Bind Vm.IsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+        </Grid>
+
+        <!-- Error bar -->
+        <InfoBar Severity="Error"
+                 IsOpen="{x:Bind Vm.HasError, Mode=OneWay}"
+                 Message="{x:Bind Vm.ErrorMessage, Mode=OneWay}"
+                 IsClosable="False" />
+
+        <!-- Results (only visible after a successful connection) -->
+        <StackPanel Visibility="{x:Bind Vm.IsConnected, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                    Spacing="8">
+
+            <!-- Type toggle -->
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <RadioButton x:Name="AppsRadio"
+                             Content="Applications"
+                             GroupName="CmType"
+                             IsChecked="True"
+                             Checked="TypeRadio_Checked" />
+                <RadioButton x:Name="PkgsRadio"
+                             Content="Packages"
+                             GroupName="CmType"
+                             Checked="TypeRadio_Checked" />
+            </StackPanel>
+
+            <!-- Filter -->
+            <TextBox PlaceholderText="Filter by name…"
+                     Text="{x:Bind Vm.SearchText, Mode=TwoWay}" />
+
+            <!-- Item list -->
+            <ListView ItemsSource="{x:Bind Vm.DisplayItems, Mode=OneWay}"
+                      SelectionMode="None"
+                      MaxHeight="280">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Background" Value="Transparent" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="vm:CmSelectableItem">
+                        <CheckBox IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch"
+                                  Padding="8,4">
+                            <StackPanel>
+                                <TextBlock Text="{x:Bind Name}" />
+                                <TextBlock Text="{x:Bind SubLabel}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </CheckBox>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+
+            <!-- Selection count -->
+            <TextBlock Text="{x:Bind Vm.SelectionLabel, Mode=OneWay}"
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </StackPanel>
+
+    </StackPanel>
+</ContentDialog>

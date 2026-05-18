@@ -21,7 +21,7 @@ public sealed partial class RestViewModel : ObservableObject, IActionEditor
         Url       = Attr(C.Attributes.Url)       ?? string.Empty;
         Variable  = Attr(C.Attributes.Variable)   ?? C.Defaults.RestVariable;
         Json      = Attr(C.Attributes.Json)       ?? string.Empty;
-        Method    = Attr(C.Attributes.Method)     ?? string.Empty;
+        Method    = Attr(C.Attributes.Method)     ?? "GET";
         Condition = Attr(C.Attributes.Condition)  ?? string.Empty;
     }
 

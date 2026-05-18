@@ -3,6 +3,7 @@ using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GUISharp.Services;
+using GUISharp.ViewModels;
 using UIpp.Core.Configuration;
 using C = UIpp.Core.Configuration.XmlConstants;
 
@@ -70,6 +71,28 @@ public sealed partial class SoftwareRefItem : ObservableObject
 {
     [ObservableProperty] public partial string Id        { get; set; }
     [ObservableProperty] public partial string Condition { get; set; }
+
+    public ObservableCollection<SoftwareItemViewModel> Catalog => App.MainVm.Software.Items;
+
+    public SoftwareItemViewModel? SelectedSoftware
+    {
+        get => App.MainVm.Software.Items.FirstOrDefault(s => s.Id == Id);
+        set
+        {
+            Id = value?.Id ?? string.Empty;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsUnresolved =>
+        !string.IsNullOrEmpty(Id) &&
+        !App.MainVm.Software.Items.Any(s => s.Id.Equals(Id, StringComparison.OrdinalIgnoreCase));
+
+    partial void OnIdChanged(string value)
+    {
+        OnPropertyChanged(nameof(SelectedSoftware));
+        OnPropertyChanged(nameof(IsUnresolved));
+    }
 
     public SoftwareRefItem()
     {

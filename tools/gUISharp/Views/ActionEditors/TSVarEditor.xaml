@@ -18,8 +18,7 @@
                      AcceptsReturn="True" MaxHeight="120" TextWrapping="Wrap" />
         </local:LabeledField>
         <local:LabeledField Label="Condition">
-            <TextBox Text="{Binding Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                     PlaceholderText="Optional condition expression" />
+            <local:ConditionInputBox Text="{Binding Condition, Mode=TwoWay}" PlaceholderText="Optional condition expression" />
         </local:LabeledField>
     </StackPanel>
 </UserControl>

@@ -18,31 +18,41 @@ public sealed partial class SwitchViewModel : ObservableObject, IActionEditor
 
     public ObservableCollection<SwitchCaseItem> Cases { get; } = [];
     public ObservableCollection<VariableAssignmentItem> DefaultVariables { get; } = [];
-    public bool HasCases => Cases.Count > 0;
+    public bool HasCases            => Cases.Count > 0;
+    public bool HasDefaultVariables => DefaultVariables.Count > 0;
 
     public SwitchViewModel(ActionNodeModel model)
     {
         _model    = model;
-        Cases.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasCases));
+        Cases.CollectionChanged            += (_, _) => OnPropertyChanged(nameof(HasCases));
+        DefaultVariables.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasDefaultVariables));
         OnValue   = Attr(C.Attributes.OnValue)   ?? string.Empty;
         DontEval  = BoolAttr(C.Attributes.DontEval);
         Condition = Attr(C.Attributes.Condition) ?? string.Empty;
 
-        foreach (var el in model.Node.Elements(C.Elements.Case))
+        string? pendingCaseComment = null;
+        foreach (var node in model.Node.Nodes())
         {
-            var caseItem = new SwitchCaseItem
+            if (node is XComment cmt)
+                pendingCaseComment = pendingCaseComment is null ? cmt.Value.Trim() : pendingCaseComment + "\n" + cmt.Value.Trim();
+            else if (node is XElement el && el.Name.LocalName == C.Elements.Case)
             {
-                RegEx = (string?)el.Attribute(C.Attributes.RegEx) ?? string.Empty,
-            };
-            foreach (var varEl in el.Elements(C.Elements.Variable))
-            {
-                caseItem.Variables.Add(new VariableAssignmentItem
+                var caseItem = new SwitchCaseItem
                 {
-                    Name  = (string?)varEl.Attribute(C.Attributes.Name) ?? string.Empty,
-                    Value = varEl.Value,
-                });
+                    RegEx   = (string?)el.Attribute(C.Attributes.RegEx) ?? string.Empty,
+                    Comment = pendingCaseComment ?? string.Empty,
+                };
+                foreach (var varEl in el.Elements(C.Elements.Variable))
+                {
+                    caseItem.Variables.Add(new VariableAssignmentItem
+                    {
+                        Name  = (string?)varEl.Attribute(C.Attributes.Name) ?? string.Empty,
+                        Value = varEl.Value,
+                    });
+                }
+                Cases.Add(caseItem);
+                pendingCaseComment = null;
             }
-            Cases.Add(caseItem);
         }
 
         var defaultEl = model.Node.Element(C.Elements.Default);
@@ -77,11 +87,14 @@ public sealed partial class SwitchViewModel : ObservableObject, IActionEditor
         SetBool(C.Attributes.DontEval, DontEval);
         Set(C.Attributes.Condition,    Condition);
 
+        _model.Node.Nodes().OfType<XComment>().Remove();
         _model.Node.Elements(C.Elements.Case).Remove();
         _model.Node.Elements(C.Elements.Default).Remove();
 
         foreach (var caseItem in Cases)
         {
+            if (!string.IsNullOrEmpty(caseItem.Comment))
+                _model.Node.Add(new XComment(caseItem.Comment));
             var caseEl = new XElement(C.Elements.Case);
             if (!string.IsNullOrEmpty(caseItem.RegEx))
                 caseEl.SetAttributeValue(C.Attributes.RegEx, caseItem.RegEx);
@@ -125,12 +138,14 @@ public sealed partial class SwitchViewModel : ObservableObject, IActionEditor
 
 public sealed partial class SwitchCaseItem : ObservableObject
 {
-    [ObservableProperty] public partial string RegEx { get; set; }
+    [ObservableProperty] public partial string RegEx    { get; set; }
+    [ObservableProperty] public partial string Comment  { get; set; }
     public ObservableCollection<VariableAssignmentItem> Variables { get; } = [];
 
     public SwitchCaseItem()
     {
-        RegEx = string.Empty;
+        RegEx   = string.Empty;
+        Comment = string.Empty;
     }
 
     [RelayCommand]

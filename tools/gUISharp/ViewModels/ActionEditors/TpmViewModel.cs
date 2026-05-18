@@ -13,6 +13,9 @@ public sealed partial class TpmViewModel : ObservableObject, IActionEditor
     [ObservableProperty] public partial string Variable  { get; set; }
     [ObservableProperty] public partial string Condition { get; set; }
 
+    public static IReadOnlyList<string> RequestOptions { get; } =
+        ["Activate", "Deactivate", "Clear", "ClearActivate", "GetInfo"];
+
     public TpmViewModel(ActionNodeModel model)
     {
         _model    = model;

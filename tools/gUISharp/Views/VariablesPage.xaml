@@ -1,0 +1,186 @@
+<Page
+    x:Class="GUISharp.Views.VariablesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GUISharp.Views"
+    xmlns:vm="using:GUISharp.ViewModels">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Toolbar: search + sort -->
+        <Grid Grid.Row="0" Padding="12,8,12,4" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <TextBox x:Name="SearchBox"
+                     Grid.Column="0"
+                     PlaceholderText="Search variables…"
+                     TextChanged="SearchBox_TextChanged">
+                <TextBox.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="Escape" Invoked="SearchBox_EscapeInvoked" />
+                </TextBox.KeyboardAccelerators>
+            </TextBox>
+
+            <ComboBox x:Name="SortBox"
+                      Grid.Column="1"
+                      PlaceholderText="Sort by"
+                      SelectedIndex="0"
+                      SelectionChanged="SortBox_SelectionChanged"
+                      MinWidth="130">
+                <ComboBoxItem Content="Position"   Tag="position" />
+                <ComboBoxItem Content="Name A→Z"   Tag="name" />
+                <ComboBoxItem Content="Source type" Tag="type" />
+                <ComboBoxItem Content="Most used"  Tag="refs" />
+            </ComboBox>
+
+            <TextBlock x:Name="CountLabel"
+                       Grid.Column="2"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </Grid>
+
+        <!-- Variable list -->
+        <ListView Grid.Row="1"
+                  x:Name="VariableList"
+                  ItemsSource="{x:Bind FilteredVariables, Mode=OneWay}"
+                  SelectionMode="None">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="vm:VariableEntry">
+                    <Expander HorizontalAlignment="Stretch">
+                        <Expander.Header>
+                            <Grid ColumnSpacing="8" HorizontalAlignment="Stretch">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Source icon -->
+                                <FontIcon Grid.Column="0"
+                                          Glyph="&#xE8EF;"
+                                          FontSize="12"
+                                          VerticalAlignment="Center"
+                                          Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                <!-- Name + source type -->
+                                <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind NameLabel}"
+                                               FontFamily="Consolas"
+                                               FontSize="13" />
+                                    <TextBlock Text="{x:Bind SourceType}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+
+                                <!-- Reference count badge -->
+                                <Border Grid.Column="2"
+                                        CornerRadius="3"
+                                        Padding="6,2"
+                                        VerticalAlignment="Center"
+                                        Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                                    <Grid>
+                                        <TextBlock Text="{x:Bind RefLabel}"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                                   Visibility="{x:Bind IsUnused, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                        <TextBlock Text="{x:Bind RefLabel}"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                   Visibility="{x:Bind IsUnused, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                                    </Grid>
+                                </Border>
+
+                                <!-- Copy button -->
+                                <Button Grid.Column="3"
+                                        Tag="{x:Bind}"
+                                        Click="CopyButton_Click"
+                                        Width="32" Height="32" Padding="0"
+                                        VerticalAlignment="Center"
+                                        ToolTipService.ToolTip="Copy %NAME% to clipboard">
+                                    <FontIcon Glyph="&#xE8C8;" FontSize="13"
+                                              FontFamily="{ThemeResource SymbolThemeFontFamily}" />
+                                </Button>
+                            </Grid>
+                        </Expander.Header>
+
+                        <!-- Usages list -->
+                        <StackPanel Spacing="2" Padding="4,4,0,4">
+                            <!-- No refs message -->
+                            <TextBlock Text="Not referenced anywhere."
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Visibility="{x:Bind IsUnused, Converter={StaticResource BoolToVisibilityConverter}}" />
+
+                            <!-- Per-usage rows -->
+                            <ItemsControl ItemsSource="{x:Bind Usages}"
+                                          Visibility="{x:Bind HasRefs, Converter={StaticResource BoolToVisibilityConverter}}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:VariableUsage">
+                                        <Grid ColumnSpacing="8" Padding="0,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Grid.Column="0"
+                                                    CornerRadius="3" Padding="5,1"
+                                                    Background="{ThemeResource SubtleFillColorTertiaryBrush}"
+                                                    VerticalAlignment="Center">
+                                                <TextBlock Text="{x:Bind IndexLabel}"
+                                                           FontFamily="Consolas" FontSize="11"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </Border>
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{x:Bind ActionLabel}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{x:Bind Field}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       VerticalAlignment="Center" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </Expander>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!-- Empty state -->
+        <TextBlock x:Name="EmptyState"
+                   Grid.Row="1"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Text="No variables declared yet."
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                   Visibility="Collapsed" />
+
+        <!-- Footer hint -->
+        <TextBlock Grid.Row="2"
+                   Padding="12,6"
+                   Text="Variables declared by TSVar, RegRead, WmiRead, FileRead, Input fields, and other actions. Reference count shows how many times %VAR% appears in the configuration."
+                   TextWrapping="Wrap"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+    </Grid>
+</Page>

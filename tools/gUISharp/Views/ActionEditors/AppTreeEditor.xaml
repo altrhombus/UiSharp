@@ -2,7 +2,144 @@
     x:Class="GUISharp.Views.ActionEditors.AppTreeEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:GUISharp.Views"
+    xmlns:vm="using:GUISharp.ViewModels.ActionEditors"
+    xmlns:vmg="using:GUISharp.ViewModels">
+
+    <UserControl.Resources>
+
+        <!-- Shared ListView item style: no padding, stretch, no selection chrome -->
+        <Style x:Key="AppTreeItemContainerStyle" TargetType="ListViewItem">
+            <Setter Property="Padding"                      Value="0" />
+            <Setter Property="Margin"                       Value="0,1" />
+            <Setter Property="HorizontalContentAlignment"   Value="Stretch" />
+            <Setter Property="Background"                   Value="Transparent" />
+        </Style>
+
+        <!-- ── SoftwareRef row ───────────────────────────────────────────── -->
+        <DataTemplate x:Key="RefTemplate" x:DataType="vm:AppTreeRefItem">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Border Grid.Column="0"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                        BorderThickness="1" CornerRadius="4" Padding="10,8">
+                    <StackPanel Spacing="8">
+                        <!-- Software picker -->
+                        <local:LabeledField Label="Software">
+                            <ComboBox ItemsSource="{x:Bind Catalog}"
+                                      SelectedItem="{x:Bind SelectedSoftware, Mode=TwoWay}"
+                                      HorizontalAlignment="Stretch"
+                                      PlaceholderText="Select from catalog…">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="vmg:SoftwareItemViewModel">
+                                        <StackPanel Orientation="Horizontal" Spacing="8">
+                                            <TextBlock Text="{x:Bind Label}" VerticalAlignment="Center" />
+                                            <TextBlock Text="{x:Bind Id}"
+                                                       FontFamily="Consolas" FontSize="11"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                       VerticalAlignment="Center" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </local:LabeledField>
+
+                        <!-- Unresolved ID warning -->
+                        <StackPanel Orientation="Horizontal" Spacing="4"
+                                    Visibility="{x:Bind IsUnresolved, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                            <FontIcon Glyph="&#xE7BA;" FontSize="12"
+                                      FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                      Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                      VerticalAlignment="Center" />
+                            <TextBlock Text="ID not found in software catalog"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <!-- Flags -->
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <CheckBox Content="Default"  IsChecked="{x:Bind IsDefault,  Mode=TwoWay}" />
+                            <CheckBox Content="Required" IsChecked="{x:Bind IsRequired, Mode=TwoWay}" />
+                            <CheckBox Content="Hidden"   IsChecked="{x:Bind IsHidden,   Mode=TwoWay}" />
+                        </StackPanel>
+
+                        <!-- Condition -->
+                        <local:LabeledField Label="Condition">
+                            <local:ConditionInputBox Text="{x:Bind Condition, Mode=TwoWay}"
+                                                     PlaceholderText="Optional" />
+                        </local:LabeledField>
+                    </StackPanel>
+                </Border>
+                <Button Grid.Column="1"
+                        Content="&#xE74D;"
+                        FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                        Width="32" Height="32" Padding="0"
+                        VerticalAlignment="Top" Margin="4,2,0,0"
+                        Tag="{x:Bind}"
+                        Click="RemoveNodeButton_Click" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- ── SoftwareGroup expander ────────────────────────────────────── -->
+        <DataTemplate x:Key="GroupTemplate" x:DataType="vm:AppTreeGroupItem">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Expander Grid.Column="0" HorizontalAlignment="Stretch" IsExpanded="True">
+                    <Expander.Header>
+                        <TextBox Text="{x:Bind Label, Mode=TwoWay}"
+                                 PlaceholderText="Group label"
+                                 HorizontalAlignment="Stretch" />
+                    </Expander.Header>
+                    <StackPanel Spacing="8" Padding="4,4,0,4">
+                        <StackPanel Orientation="Horizontal" Spacing="16">
+                            <CheckBox Content="Default"  IsChecked="{x:Bind IsDefault,  Mode=TwoWay}" />
+                            <CheckBox Content="Required" IsChecked="{x:Bind IsRequired, Mode=TwoWay}" />
+                        </StackPanel>
+                        <local:LabeledField Label="Condition">
+                            <local:ConditionInputBox Text="{x:Bind Condition, Mode=TwoWay}"
+                                                     PlaceholderText="Optional" />
+                        </local:LabeledField>
+
+                        <!-- Reorderable nested items -->
+                        <ListView ItemsSource="{x:Bind Items}"
+                                  ItemTemplateSelector="{StaticResource NodeSelector}"
+                                  ItemContainerStyle="{StaticResource AppTreeItemContainerStyle}"
+                                  CanReorderItems="True" CanDragItems="True" AllowDrop="True"
+                                  SelectionMode="None"
+                                  ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <Button Content="+ Ref"   Command="{x:Bind AddRefCommand}"   />
+                            <Button Content="+ Group" Command="{x:Bind AddGroupCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+                </Expander>
+                <Button Grid.Column="1"
+                        Content="&#xE74D;"
+                        FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                        Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                        Width="32" Height="32" Padding="0"
+                        VerticalAlignment="Top" Margin="4,2,0,0"
+                        Tag="{x:Bind}"
+                        Click="RemoveNodeButton_Click" />
+            </Grid>
+        </DataTemplate>
+
+        <!-- Selector that picks the correct template per item type -->
+        <local:AppTreeNodeTemplateSelector x:Key="NodeSelector"
+                                           RefTemplate="{StaticResource RefTemplate}"
+                                           GroupTemplate="{StaticResource GroupTemplate}" />
+    </UserControl.Resources>
+
     <StackPanel Spacing="12">
         <TextBlock Text="AppTree" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Displays a tree of applications and packages for the user to choose. Sets numbered task sequence variables consumed by Install Application and Install Package steps. Only useful within a task sequence."
@@ -19,9 +156,94 @@
             <TextBox Text="{Binding PackageVarBase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
         <local:LabeledField Label="Condition">
-            <TextBox Text="{Binding Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+            <local:ConditionInputBox Text="{Binding Condition, Mode=TwoWay}" PlaceholderText="Optional" />
         </local:LabeledField>
-        <TextBlock Text="Software catalog is managed on the Software tab."
+
+        <!-- Software Sets -->
+        <StackPanel Spacing="8">
+            <TextBlock Text="Software Sets" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
+            <TextBlock Text="Each set can be conditionally shown. Within a set, drag to reorder items, or use + Ref and + Group to add entries."
+                       TextWrapping="Wrap"
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <!-- Empty state -->
+            <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1" CornerRadius="4" Padding="20,24"
+                    Visibility="{Binding HasSets, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                <StackPanel HorizontalAlignment="Center" Spacing="6">
+                    <FontIcon Glyph="&#xE7C9;" FontSize="20" Opacity="0.4" HorizontalAlignment="Center" />
+                    <TextBlock Text="No software sets"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}"
+                               HorizontalAlignment="Center" Opacity="0.6" />
+                    <TextBlock Text="Add a set to define which software is offered to the user."
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               TextWrapping="Wrap" HorizontalAlignment="Center"
+                               Opacity="0.6" MaxWidth="240" TextAlignment="Center" />
+                </StackPanel>
+            </Border>
+
+            <!-- Sets list -->
+            <ItemsControl x:Name="SetsControl"
+                          ItemsSource="{Binding Sets}"
+                          Visibility="{Binding HasSets, Converter={StaticResource BoolToVisibilityConverter}}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="vm:AppTreeSetItem">
+                        <Grid Margin="0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Expander Grid.Column="0" HorizontalAlignment="Stretch" IsExpanded="True">
+                                <Expander.Header>
+                                    <TextBox Text="{x:Bind Name, Mode=TwoWay}"
+                                             PlaceholderText="Set name (e.g. Default)"
+                                             HorizontalAlignment="Stretch" />
+                                </Expander.Header>
+                                <StackPanel Spacing="8" Padding="4,4,0,4">
+                                    <local:LabeledField Label="Condition">
+                                        <local:ConditionInputBox Text="{x:Bind Condition, Mode=TwoWay}"
+                                                                 PlaceholderText="Optional" />
+                                    </local:LabeledField>
+
+                                    <!-- Reorderable items (refs and groups) -->
+                                    <ListView ItemsSource="{x:Bind Items}"
+                                              ItemTemplateSelector="{StaticResource NodeSelector}"
+                                              ItemContainerStyle="{StaticResource AppTreeItemContainerStyle}"
+                                              CanReorderItems="True" CanDragItems="True" AllowDrop="True"
+                                              SelectionMode="None"
+                                              ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                              ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+
+                                    <StackPanel Orientation="Horizontal" Spacing="4">
+                                        <Button Content="+ Ref"   Command="{x:Bind AddRefCommand}"   />
+                                        <Button Content="+ Group" Command="{x:Bind AddGroupCommand}" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </Expander>
+                            <!-- Remove set -->
+                            <Button Grid.Column="1"
+                                    Content="&#xE74D;"
+                                    FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                    Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                                    Command="{Binding ElementName=SetsControl, Path=DataContext.RemoveSetCommand}"
+                                    CommandParameter="{x:Bind}"
+                                    Width="32" Height="32" Padding="0"
+                                    VerticalAlignment="Top" Margin="4,2,0,0" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Spacing="4" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+            </ItemsControl>
+
+            <Button Content="+ Set" Command="{Binding AddSetCommand}" />
+        </StackPanel>
+
+        <TextBlock Text="Software catalog (apps and packages) is managed on the Software tab."
                    Style="{ThemeResource CaptionTextBlockStyle}"
                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
     </StackPanel>

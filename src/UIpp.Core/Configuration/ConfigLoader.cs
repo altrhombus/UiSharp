@@ -12,6 +12,10 @@ public static class ConfigLoader
     public static LoadedConfig Load(string path) =>
         ParseXml(File.ReadAllText(path), path);
 
+    // Parse from an in-memory XML string (e.g. wizard-generated templates).
+    public static LoadedConfig LoadFromXml(string xml) =>
+        ParseXml(xml, "template");
+
     // Async load — handles both local paths and http(s):// URLs.
     // On download failure, falls back to fallbackPath if provided.
     // Retries up to maxRetries times with a 5-second delay between attempts.

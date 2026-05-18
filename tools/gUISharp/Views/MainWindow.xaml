@@ -8,6 +8,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
@@ -36,8 +37,16 @@
             </AppBarButton>
         </CommandBar>
 
+        <!-- Unsaved-changes banner -->
+        <InfoBar Grid.Row="1"
+                 IsOpen="{x:Bind ViewModel.IsModified, Mode=OneWay}"
+                 IsClosable="False"
+                 Severity="Informational"
+                 Title="Unsaved changes"
+                 Message="Ctrl+S to save." />
+
         <!-- Navigation shell -->
-        <NavigationView Grid.Row="1"
+        <NavigationView Grid.Row="2"
                         x:Name="NavView"
                         PaneDisplayMode="Left"
                         IsBackButtonVisible="Collapsed"
@@ -56,6 +65,11 @@
                 <NavigationViewItem Tag="Software" Content="Software">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE74C;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Tag="Variables" Content="Variables">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE943;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
             </NavigationView.MenuItems>

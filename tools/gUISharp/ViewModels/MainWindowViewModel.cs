@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GUISharp.Services;
+using GUISharp.Views;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using UIpp.Core.Configuration;
@@ -44,7 +45,19 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private async Task New()
     {
         if (!await ConfirmDiscardChangesAsync()) return;
-        LoadConfig(_configService.NewConfig());
+        if (App.MainWindow?.Content is not FrameworkElement root) return;
+
+        var wizard = new NewConfigWizardDialog { XamlRoot = root.XamlRoot };
+        if (await wizard.ShowAsync() != ContentDialogResult.Primary) return;
+
+        try
+        {
+            LoadConfig(_configService.LoadFromXml(wizard.GetTemplateXml()));
+        }
+        catch
+        {
+            LoadConfig(_configService.NewConfig());
+        }
         CurrentFile = null;
         IsModified  = false;
     }
@@ -148,30 +161,36 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         var dialog = new ContentDialog
         {
-            Title           = "Unsaved Changes",
-            Content         = "You have unsaved changes. Do you want to discard them?",
-            PrimaryButtonText = "Discard",
-            CloseButtonText   = "Cancel",
-            XamlRoot        = root.XamlRoot,
+            Title               = "Unsaved Changes",
+            Content             = "Do you want to save your changes before continuing?",
+            PrimaryButtonText   = "Save",
+            SecondaryButtonText = "Don't Save",
+            CloseButtonText     = "Cancel",
+            DefaultButton       = ContentDialogButton.Primary,
+            XamlRoot            = root.XamlRoot,
         };
-        return await dialog.ShowAsync() == ContentDialogResult.Primary;
+
+        var result = await dialog.ShowAsync();
+        if (result == ContentDialogResult.Primary)
+            return await TrySaveAsync();
+        return result == ContentDialogResult.Secondary;
     }
 
     private static async Task ShowErrorAsync(string title, string message)
     {
+        var logPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "guisharp_error.log");
         System.Diagnostics.Debug.WriteLine($"[ERROR] {title}: {message}");
-        System.IO.File.AppendAllText(
-            System.IO.Path.Combine(System.IO.Path.GetTempPath(), "guisharp_error.log"),
+        System.IO.File.AppendAllText(logPath,
             $"[{DateTime.Now:HH:mm:ss}] {title}: {message}{Environment.NewLine}");
 
         if (App.MainWindow?.Content is not FrameworkElement root) return;
 
         var dialog = new ContentDialog
         {
-            Title          = title,
-            Content        = message,
+            Title           = title,
+            Content         = $"{message}\n\nDetails written to: {logPath}",
             CloseButtonText = "OK",
-            XamlRoot       = root.XamlRoot,
+            XamlRoot        = root.XamlRoot,
         };
         await dialog.ShowAsync();
     }

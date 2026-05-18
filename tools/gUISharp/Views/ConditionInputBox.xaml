@@ -1,0 +1,136 @@
+<UserControl
+    x:Class="GUISharp.Views.ConditionInputBox"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GUISharp.Views">
+
+    <Grid ColumnSpacing="4">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <TextBox x:Name="InputBox"
+                 Grid.Column="0"
+                 TextChanged="InputBox_TextChanged" />
+
+        <Button Grid.Column="1"
+                Width="36" Height="32" Padding="4,0"
+                VerticalAlignment="Center"
+                ToolTipService.ToolTip="Condition helper — insert templates and browse syntax reference">
+            <TextBlock Text="fx" FontFamily="Consolas" FontSize="11"
+                       VerticalAlignment="Center" HorizontalAlignment="Center" />
+            <Button.Flyout>
+                <Flyout x:Name="HelperFlyout" Placement="BottomEdgeAlignedRight">
+                    <ScrollViewer MaxHeight="560" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Spacing="12" Width="400" Padding="0,0,4,4">
+
+                            <TextBlock Text="Condition Helper" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                            <!-- Templates -->
+                            <TextBlock Text="Templates — click to insert at cursor"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ItemsRepeater ItemsSource="{x:Bind Templates}">
+                                <ItemsRepeater.Layout>
+                                    <StackLayout Spacing="2" />
+                                </ItemsRepeater.Layout>
+                                <ItemsRepeater.ItemTemplate>
+                                    <DataTemplate x:DataType="local:ConditionTemplate">
+                                        <Button HorizontalAlignment="Stretch"
+                                                HorizontalContentAlignment="Left"
+                                                Padding="8,6"
+                                                Tag="{x:Bind}"
+                                                Click="Template_Click">
+                                            <StackPanel Spacing="2">
+                                                <TextBlock Text="{x:Bind Label}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           FontWeight="SemiBold" />
+                                                <TextBlock Text="{x:Bind Template}"
+                                                           FontFamily="Consolas" FontSize="11"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsRepeater.ItemTemplate>
+                            </ItemsRepeater>
+
+                            <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                    BorderThickness="0,1,0,0" />
+
+                            <!-- Syntax quick reference -->
+                            <TextBlock Text="Quick reference"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <Grid ColumnSpacing="10" RowSpacing="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="48" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" MinWidth="48" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition /><RowDefinition /><RowDefinition />
+                                    <RowDefinition /><RowDefinition />
+                                    <RowDefinition Height="8" />
+                                    <RowDefinition /><RowDefinition /><RowDefinition /><RowDefinition />
+                                </Grid.RowDefinitions>
+
+                                <!-- Comparison operators -->
+                                <TextBlock Grid.Row="0" Grid.Column="0" Text="=" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="0" Grid.Column="1" Text="Equals" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="0" Grid.Column="2" Text="&lt;&gt;" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="0" Grid.Column="3" Text="Not equal" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0" Text="&gt;" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="Greater than" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="1" Grid.Column="2" Text="&gt;=" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="1" Grid.Column="3" Text="Greater or equal" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0" Text="&lt;" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="2" Grid.Column="1" Text="Less than" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="2" Grid.Column="2" Text="&lt;=" FontFamily="Consolas" FontSize="12" />
+                                <TextBlock Grid.Row="2" Grid.Column="3" Text="Less or equal" FontSize="11" VerticalAlignment="Center" />
+
+                                <!-- Boolean operators -->
+                                <TextBlock Grid.Row="3" Grid.Column="0" Text="AND" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="3" Grid.Column="1" Text="Both conditions true" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="3" Grid.Column="2" Text="OR" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="3" Grid.Column="3" Text="Either condition true" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="4" Grid.Column="0" Text="NOT" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="4" Grid.Column="1" Text="Negate condition" FontSize="11" VerticalAlignment="Center" />
+
+                                <!-- Spacer row 5 (Height=8) -->
+
+                                <!-- String functions -->
+                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Left(s,n)" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="6" Grid.Column="1" Text="Left N chars" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="6" Grid.Column="2" Text="Right(s,n)" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="6" Grid.Column="3" Text="Right N chars" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="7" Grid.Column="0" Text="Mid(s,n,l)" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="7" Grid.Column="1" Text="Substring" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="7" Grid.Column="2" Text="InStr(s,t)" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="7" Grid.Column="3" Text="Find in string" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="8" Grid.Column="0" Text="Len(s)" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="8" Grid.Column="1" Text="String length" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="8" Grid.Column="2" Text="Trim(s)" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="8" Grid.Column="3" Text="Strip whitespace" FontSize="11" VerticalAlignment="Center" />
+
+                                <TextBlock Grid.Row="9" Grid.Column="0" Text="UCase(s)" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="9" Grid.Column="1" Text="Uppercase" FontSize="11" VerticalAlignment="Center" />
+                                <TextBlock Grid.Row="9" Grid.Column="2" Text="LCase(s)" FontFamily="Consolas" FontSize="11" />
+                                <TextBlock Grid.Row="9" Grid.Column="3" Text="Lowercase" FontSize="11" VerticalAlignment="Center" />
+                            </Grid>
+
+                        </StackPanel>
+                    </ScrollViewer>
+                </Flyout>
+            </Button.Flyout>
+        </Button>
+    </Grid>
+</UserControl>

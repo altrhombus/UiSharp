@@ -18,6 +18,81 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public string DisplayLabel => BuildDisplayLabel();
 
+    public string SummaryLabel
+    {
+        get
+        {
+            if (IsGroup)
+                return Children.Count == 0 ? string.Empty
+                    : Children.Count == 1 ? "1 action" : $"{Children.Count} actions";
+            return TypeName switch
+            {
+                C.ActionTypes.Preflight => FormatCount(CountElements(C.Elements.PreflightCheck), "check", "checks"),
+                C.ActionTypes.UserInput => FormatCount(CountInputFields(), "field", "fields"),
+                C.ActionTypes.Switch    => FormatCount(CountElements(C.Elements.Case), "case", "cases"),
+                C.ActionTypes.AppTree   => FormatAppTreeSummary(),
+                _ => string.Empty
+            };
+        }
+    }
+
+    public bool HasSummary => !string.IsNullOrEmpty(SummaryLabel);
+
+    public bool HasWarning => !string.IsNullOrEmpty(WarningMessage);
+
+    public string WarningMessage => TypeName switch
+    {
+        C.ActionTypes.TSVar     => string.IsNullOrWhiteSpace(Attr(C.Attributes.Variable))
+                                   && string.IsNullOrWhiteSpace(Attr(C.Attributes.Name))
+                                       ? "Variable name is empty — this action sets nothing."
+                                       : string.Empty,
+        C.ActionTypes.UserInput => HasInputFieldWithoutVariable()
+                                       ? "One or more input fields have no Variable — the response will not be captured."
+                                       : string.Empty,
+        C.ActionTypes.Preflight => HasUnconditionedPreflightCheck()
+                                       ? "One or more preflight checks have no condition — they will always pass."
+                                       : string.Empty,
+        C.ActionTypes.Switch    => !Model.Node.Elements(C.Elements.Case).Any()
+                                   && !(Model.Node.Element(C.Elements.Default)?.Elements(C.Elements.Variable).Any() ?? false)
+                                       ? "Switch has no cases and no default — it does nothing."
+                                       : string.Empty,
+        _ => string.Empty
+    };
+
+    public string? Comment
+    {
+        get => Model.Comment;
+        set
+        {
+            if (Model.Comment == value) return;
+            Model.Comment = value;
+            OnPropertyChanged(nameof(Comment));
+            OnPropertyChanged(nameof(HasComment));
+            OnPropertyChanged(nameof(CommentDisplay));
+            Dirtied?.Invoke(this, EventArgs.Empty);
+        }
+    }
+
+    public bool HasComment => !string.IsNullOrEmpty(Model.Comment);
+
+    public string CommentDisplay
+    {
+        get
+        {
+            var c = Model.Comment;
+            if (string.IsNullOrEmpty(c)) return string.Empty;
+            return c.Split('\n', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault()?.Trim() ?? string.Empty;
+        }
+    }
+
+    public void NotifyCommentChanged()
+    {
+        OnPropertyChanged(nameof(Comment));
+        OnPropertyChanged(nameof(HasComment));
+        OnPropertyChanged(nameof(CommentDisplay));
+    }
+
     // Segoe MDL2 / Fluent glyph per action category, for the tree icon column.
     public string ActionIcon => IsGroup ? "" : TypeName switch
     {
@@ -64,6 +139,20 @@ public sealed partial class ActionNodeViewModel : ObservableObject
         EditorViewModel = factory.Create(model);
         if (EditorViewModel is not null)
             EditorViewModel.PropertyChanged += (_, _) => Dirtied?.Invoke(this, EventArgs.Empty);
+
+        Dirtied += (_, _) =>
+        {
+            OnPropertyChanged(nameof(DisplayLabel));
+            OnPropertyChanged(nameof(SummaryLabel));
+            OnPropertyChanged(nameof(HasSummary));
+            OnPropertyChanged(nameof(WarningMessage));
+            OnPropertyChanged(nameof(HasWarning));
+        };
+        Children.CollectionChanged += (_, _) =>
+        {
+            OnPropertyChanged(nameof(SummaryLabel));
+            OnPropertyChanged(nameof(HasSummary));
+        };
     }
 
     public void RefreshEditorViewModel()
@@ -83,6 +172,50 @@ public sealed partial class ActionNodeViewModel : ObservableObject
         foreach (var child in Children)
             child.FlushEditsToNode();
     }
+
+    private static string FormatCount(int n, string singular, string plural) =>
+        n == 0 ? string.Empty : n == 1 ? $"1 {singular}" : $"{n} {plural}";
+
+    private string FormatAppTreeSummary()
+    {
+        var setsEl = Model.Node.Element(C.Elements.SoftwareSets);
+        if (setsEl is null) return string.Empty;
+        int groups = setsEl.Descendants(C.Elements.SoftwareGroup).Count();
+        int refs   = setsEl.Descendants(C.Elements.SoftwareRef).Count();
+        if (groups == 0 && refs == 0) return string.Empty;
+        var parts = new List<string>();
+        if (groups > 0) parts.Add(FormatCount(groups, "group", "groups"));
+        if (refs   > 0) parts.Add(FormatCount(refs,   "ref",   "refs"));
+        return string.Join(", ", parts);
+    }
+
+    private int CountElements(string name) =>
+        Model.Node.Elements(name).Count();
+
+    private int CountInputFields() =>
+        Model.Node.Elements().Count(el => el.Name.LocalName is
+            C.InputTypes.Text or C.InputTypes.Choice or C.InputTypes.Checkbox or
+            C.InputTypes.Info or C.InputTypes.Browse or
+            C.InputTypes.TextOld or C.InputTypes.ChoiceOld or C.InputTypes.CheckboxOld);
+
+    private bool HasInputFieldWithoutVariable()
+    {
+        foreach (var el in Model.Node.Elements())
+        {
+            if (el.Name.LocalName is not (C.InputTypes.Text or C.InputTypes.Choice or
+                    C.InputTypes.Checkbox or C.InputTypes.Browse or
+                    C.InputTypes.TextOld or C.InputTypes.ChoiceOld or C.InputTypes.CheckboxOld))
+                continue;
+            if (string.IsNullOrWhiteSpace((string?)el.Attribute(C.Attributes.Variable)))
+                return true;
+        }
+        return false;
+    }
+
+    private bool HasUnconditionedPreflightCheck() =>
+        Model.Node.Elements(C.Elements.PreflightCheck).Any(el =>
+            string.IsNullOrWhiteSpace((string?)el.Attribute(C.Attributes.CheckCondition))
+            && string.IsNullOrWhiteSpace((string?)el.Attribute(C.Attributes.WarnCondition)));
 
     private string BuildDisplayLabel()
     {
@@ -123,6 +256,25 @@ public sealed partial class ActionNodeViewModel : ObservableObject
                     ? TypeName
                     : $"{TypeName}: {Attr(C.Attributes.Name)}"
         };
+    }
+
+    // ── Quick find filter ─────────────────────────────────────────────────────
+
+    private string _filterText = string.Empty;
+
+    public bool IsMatch => _filterText.Length == 0
+        || DisplayLabel.Contains(_filterText, StringComparison.OrdinalIgnoreCase)
+        || TypeName.Contains(_filterText, StringComparison.OrdinalIgnoreCase);
+
+    public double MatchOpacity => _filterText.Length == 0 || IsMatch ? 1.0 : 0.3;
+
+    public void ApplyFilter(string filterText)
+    {
+        _filterText = filterText;
+        OnPropertyChanged(nameof(IsMatch));
+        OnPropertyChanged(nameof(MatchOpacity));
+        foreach (var child in Children)
+            child.ApplyFilter(filterText);
     }
 
     private string? Attr(string name) => (string?)Model.Node.Attribute(name);

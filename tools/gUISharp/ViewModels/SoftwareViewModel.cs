@@ -9,11 +9,18 @@ public sealed partial class SoftwareViewModel : ObservableObject
 {
     public ObservableCollection<SoftwareItemViewModel> Items { get; } = [];
 
+    public bool HasItems => Items.Count > 0;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
     public partial SoftwareItemViewModel? SelectedItem { get; set; }
 
     public bool HasSelection => SelectedItem is not null;
+
+    public SoftwareViewModel()
+    {
+        Items.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasItems));
+    }
 
     public void LoadFrom(IEnumerable<ISoftware> software)
     {
@@ -71,4 +78,29 @@ public sealed partial class SoftwareViewModel : ObservableObject
 
     partial void OnSelectedItemChanged(SoftwareItemViewModel? value) =>
         RemoveItemCommand.NotifyCanExecuteChanged();
+
+    public void ImportItems(IEnumerable<CmSelectableItem> items)
+    {
+        foreach (var item in items)
+        {
+            var vm = item.IsApp
+                ? new SoftwareItemViewModel
+                  {
+                      IsApplication = true,
+                      Id            = Guid.NewGuid().ToString("D").ToUpper(),
+                      Label         = item.Name,
+                      AppName       = item.Name,
+                      OrderIndex    = Items.Count,
+                  }
+                : new SoftwareItemViewModel
+                  {
+                      IsApplication = false,
+                      Id            = Guid.NewGuid().ToString("D").ToUpper(),
+                      Label         = item.Name,
+                      PkgId         = item.PkgId,
+                      OrderIndex    = Items.Count,
+                  };
+            Items.Add(vm);
+        }
+    }
 }

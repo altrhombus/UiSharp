@@ -19,6 +19,45 @@ public sealed partial class ActionListPage : Page
         this.InitializeComponent();
     }
 
+    // ── Search / filter ───────────────────────────────────────────────────────
+
+    private async void RemoveAction_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = ViewModel.ActionList.SelectedAction;
+        if (selected is null) return;
+
+        if (selected.IsGroup && selected.Children.Count > 0)
+        {
+            var n = selected.Children.Count;
+            var dialog = new ContentDialog
+            {
+                Title             = "Delete Group",
+                Content           = $"Delete \"{selected.DisplayLabel}\" and all {n} child action{(n == 1 ? "" : "s")}?",
+                PrimaryButtonText = "Delete",
+                CloseButtonText   = "Cancel",
+                DefaultButton     = ContentDialogButton.Close,
+                XamlRoot          = XamlRoot,
+            };
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        }
+
+        ViewModel.ActionList.RemoveActionCommand.Execute(null);
+    }
+
+    private void SearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Escape)
+        {
+            ViewModel.ActionList.FilterText = string.Empty;
+            e.Handled = true;
+        }
+    }
+
+    // ── Cascading rename (P7) ─────────────────────────────────────────────────
+
+    private void RenameInfoBar_Closed(InfoBar sender, InfoBarClosedEventArgs args)
+        => ViewModel.ActionList.DismissPendingRename();
+
     // ── Focus-based sync ──────────────────────────────────────────────────────
 
     private void GuidedPanel_GotFocus(object sender, RoutedEventArgs e)
@@ -30,6 +69,45 @@ public sealed partial class ActionListPage : Page
     private void XmlPanel_GotFocus(object sender, RoutedEventArgs e)
     {
         ViewModel.ActionList.SyncGuidedToXml();
+    }
+
+    // ── Tree pane resize ─────────────────────────────────────────────────────
+
+    private bool   _treeDragging;
+    private double _treeDragStartX;
+    private double _treeDragStartWidth;
+
+    private void TreeSplitter_PointerEntered(object sender, PointerRoutedEventArgs e)
+        => this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast);
+
+    private void TreeSplitter_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_treeDragging)
+            this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+    }
+
+    private void TreeSplitter_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _treeDragging = true;
+        _treeDragStartX     = e.GetCurrentPoint(this).Position.X;
+        _treeDragStartWidth = TreeCol.ActualWidth;
+        ((UIElement)sender).CapturePointer(e.Pointer);
+        this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast);
+    }
+
+    private void TreeSplitter_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_treeDragging) return;
+        var delta    = e.GetCurrentPoint(this).Position.X - _treeDragStartX;
+        var newWidth = Math.Max(200, Math.Min(this.ActualWidth - 300, _treeDragStartWidth + delta));
+        TreeCol.Width = new GridLength(newWidth);
+    }
+
+    private void TreeSplitter_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        _treeDragging = false;
+        ((UIElement)sender).ReleasePointerCapture(e.Pointer);
+        this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
     }
 
     // ── Splitter drag ─────────────────────────────────────────────────────────

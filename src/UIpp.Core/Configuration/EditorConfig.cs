@@ -56,4 +56,7 @@ public sealed class ActionNodeModel
         Node.Name.LocalName.Equals(XmlConstants.Elements.ActionGroup, StringComparison.OrdinalIgnoreCase);
 
     public List<ActionNodeModel> Children { get; init; } = [];
+
+    /// <summary>Text of any XML comment(s) that immediately precede this action in the document.</summary>
+    public string? Comment { get; set; }
 }

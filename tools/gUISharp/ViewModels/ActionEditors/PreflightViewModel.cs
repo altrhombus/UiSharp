@@ -36,18 +36,26 @@ public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
 
         Checks.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasChecks));
 
-        foreach (var el in model.Node.Elements(C.Elements.PreflightCheck))
+        string? pendingCheckComment = null;
+        foreach (var node in model.Node.Nodes())
         {
-            Checks.Add(new PreflightCheckItem
+            if (node is XComment cmt)
+                pendingCheckComment = pendingCheckComment is null ? cmt.Value.Trim() : pendingCheckComment + "\n" + cmt.Value.Trim();
+            else if (node is XElement el && el.Name.LocalName == C.Elements.PreflightCheck)
             {
-                Text             = (string?)el.Attribute(C.Attributes.Text)             ?? string.Empty,
-                Description      = (string?)el.Attribute(C.Attributes.Description)      ?? string.Empty,
-                ErrorDescription = (string?)el.Attribute(C.Attributes.ErrorDescription) ?? string.Empty,
-                WarnDescription  = (string?)el.Attribute(C.Attributes.WarnDescription)  ?? string.Empty,
-                CheckCondition   = (string?)el.Attribute(C.Attributes.CheckCondition)   ?? string.Empty,
-                WarnCondition    = (string?)el.Attribute(C.Attributes.WarnCondition)    ?? string.Empty,
-                Condition        = (string?)el.Attribute(C.Attributes.Condition)        ?? string.Empty,
-            });
+                Checks.Add(new PreflightCheckItem
+                {
+                    Text             = (string?)el.Attribute(C.Attributes.Text)             ?? string.Empty,
+                    Description      = (string?)el.Attribute(C.Attributes.Description)      ?? string.Empty,
+                    ErrorDescription = (string?)el.Attribute(C.Attributes.ErrorDescription) ?? string.Empty,
+                    WarnDescription  = (string?)el.Attribute(C.Attributes.WarnDescription)  ?? string.Empty,
+                    CheckCondition   = (string?)el.Attribute(C.Attributes.CheckCondition)   ?? string.Empty,
+                    WarnCondition    = (string?)el.Attribute(C.Attributes.WarnCondition)    ?? string.Empty,
+                    Condition        = (string?)el.Attribute(C.Attributes.Condition)        ?? string.Empty,
+                    Comment          = pendingCheckComment                                  ?? string.Empty,
+                });
+                pendingCheckComment = null;
+            }
         }
     }
 
@@ -77,9 +85,12 @@ public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
         Set(C.Attributes.TimeoutAction,     TimeoutAction);
         Set(C.Attributes.Condition,         Condition);
 
+        _model.Node.Nodes().OfType<XComment>().Remove();
         _model.Node.Elements(C.Elements.PreflightCheck).Remove();
         foreach (var item in Checks)
         {
+            if (!string.IsNullOrEmpty(item.Comment))
+                _model.Node.Add(new XComment(item.Comment));
             var el = new XElement(C.Elements.PreflightCheck);
             SetEl(el, C.Attributes.Text,             item.Text);
             SetEl(el, C.Attributes.Description,      item.Description);
@@ -118,6 +129,7 @@ public sealed partial class PreflightCheckItem : ObservableObject
     [ObservableProperty] public partial string WarnCondition    { get; set; }
     [ObservableProperty] public partial string Condition        { get; set; }
     [ObservableProperty] public partial bool   IsExpanded       { get; set; }
+    [ObservableProperty] public partial string Comment          { get; set; }
 
     public ICommand ToggleExpandedCommand { get; }
 
@@ -132,5 +144,6 @@ public sealed partial class PreflightCheckItem : ObservableObject
         WarnCondition    = string.Empty;
         Condition        = string.Empty;
         IsExpanded       = false;
+        Comment          = string.Empty;
     }
 }

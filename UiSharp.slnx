@@ -8,6 +8,9 @@
     <Project Path="src/UIpp.Windows.Tests/UIpp.Windows.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
-    <Project Path="tools/gUISharp/gUISharp.csproj" />
+    <Project Path="tools/gUISharp/gUISharp.csproj">
+      <Platform Solution="Debug|Any CPU"   Project="x64" />
+      <Platform Solution="Release|Any CPU" Project="x64" />
+    </Project>
   </Folder>
 </Solution>

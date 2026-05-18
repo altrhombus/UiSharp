@@ -1,9 +1,9 @@
 <Project>
-  <!-- WindowsAppSDK 2.0.x: net472 XamlCompiler.exe exits with code 1 on .NET 10 builds despite
-       generating correct output. Wrap it so dotnet build (Core MSBuild) doesn't treat it as a
-       failure, while still running the real compiler. -->
+  <!-- WindowsAppSDK 2.0.x: route XamlCompiler.exe through a wrapper that eats the exit code.
+       XamlCompiler.exe exits 1 on warnings-as-errors in Pass 2 even when output is valid;
+       the wrapper forces exit 0 so MSBuild does not abort before reading output.json. -->
   <PropertyGroup>
-    <XamlCompilerExePath>$(MSBuildProjectDirectory)\xamlcompiler-wrap.cmd</XamlCompilerExePath>
+    <XamlCompilerExePath>$(MSBuildThisFileDirectory)xamlcompiler-wrap.cmd</XamlCompilerExePath>
   </PropertyGroup>
 
   <!-- WebView2Loader.dll ships in runtimes/win-<arch>/native/ but the OS DLL loader only

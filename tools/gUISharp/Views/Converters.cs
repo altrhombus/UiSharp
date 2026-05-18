@@ -1,4 +1,6 @@
+using GUISharp.ViewModels.ActionEditors;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 
@@ -29,6 +31,19 @@ public sealed class BoolToTypeConverter : IValueConverter
 
     public object ConvertBack(object value, Type targetType, object parameter, string language) =>
         value is "Application";
+}
+
+// Selects between RefTemplate and GroupTemplate for AppTree node items.
+public sealed class AppTreeNodeTemplateSelector : DataTemplateSelector
+{
+    public DataTemplate? RefTemplate   { get; set; }
+    public DataTemplate? GroupTemplate { get; set; }
+
+    protected override DataTemplate? SelectTemplateCore(object item) =>
+        item is AppTreeRefItem ? RefTemplate : GroupTemplate;
+
+    protected override DataTemplate? SelectTemplateCore(object item, DependencyObject container) =>
+        item is AppTreeRefItem ? RefTemplate : GroupTemplate;
 }
 
 // Converts a hex color string (e.g. "#1A3C6D" or "1A3C6D") to a SolidColorBrush.

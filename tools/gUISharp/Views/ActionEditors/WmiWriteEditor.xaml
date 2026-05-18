@@ -1,4 +1,4 @@
-<UserControl
+﻿<UserControl
     x:Class="GUISharp.Views.ActionEditors.WmiWriteEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -20,13 +20,45 @@
             <TextBox Text="{Binding KeyQualifier, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
         </local:LabeledField>
         <local:LabeledField Label="Condition">
-            <TextBox Text="{Binding Condition, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
+            <local:ConditionInputBox Text="{Binding Condition, Mode=TwoWay}" PlaceholderText="Optional" />
         </local:LabeledField>
         <TextBlock Text="Properties" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
-        <ListView x:Name="Editor" ItemsSource="{Binding Properties}" SelectionMode="None">
+
+        <!-- Empty state -->
+        <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                BorderThickness="1" CornerRadius="4" Padding="20,16"
+                Visibility="{Binding HasProperties, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+            <TextBlock Text="No properties — add one below"
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       HorizontalAlignment="Center" Opacity="0.6" />
+        </Border>
+
+        <!-- Column headers -->
+        <Grid ColumnSpacing="8"
+              Visibility="{Binding HasProperties, Converter={StaticResource BoolToVisibilityConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="0" Text="Name"     Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBlock Grid.Column="1" Text="CIM Type" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBlock Grid.Column="2" Text="Value"    Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </Grid>
+
+        <ListView x:Name="Editor" ItemsSource="{Binding Properties}" SelectionMode="None"
+                  Visibility="{Binding HasProperties, Converter={StaticResource BoolToVisibilityConverter}}">
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="Padding" Value="0" />
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListView.ItemContainerStyle>
             <ListView.ItemTemplate>
                 <DataTemplate x:DataType="vm:WmiPropertyItem">
-                    <Grid ColumnSpacing="8" Padding="0,4">
+                    <Grid ColumnSpacing="8" Padding="0,2">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
@@ -35,11 +67,15 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBox Grid.Column="0" Text="{x:Bind Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Name" />
-                        <TextBox Grid.Column="1" Text="{x:Bind CimType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="CIM_STRING" />
+                        <ComboBox Grid.Column="1"
+                                  ItemsSource="{Binding ElementName=Editor, Path=DataContext.CimTypeOptions}"
+                                  SelectedItem="{x:Bind CimType, Mode=TwoWay}"
+                                  HorizontalAlignment="Stretch" />
                         <TextBox Grid.Column="2" Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Value" />
                         <CheckBox Grid.Column="3" Content="Key" IsChecked="{x:Bind IsKey, Mode=TwoWay}" VerticalAlignment="Center" />
                         <Button Grid.Column="4" Content="&#xE74D;"
                                 FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
                                 Command="{Binding ElementName=Editor, Path=DataContext.RemovePropertyCommand}"
                                 CommandParameter="{x:Bind}"
                                 VerticalAlignment="Center" />
