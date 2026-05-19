@@ -275,6 +275,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public void NavigateToActions()  => NavigationRequested?.Invoke("Actions");
     public void NavigateToSoftware() => NavigationRequested?.Invoke("Software");
 
+    public string? PendingVariableFilter { get; private set; }
+
+    public void NavigateToVariables(string? filter = null)
+    {
+        PendingVariableFilter = filter;
+        NavigationRequested?.Invoke("Variables");
+    }
+
+    public void ClearPendingVariableFilter() => PendingVariableFilter = null;
+
     /// <summary>Saves the current file (prompting for a path if unsaved). Returns true when the caller may proceed.</summary>
     public async Task<bool> TrySaveAsync()
     {

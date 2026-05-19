@@ -21,7 +21,20 @@ public sealed partial class VariablesPage : Page
         this.InitializeComponent();
         App.MainVm.ActionList.PropertyChanged += OnActionListPropertyChanged;
         Unloaded += (_, _) => App.MainVm.ActionList.PropertyChanged -= OnActionListPropertyChanged;
+        Loaded += VariablesPage_Loaded;
         RefreshFilter();
+    }
+
+    private void VariablesPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        var filter = App.MainVm.PendingVariableFilter;
+        if (!string.IsNullOrEmpty(filter))
+        {
+            SearchBox.Text = filter;
+            _searchText = filter;
+            App.MainVm.ClearPendingVariableFilter();
+            RefreshFilter();
+        }
     }
 
     private void OnActionListPropertyChanged(object? sender, PropertyChangedEventArgs e)

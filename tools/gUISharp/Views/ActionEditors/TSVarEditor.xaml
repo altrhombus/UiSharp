@@ -11,8 +11,15 @@
                    Style="{ThemeResource CaptionTextBlockStyle}"
                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         <local:LabeledField Label="Variable Name">
-            <TextBox Text="{Binding Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox x:Name="VariableNameBox"
+                     Text="{Binding Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     TextChanged="VariableNameBox_TextChanged" />
         </local:LabeledField>
+        <HyperlinkButton x:Name="ViewUsagesLink"
+                         Margin="0,-8,0,0"
+                         FontSize="11"
+                         Visibility="Collapsed"
+                         Click="ViewUsagesLink_Click" />
         <local:LabeledField Label="Value">
             <local:VariableAwareTextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                         AcceptsReturn="True" InputMaxHeight="120" TextWrapping="Wrap" />

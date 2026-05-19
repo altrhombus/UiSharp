@@ -19,8 +19,15 @@
             <TextBox Text="{Binding Property, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
         <local:LabeledField Label="Variable">
-            <TextBox Text="{Binding Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox x:Name="VariableNameBox"
+                     Text="{Binding Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     TextChanged="VariableNameBox_TextChanged" />
         </local:LabeledField>
+        <HyperlinkButton x:Name="ViewUsagesLink"
+                         Margin="0,-8,0,0"
+                         FontSize="11"
+                         Visibility="Collapsed"
+                         Click="ViewUsagesLink_Click" />
         <local:LabeledField Label="Key Qualifier">
             <TextBox Text="{Binding KeyQualifier, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="Optional" />
         </local:LabeledField>

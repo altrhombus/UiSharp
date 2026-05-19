@@ -19,8 +19,15 @@
             <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
         <local:LabeledField Label="Variable">
-            <TextBox Text="{Binding Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <TextBox x:Name="VariableNameBox"
+                     Text="{Binding Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                     TextChanged="VariableNameBox_TextChanged" />
         </local:LabeledField>
+        <HyperlinkButton x:Name="ViewUsagesLink"
+                         Margin="0,-8,0,0"
+                         FontSize="11"
+                         Visibility="Collapsed"
+                         Click="ViewUsagesLink_Click" />
         <CheckBox Content="Use 64-bit Registry" IsChecked="{Binding Reg64, Mode=TwoWay}" />
         <local:LabeledField Label="Condition">
             <local:ConditionInputBox Text="{Binding Condition, Mode=TwoWay}" PlaceholderText="Optional" />
