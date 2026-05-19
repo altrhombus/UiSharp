@@ -150,6 +150,13 @@ public sealed partial class ActionListPage : Page
             AddFlyout.Hide();
             e.Handled = true;
         }
+        else if (e.Key == Windows.System.VirtualKey.Enter)
+        {
+            var first = AddCatalogPanel.Children.OfType<Button>().FirstOrDefault();
+            if (first is not null)
+                AddFromTypeName((string)first.Tag);
+            e.Handled = true;
+        }
     }
 
     private void RebuildAddCatalog(string filter)
@@ -219,8 +226,10 @@ public sealed partial class ActionListPage : Page
     }
 
     private void CatalogButton_Click(object sender, RoutedEventArgs e)
+        => AddFromTypeName((string)((Button)sender).Tag);
+
+    private void AddFromTypeName(string typeName)
     {
-        var typeName = (string)((Button)sender).Tag;
         if (typeName == "Group")
             ViewModel.ActionList.AddGroupCommand.Execute(null);
         else

@@ -136,8 +136,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public string WindowTitle =>
         CurrentFile is null
-            ? "gUI#"
-            : $"{(IsModified ? "* " : string.Empty)}{Path.GetFileName(CurrentFile)} — gUI#";
+            ? "gUI# — Visual editor for UI++ configurations"
+            : $"{Path.GetFileName(CurrentFile)}{(IsModified ? " •" : string.Empty)} — gUI#";
 
     public MainWindowViewModel(
         IConfigService configService,

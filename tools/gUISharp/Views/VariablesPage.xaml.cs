@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using GUISharp.ViewModels;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
@@ -53,12 +54,18 @@ public sealed partial class VariablesPage : Page
 
     private void CopyButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button { Tag: VariableEntry entry })
-        {
-            var dp = new DataPackage();
-            dp.SetText(entry.NameLabel);
-            Clipboard.SetContent(dp);
-        }
+        if (sender is not Button { Tag: VariableEntry entry } btn) return;
+        var dp = new DataPackage();
+        dp.SetText(entry.NameLabel);
+        Clipboard.SetContent(dp);
+
+        if (btn.Content is not FontIcon icon) return;
+        icon.Glyph = ""; // Checkmark
+        var timer = DispatcherQueue.GetForCurrentThread().CreateTimer();
+        timer.Interval = TimeSpan.FromMilliseconds(1500);
+        timer.IsRepeating = false;
+        timer.Tick += (_, _) => { icon.Glyph = ""; timer.Stop(); }; // Copy
+        timer.Start();
     }
 
     private void UsageRow_Click(object sender, RoutedEventArgs e)

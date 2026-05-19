@@ -34,8 +34,8 @@
                                Text="Guided"
                                VerticalAlignment="Center"
                                Margin="10,0,0,0"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                               Style="{ThemeResource BodyStrongTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
                     <Button x:Name="ExpandXmlBtn"
                             Grid.Column="1"
                             Width="28" Height="28" Padding="0"

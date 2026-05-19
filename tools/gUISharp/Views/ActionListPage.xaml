@@ -306,8 +306,8 @@
                                    Text="{x:Bind ViewModel.ActionList.GuidedPanelTitle, Mode=OneWay}"
                                    VerticalAlignment="Center"
                                    Margin="10,0,0,0"
-                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorPrimaryBrush}" />
 
                         <!-- Expand XML button (shown when XML panel is collapsed) -->
                         <Button x:Name="ExpandXmlBtn"
