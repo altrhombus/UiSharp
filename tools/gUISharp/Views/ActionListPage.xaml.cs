@@ -56,6 +56,19 @@ public sealed partial class ActionListPage : Page
             };
             if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
         }
+        else if (!selected.IsGroup && (selected.IsDirty || selected.HasComment))
+        {
+            var dialog = new ContentDialog
+            {
+                Title             = $"Delete \"{selected.DisplayLabel}\"?",
+                Content           = "This action has unsaved changes. Delete it anyway?",
+                PrimaryButtonText = "Delete",
+                CloseButtonText   = "Cancel",
+                DefaultButton     = ContentDialogButton.Close,
+                XamlRoot          = XamlRoot,
+            };
+            if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+        }
 
         ViewModel.ActionList.RemoveActionCommand.Execute(null);
     }
