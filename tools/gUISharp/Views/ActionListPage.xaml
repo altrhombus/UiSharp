@@ -204,9 +204,14 @@
                                             Visibility="{x:Bind HasGroupColor, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                                             Background="{x:Bind GroupColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}" />
                                     <StackPanel Grid.Column="3" VerticalAlignment="Center">
-                                        <TextBlock Text="{x:Bind DisplayLabel, Mode=OneWay}"
-                                                   FontWeight="{x:Bind LabelFontWeight}"
-                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock FontWeight="{x:Bind LabelFontWeight}"
+                                                   TextTrimming="CharacterEllipsis">
+                                            <Run Text="{x:Bind HighlightPrefix, Mode=OneWay}" />
+                                            <Run Text="{x:Bind HighlightMatch,  Mode=OneWay}"
+                                                 FontWeight="SemiBold"
+                                                 Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                            <Run Text="{x:Bind HighlightSuffix, Mode=OneWay}" />
+                                        </TextBlock>
                                         <TextBlock Text="{x:Bind CommentDisplay, Mode=OneWay}"
                                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"

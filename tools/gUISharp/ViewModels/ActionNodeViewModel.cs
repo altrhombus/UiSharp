@@ -185,6 +185,9 @@ public sealed partial class ActionNodeViewModel : ObservableObject
         OnPropertyChanged(nameof(HasCondition));
         OnPropertyChanged(nameof(GroupColor));
         OnPropertyChanged(nameof(HasGroupColor));
+        OnPropertyChanged(nameof(HighlightPrefix));
+        OnPropertyChanged(nameof(HighlightMatch));
+        OnPropertyChanged(nameof(HighlightSuffix));
     }
 
     // Segoe MDL2 / Fluent glyph per action category, for the tree icon column.
@@ -457,11 +460,32 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public double MatchOpacity => _filterText.Length == 0 || IsMatch ? 1.0 : 0.3;
 
+    public string HighlightPrefix => GetHighlightPart(0);
+    public string HighlightMatch  => GetHighlightPart(1);
+    public string HighlightSuffix => GetHighlightPart(2);
+
+    private string GetHighlightPart(int part)
+    {
+        var label = DisplayLabel;
+        if (_filterText.Length == 0) return part == 0 ? label : string.Empty;
+        int idx = label.IndexOf(_filterText, StringComparison.OrdinalIgnoreCase);
+        if (idx < 0) return part == 0 ? label : string.Empty;
+        return part switch
+        {
+            0 => label[..idx],
+            1 => label.Substring(idx, _filterText.Length),
+            _ => label[(idx + _filterText.Length)..],
+        };
+    }
+
     public void ApplyFilter(string filterText)
     {
         _filterText = filterText;
         OnPropertyChanged(nameof(IsMatch));
         OnPropertyChanged(nameof(MatchOpacity));
+        OnPropertyChanged(nameof(HighlightPrefix));
+        OnPropertyChanged(nameof(HighlightMatch));
+        OnPropertyChanged(nameof(HighlightSuffix));
         foreach (var child in Children)
             child.ApplyFilter(filterText);
     }
