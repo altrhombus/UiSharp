@@ -70,6 +70,8 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public bool HasWarning => !string.IsNullOrEmpty(WarningMessage);
 
+    public bool HasCondition => !IsGroup && !string.IsNullOrWhiteSpace(Attr(C.Attributes.Condition));
+
     public string WarningMessage => TypeName switch
     {
         C.ActionTypes.TSVar     => string.IsNullOrWhiteSpace(Attr(C.Attributes.Variable))
@@ -134,6 +136,7 @@ public sealed partial class ActionNodeViewModel : ObservableObject
         OnPropertyChanged(nameof(HasSummary));
         OnPropertyChanged(nameof(WarningMessage));
         OnPropertyChanged(nameof(HasWarning));
+        OnPropertyChanged(nameof(HasCondition));
     }
 
     // Segoe MDL2 / Fluent glyph per action category, for the tree icon column.
@@ -190,6 +193,7 @@ public sealed partial class ActionNodeViewModel : ObservableObject
             OnPropertyChanged(nameof(HasSummary));
             OnPropertyChanged(nameof(WarningMessage));
             OnPropertyChanged(nameof(HasWarning));
+            OnPropertyChanged(nameof(HasCondition));
         };
         Children.CollectionChanged += (_, _) =>
         {

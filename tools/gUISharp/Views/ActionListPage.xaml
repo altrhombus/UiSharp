@@ -202,6 +202,7 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <FontIcon Grid.Column="0"
                                               Glyph="{x:Bind ActionIcon}"
@@ -232,6 +233,15 @@
                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                     </Border>
                                     <FontIcon Grid.Column="3"
+                                              Glyph="&#xE71C;"
+                                              FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                              FontSize="11"
+                                              VerticalAlignment="Center"
+                                              Margin="4,0,0,0"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                              Visibility="{x:Bind HasCondition, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                              ToolTipService.ToolTip="This action runs conditionally" />
+                                    <FontIcon Grid.Column="4"
                                               Glyph="&#xE7BA;"
                                               FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                               FontSize="12"
