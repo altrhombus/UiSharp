@@ -97,8 +97,20 @@
                             <TextBox Text="{x:Bind ViewModel.GlobalSettings.Subtitle, Mode=TwoWay}" />
                         </local:LabeledField>
 
-                        <local:LabeledField Label="Font Face">
-                            <TextBox Text="{x:Bind ViewModel.GlobalSettings.FontFace, Mode=TwoWay}" />
+                        <local:LabeledField Label="Font Face"
+                            ToolTipService.ToolTip="Fonts listed are reliably present in WinPE. Type any font name for a custom choice.">
+                            <ComboBox IsEditable="True"
+                                      Text="{x:Bind ViewModel.GlobalSettings.FontFace, Mode=TwoWay}"
+                                      HorizontalAlignment="Stretch"
+                                      PlaceholderText="e.g. Segoe UI">
+                                <ComboBoxItem Content="Segoe UI"    FontFamily="Segoe UI" />
+                                <ComboBoxItem Content="Tahoma"      FontFamily="Tahoma" />
+                                <ComboBoxItem Content="Arial"       FontFamily="Arial" />
+                                <ComboBoxItem Content="Calibri"     FontFamily="Calibri" />
+                                <ComboBoxItem Content="Verdana"     FontFamily="Verdana" />
+                                <ComboBoxItem Content="Consolas"    FontFamily="Consolas" />
+                                <ComboBoxItem Content="Courier New" FontFamily="Courier New" />
+                            </ComboBox>
                         </local:LabeledField>
 
                         <local:LabeledField Label="Icon Path">
