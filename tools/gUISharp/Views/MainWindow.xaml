@@ -18,14 +18,14 @@
                     <KeyboardAccelerator Key="N" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
-            <AppBarButton Icon="OpenFile" Label="Open" Command="{x:Bind ViewModel.OpenCommand}">
-                <AppBarButton.KeyboardAccelerators>
-                    <KeyboardAccelerator Key="O" Modifiers="Control" />
-                </AppBarButton.KeyboardAccelerators>
+            <AppBarButton Icon="OpenFile" Label="Open">
                 <AppBarButton.Flyout>
                     <MenuFlyout x:Name="RecentFilesFlyout" Opening="RecentFilesFlyout_Opening">
                         <MenuFlyoutItem Text="Open File…" Command="{x:Bind ViewModel.OpenCommand}">
                             <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8E5;" /></MenuFlyoutItem.Icon>
+                            <MenuFlyoutItem.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="O" Modifiers="Control" />
+                            </MenuFlyoutItem.KeyboardAccelerators>
                         </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
                     </MenuFlyout>
