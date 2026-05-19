@@ -91,22 +91,46 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public string WarningMessage => TypeName switch
     {
-        C.ActionTypes.TSVar     => string.IsNullOrWhiteSpace(Attr(C.Attributes.Variable))
-                                   && string.IsNullOrWhiteSpace(Attr(C.Attributes.Name))
-                                       ? "Variable name is empty — this action sets nothing."
-                                       : string.Empty,
-        C.ActionTypes.UserInput => HasInputFieldWithoutVariable()
-                                       ? "One or more input fields have no Variable — the response will not be captured."
-                                       : string.Empty,
-        C.ActionTypes.Preflight => HasUnconditionedPreflightCheck()
-                                       ? "One or more preflight checks have no condition — they will always pass."
-                                       : string.Empty,
-        C.ActionTypes.Switch    => !Model.Node.Elements(C.Elements.Case).Any()
-                                   && !(Model.Node.Element(C.Elements.Default)?.Elements(C.Elements.Variable).Any() ?? false)
-                                       ? "Switch has no cases and no default — it does nothing."
-                                       : string.Empty,
+        C.ActionTypes.TSVar        => GetTSVarWarning(),
+        C.ActionTypes.UserInput    => HasInputFieldWithoutVariable()
+                                         ? "One or more input fields have no Variable — the response will not be captured."
+                                         : string.Empty,
+        C.ActionTypes.Preflight    => HasUnconditionedPreflightCheck()
+                                         ? "One or more preflight checks have no condition — they will always pass."
+                                         : string.Empty,
+        C.ActionTypes.Switch       => GetSwitchWarning(),
+        C.ActionTypes.ExternalCall => string.IsNullOrWhiteSpace(Attr(C.Attributes.ExitCodeVariable))
+                                         ? "No exit code variable — cannot branch on the result."
+                                         : string.Empty,
         _ => string.Empty
     };
+
+    private string GetTSVarWarning()
+    {
+        if (string.IsNullOrWhiteSpace(Attr(C.Attributes.Variable))
+            && string.IsNullOrWhiteSpace(Attr(C.Attributes.Name)))
+            return "Variable name is empty — this action sets nothing.";
+        var value = Attr(C.Attributes.Value);
+        if (!string.IsNullOrEmpty(value) && value.StartsWith('"') && !value.EndsWith('"'))
+            return "Value looks like an unterminated string.";
+        return string.Empty;
+    }
+
+    private string GetSwitchWarning()
+    {
+        if (!Model.Node.Elements(C.Elements.Case).Any()
+            && !(Model.Node.Element(C.Elements.Default)?.Elements(C.Elements.Variable).Any() ?? false))
+            return "Switch has no cases and no default — it does nothing.";
+        var onValue = Attr(C.Attributes.OnValue);
+        if (!string.IsNullOrEmpty(onValue) && onValue.StartsWith('%') && onValue.EndsWith('%') && onValue.Length > 2)
+        {
+            var varName  = onValue[1..^1];
+            var declared = App.MainVm?.ActionList.DeclaredVariables;
+            if (declared is not null && !declared.Any(v => v.Name.Equals(varName, StringComparison.OrdinalIgnoreCase)))
+                return $"Switch evaluates {onValue} but that variable is not declared above this point.";
+        }
+        return string.Empty;
+    }
 
     public string? Comment
     {
