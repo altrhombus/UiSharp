@@ -214,6 +214,7 @@
                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                         <TextBlock Text="{x:Bind DisplayLabel, Mode=OneWay}"
+                                                   FontWeight="{x:Bind LabelFontWeight}"
                                                    TextTrimming="CharacterEllipsis" />
                                         <TextBlock Text="{x:Bind CommentDisplay, Mode=OneWay}"
                                                    Style="{ThemeResource CaptionTextBlockStyle}"

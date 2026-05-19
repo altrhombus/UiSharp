@@ -16,6 +16,10 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public bool IsGroup => Model.IsGroup;
 
+    public Windows.UI.Text.FontWeight LabelFontWeight => IsGroup
+        ? new Windows.UI.Text.FontWeight { Weight = 600 }
+        : new Windows.UI.Text.FontWeight { Weight = 400 };
+
     public string HumanTypeName => IsGroup ? "Action Group" : TypeName switch
     {
         C.ActionTypes.TSVar         => "Variables",
