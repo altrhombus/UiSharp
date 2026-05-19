@@ -66,6 +66,23 @@ public sealed partial class ActionListPage : Page
         }
     }
 
+    private void WelcomeRecentList_Loaded(object sender, RoutedEventArgs e)
+    {
+        WelcomeRecentList.ItemsSource = ViewModel.RecentFiles
+            .Select(p => new RecentFileEntry(System.IO.Path.GetFileName(p), p))
+            .ToList();
+        ViewModel.RecentFiles.CollectionChanged += (_, _) =>
+            WelcomeRecentList.ItemsSource = ViewModel.RecentFiles
+                .Select(p => new RecentFileEntry(System.IO.Path.GetFileName(p), p))
+                .ToList();
+    }
+
+    private void WelcomeOpenRecent_ItemClick(object sender, ItemClickEventArgs e)
+    {
+        if (e.ClickedItem is RecentFileEntry entry)
+            _ = ViewModel.OpenRecentCommand.ExecuteAsync(entry.FullPath);
+    }
+
     private void SearchAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
     {
         SearchBox.Focus(FocusState.Keyboard);

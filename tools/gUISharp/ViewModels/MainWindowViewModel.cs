@@ -83,6 +83,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(ModifiedBadgeVisibility))]
     public partial bool IsModified { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsFileLoaded { get; set; }
+
+    public bool HasRecentFiles => RecentFiles.Count > 0;
+
     public Visibility ModifiedBadgeVisibility =>
         IsModified ? Visibility.Visible : Visibility.Collapsed;
 
@@ -101,6 +106,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ActionList         = new ActionListViewModel(factory);
         ActionList.Dirtied += (_, _) => MarkModified();
         LoadRecentFiles();
+        RecentFiles.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRecentFiles));
     }
 
     [RelayCommand]
@@ -174,6 +180,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
                                 config.DocumentComment);
         Software.LoadFrom(config.SoftwareList, config.SoftwareElement);
         ActionList.LoadActions(config.Actions);
+        IsFileLoaded = true;
     }
 
     private EditorConfig BuildConfig()
