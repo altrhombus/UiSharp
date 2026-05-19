@@ -99,6 +99,12 @@ public sealed partial class MainWindow : Window
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
+        if (args.IsSettingsSelected)
+        {
+            ContentFrame.Navigate(typeof(PreferencesPage));
+            return;
+        }
+
         if (args.SelectedItem is not NavigationViewItem item) return;
 
         try
@@ -109,7 +115,6 @@ public sealed partial class MainWindow : Window
                 "GlobalSettings" => ContentFrame.Navigate(typeof(GlobalSettingsPage)),
                 "Software"       => ContentFrame.Navigate(typeof(SoftwarePage)),
                 "Variables"      => ContentFrame.Navigate(typeof(VariablesPage)),
-                "Preferences"    => ContentFrame.Navigate(typeof(PreferencesPage)),
                 _                => false,
             };
         }
