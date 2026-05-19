@@ -456,7 +456,8 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public bool IsMatch => _filterText.Length == 0
         || DisplayLabel.Contains(_filterText, StringComparison.OrdinalIgnoreCase)
-        || TypeName.Contains(_filterText, StringComparison.OrdinalIgnoreCase);
+        || TypeName.Contains(_filterText, StringComparison.OrdinalIgnoreCase)
+        || Children.Any(c => c.IsMatch);
 
     public double MatchOpacity => _filterText.Length == 0 || IsMatch ? 1.0 : 0.3;
 
@@ -481,13 +482,14 @@ public sealed partial class ActionNodeViewModel : ObservableObject
     public void ApplyFilter(string filterText)
     {
         _filterText = filterText;
+        // Children must be updated first so IsMatch (which checks Children.Any) is correct.
+        foreach (var child in Children)
+            child.ApplyFilter(filterText);
         OnPropertyChanged(nameof(IsMatch));
         OnPropertyChanged(nameof(MatchOpacity));
         OnPropertyChanged(nameof(HighlightPrefix));
         OnPropertyChanged(nameof(HighlightMatch));
         OnPropertyChanged(nameof(HighlightSuffix));
-        foreach (var child in Children)
-            child.ApplyFilter(filterText);
     }
 
     private string? Attr(string name) => (string?)Model.Node.Attribute(name);
