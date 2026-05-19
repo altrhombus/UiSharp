@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Management;
+using System.Net;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GUISharp.Services;
 
@@ -32,8 +34,11 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasError))]
     public partial string ErrorMessage { get; set; } = string.Empty;
 
-    [ObservableProperty] public partial bool   ShowApps   { get; set; } = true;
-    [ObservableProperty] public partial string SearchText { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool   ShowApps        { get; set; } = true;
+    [ObservableProperty] public partial string SearchText      { get; set; } = string.Empty;
+    [ObservableProperty] public partial string AltUsername     { get; set; } = string.Empty;
+    [ObservableProperty] public partial string AltPassword     { get; set; } = string.Empty;
+    [ObservableProperty] public partial bool   ShowCredentials { get; set; }
 
     private readonly IConfigMgrService _service;
     private readonly List<CmSelectableItem> _allApps = [];
@@ -71,8 +76,17 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
             var server = ServerName.Trim();
             var site   = SiteCode.Trim().ToUpperInvariant();
 
-            var apps = await _service.GetApplicationsAsync(server, site);
-            var pkgs = await _service.GetPackagesAsync(server, site);
+            NetworkCredential? credential = null;
+            if (ShowCredentials && !string.IsNullOrWhiteSpace(AltUsername))
+            {
+                var idx = AltUsername.IndexOf('\\');
+                credential = idx >= 0
+                    ? new NetworkCredential(AltUsername[(idx + 1)..], AltPassword, AltUsername[..idx])
+                    : new NetworkCredential(AltUsername, AltPassword);
+            }
+
+            var apps = await _service.GetApplicationsAsync(server, site, credential);
+            var pkgs = await _service.GetPackagesAsync(server, site, credential);
 
             _allApps.Clear();
             _allPkgs.Clear();
@@ -93,9 +107,16 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
             OnPropertyChanged(nameof(IsConnected));
             RebuildDisplayItems();
         }
+        catch (ManagementException ex) when (ex.ErrorCode == ManagementStatus.AccessDenied)
+        {
+            ErrorMessage = "Access denied. Enter alternate credentials below to connect with a different account.";
+            ShowCredentials = true;
+        }
         catch (Exception ex)
         {
-            ErrorMessage = $"Connection failed: {ex.Message}";
+            ErrorMessage = (uint)ex.HResult == 0x800706BA
+                ? "Cannot reach the SMS Provider — verify the server name and network access."
+                : $"Connection failed: {ex.Message}";
         }
         finally
         {
@@ -112,7 +133,8 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
     {
         _allApps.Clear();
         _allPkgs.Clear();
-        ErrorMessage = string.Empty;
+        ErrorMessage    = string.Empty;
+        ShowCredentials = false;
         OnPropertyChanged(nameof(IsConnected));
         DisplayItems.Clear();
         NotifySelectionChanged();

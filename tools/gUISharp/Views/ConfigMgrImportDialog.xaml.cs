@@ -26,4 +26,10 @@ public sealed partial class ConfigMgrImportDialog : ContentDialog
     {
         Vm.ShowApps = ReferenceEquals(sender, AppsRadio);
     }
+
+    private void CredentialPasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
+    {
+        if (sender is PasswordBox pb)
+            Vm.AltPassword = pb.Password;
+    }
 }

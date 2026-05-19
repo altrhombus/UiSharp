@@ -1,18 +1,19 @@
 using System.Management;
+using System.Net;
 
 namespace GUISharp.Services;
 
 public sealed class ConfigMgrService : IConfigMgrService
 {
-    public Task<IReadOnlyList<CmApplicationEntry>> GetApplicationsAsync(string server, string siteCode) =>
-        Task.Run(() => QueryApplications(server, siteCode));
+    public Task<IReadOnlyList<CmApplicationEntry>> GetApplicationsAsync(string server, string siteCode, NetworkCredential? credential = null) =>
+        Task.Run(() => QueryApplications(server, siteCode, credential));
 
-    public Task<IReadOnlyList<CmPackageEntry>> GetPackagesAsync(string server, string siteCode) =>
-        Task.Run(() => QueryPackages(server, siteCode));
+    public Task<IReadOnlyList<CmPackageEntry>> GetPackagesAsync(string server, string siteCode, NetworkCredential? credential = null) =>
+        Task.Run(() => QueryPackages(server, siteCode, credential));
 
-    private static IReadOnlyList<CmApplicationEntry> QueryApplications(string server, string siteCode)
+    private static IReadOnlyList<CmApplicationEntry> QueryApplications(string server, string siteCode, NetworkCredential? credential)
     {
-        var scope = Connect(server, siteCode);
+        var scope = Connect(server, siteCode, credential);
         var result = new List<CmApplicationEntry>();
         using var searcher = new ManagementObjectSearcher(scope,
             new ObjectQuery("SELECT LocalizedDisplayName, LocalizedDescription FROM SMS_Application WHERE IsLatest = 1"));
@@ -27,9 +28,9 @@ public sealed class ConfigMgrService : IConfigMgrService
         return result;
     }
 
-    private static IReadOnlyList<CmPackageEntry> QueryPackages(string server, string siteCode)
+    private static IReadOnlyList<CmPackageEntry> QueryPackages(string server, string siteCode, NetworkCredential? credential)
     {
-        var scope = Connect(server, siteCode);
+        var scope = Connect(server, siteCode, credential);
         var result = new List<CmPackageEntry>();
         using var searcher = new ManagementObjectSearcher(scope,
             new ObjectQuery("SELECT PackageID, Name FROM SMS_Package"));
@@ -44,10 +45,25 @@ public sealed class ConfigMgrService : IConfigMgrService
         return result;
     }
 
-    private static ManagementScope Connect(string server, string siteCode)
+    private static ManagementScope Connect(string server, string siteCode, NetworkCredential? credential)
     {
-        var scope = new ManagementScope($@"\\{server}\root\SMS\site_{siteCode}");
-        scope.Connect();
-        return scope;
+        var path = $@"\\{server}\root\SMS\site_{siteCode}";
+        if (credential is null)
+        {
+            var scope = new ManagementScope(path);
+            scope.Connect();
+            return scope;
+        }
+        var options = new ConnectionOptions
+        {
+            Username  = credential.UserName,
+            Password  = credential.Password,
+            Authority = string.IsNullOrEmpty(credential.Domain)
+                ? null
+                : $"NTLMDOMAIN:{credential.Domain}",
+        };
+        var scopeWithCreds = new ManagementScope(path, options);
+        scopeWithCreds.Connect();
+        return scopeWithCreds;
     }
 }

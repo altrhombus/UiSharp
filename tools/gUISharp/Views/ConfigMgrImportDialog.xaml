@@ -21,12 +21,14 @@
             </Grid.ColumnDefinitions>
             <TextBox Grid.Column="0"
                      PlaceholderText="SMS Provider / server name"
-                     Text="{x:Bind Vm.ServerName, Mode=TwoWay}" />
+                     Text="{x:Bind Vm.ServerName, Mode=TwoWay}"
+                     ToolTipService.ToolTip="NetBIOS or FQDN of your SMS Provider. Found in ConfigMgr Console: Administration &gt; Site Configuration &gt; Servers and Site System Roles." />
             <TextBox Grid.Column="1"
                      PlaceholderText="Site code"
                      MaxLength="3"
                      CharacterCasing="Upper"
-                     Text="{x:Bind Vm.SiteCode, Mode=TwoWay}" />
+                     Text="{x:Bind Vm.SiteCode, Mode=TwoWay}"
+                     ToolTipService.ToolTip="3-character ConfigMgr site code. Found in Administration &gt; Site Configuration &gt; Sites." />
             <Button Grid.Column="2"
                     Content="Connect"
                     IsEnabled="{x:Bind Vm.CanConnect, Mode=OneWay}"
@@ -42,6 +44,19 @@
                  IsOpen="{x:Bind Vm.HasError, Mode=OneWay}"
                  Message="{x:Bind Vm.ErrorMessage, Mode=OneWay}"
                  IsClosable="False" />
+
+        <!-- Alternate credentials — shown after access denied -->
+        <StackPanel Visibility="{x:Bind Vm.ShowCredentials, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                    Spacing="6">
+            <TextBlock Text="Enter alternate credentials and click Connect again:"
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <TextBox PlaceholderText="DOMAIN\username  or  username@domain.com"
+                     Text="{x:Bind Vm.AltUsername, Mode=TwoWay}" />
+            <PasswordBox x:Name="CredentialPasswordBox"
+                         PlaceholderText="Password"
+                         PasswordChanged="CredentialPasswordBox_PasswordChanged" />
+        </StackPanel>
 
         <!-- Results (only visible after a successful connection) -->
         <StackPanel Visibility="{x:Bind Vm.IsConnected, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
