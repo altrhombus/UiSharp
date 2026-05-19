@@ -22,6 +22,14 @@
                 <AppBarButton.KeyboardAccelerators>
                     <KeyboardAccelerator Key="O" Modifiers="Control" />
                 </AppBarButton.KeyboardAccelerators>
+                <AppBarButton.Flyout>
+                    <MenuFlyout x:Name="RecentFilesFlyout" Opening="RecentFilesFlyout_Opening">
+                        <MenuFlyoutItem Text="Open File…" Command="{x:Bind ViewModel.OpenCommand}">
+                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8E5;" /></MenuFlyoutItem.Icon>
+                        </MenuFlyoutItem>
+                        <MenuFlyoutSeparator />
+                    </MenuFlyout>
+                </AppBarButton.Flyout>
             </AppBarButton>
             <AppBarButton Icon="Save" Label="Save"     Command="{x:Bind ViewModel.SaveCommand}">
                 <AppBarButton.KeyboardAccelerators>

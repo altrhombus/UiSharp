@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GUISharp.Services;
@@ -13,9 +14,65 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IConfigService _configService;
     private readonly IFileDialogService _fileDialogService;
 
-    public ActionListViewModel    ActionList    { get; }
+    public ActionListViewModel     ActionList     { get; }
     public GlobalSettingsViewModel GlobalSettings { get; } = new();
-    public SoftwareViewModel      Software      { get; } = new();
+    public SoftwareViewModel       Software       { get; } = new();
+
+    // ── Recent files ─────────────────────────────────────────────────────────
+
+    public ObservableCollection<string> RecentFiles { get; } = new();
+
+    private static readonly string RecentFilesPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "gUISharp", "recent_files.txt");
+
+    private const int MaxRecentFiles = 5;
+
+    private void LoadRecentFiles()
+    {
+        try
+        {
+            if (!File.Exists(RecentFilesPath)) return;
+            foreach (var line in File.ReadAllLines(RecentFilesPath)
+                                     .Where(File.Exists)
+                                     .Take(MaxRecentFiles))
+                RecentFiles.Add(line);
+        }
+        catch { /* non-fatal */ }
+    }
+
+    private void AddToRecentFiles(string path)
+    {
+        RecentFiles.Remove(path);
+        RecentFiles.Insert(0, path);
+        while (RecentFiles.Count > MaxRecentFiles)
+            RecentFiles.RemoveAt(RecentFiles.Count - 1);
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(RecentFilesPath)!);
+            File.WriteAllLines(RecentFilesPath, RecentFiles);
+        }
+        catch { /* non-fatal */ }
+    }
+
+    [RelayCommand]
+    private async Task OpenRecentAsync(string path)
+    {
+        if (!await ConfirmDiscardChangesAsync()) return;
+        try
+        {
+            var config = await _configService.LoadAsync(path);
+            LoadConfig(config);
+            CurrentFile = path;
+            IsModified  = false;
+            AddToRecentFiles(path);
+        }
+        catch (Exception ex)
+        {
+            RecentFiles.Remove(path);
+            await ShowErrorAsync("Failed to open file", ex.Message);
+        }
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
@@ -43,6 +100,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _fileDialogService = fileDialogService;
         ActionList         = new ActionListViewModel(factory);
         ActionList.Dirtied += (_, _) => MarkModified();
+        LoadRecentFiles();
     }
 
     [RelayCommand]
@@ -79,6 +137,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             LoadConfig(config);
             CurrentFile = path;
             IsModified  = false;
+            AddToRecentFiles(path);
         }
         catch (Exception ex)
         {

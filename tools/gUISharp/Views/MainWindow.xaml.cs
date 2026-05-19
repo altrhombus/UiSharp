@@ -2,6 +2,7 @@ using GUISharp.ViewModels;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace GUISharp.Views;
 
@@ -57,6 +58,28 @@ public sealed partial class MainWindow : Window
         {
             if (await ViewModel.TrySaveAsync())
                 this.Close();
+        }
+    }
+
+    private void RecentFilesFlyout_Opening(object sender, object e)
+    {
+        var flyout = (MenuFlyout)sender;
+        while (flyout.Items.Count > 2)
+            flyout.Items.RemoveAt(2);
+
+        var recent = ViewModel.RecentFiles;
+        if (recent.Count == 0)
+        {
+            flyout.Items.Add(new MenuFlyoutItem { Text = "No recent files", IsEnabled = false });
+            return;
+        }
+
+        foreach (var path in recent)
+        {
+            var item = new MenuFlyoutItem { Text = System.IO.Path.GetFileName(path) };
+            ToolTipService.SetToolTip(item, path);
+            item.Click += (_, _) => _ = ViewModel.OpenRecentCommand.ExecuteAsync(path);
+            flyout.Items.Add(item);
         }
     }
 
