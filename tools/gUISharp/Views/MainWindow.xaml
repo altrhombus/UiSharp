@@ -42,6 +42,19 @@
                     <KeyboardAccelerator Key="S" Modifiers="Control,Shift" />
                 </AppBarButton.KeyboardAccelerators>
             </AppBarButton>
+            <AppBarSeparator />
+            <AppBarButton Label="Undo" Command="{x:Bind ViewModel.UndoCommand}">
+                <AppBarButton.Icon><FontIcon Glyph="&#xE7A7;" /></AppBarButton.Icon>
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="Z" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
+            <AppBarButton Label="Redo" Command="{x:Bind ViewModel.RedoCommand}">
+                <AppBarButton.Icon><FontIcon Glyph="&#xE7A6;" /></AppBarButton.Icon>
+                <AppBarButton.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="Y" Modifiers="Control" />
+                </AppBarButton.KeyboardAccelerators>
+            </AppBarButton>
         </CommandBar>
 
         <!-- Navigation shell -->

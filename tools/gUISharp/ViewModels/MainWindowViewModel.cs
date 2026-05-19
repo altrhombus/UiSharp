@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GUISharp.Services;
 using GUISharp.Views;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using UIpp.Core.Configuration;
@@ -13,6 +14,70 @@ public sealed partial class MainWindowViewModel : ObservableObject
 {
     private readonly IConfigService _configService;
     private readonly IFileDialogService _fileDialogService;
+
+    // ── Undo / Redo ──────────────────────────────────────────────────────────
+
+    private readonly IUndoService _undoService = new UndoService();
+    private readonly DispatcherQueueTimer _snapshotTimer;
+    private AppStateSnapshot? _lastSnapshot;
+    private bool _isUndoRedoing;
+
+    private AppStateSnapshot CaptureSnapshot() => new(
+        GlobalSettings.CurrentXmlText,
+        Software.CurrentXmlText,
+        ActionList.CurrentXmlText);
+
+    private void OnAnyDirtied(object? sender, EventArgs e)
+    {
+        if (_isUndoRedoing) return;
+        _snapshotTimer.Stop();
+        _snapshotTimer.Start();
+    }
+
+    private void CommitSnapshot()
+    {
+        if (_lastSnapshot is null) return;
+        _undoService.Push(_lastSnapshot);
+        _lastSnapshot = CaptureSnapshot();
+        UndoCommand.NotifyCanExecuteChanged();
+        RedoCommand.NotifyCanExecuteChanged();
+    }
+
+    private void ApplySnapshot(AppStateSnapshot snapshot)
+    {
+        _isUndoRedoing = true;
+        GlobalSettings.OnXmlEdited(snapshot.GlobalSettingsXml);
+        Software.OnXmlEdited(snapshot.SoftwareXml);
+        ActionList.OnXmlEdited(snapshot.ActionsXml);
+        _isUndoRedoing = false;
+    }
+
+    private bool CanUndoAction() => _undoService.CanUndo;
+    private bool CanRedoAction() => _undoService.CanRedo;
+
+    [RelayCommand(CanExecute = nameof(CanUndoAction))]
+    private void Undo()
+    {
+        var current  = _lastSnapshot ?? CaptureSnapshot();
+        var previous = _undoService.TryUndo(current);
+        if (previous is null) return;
+        _lastSnapshot = previous;
+        ApplySnapshot(previous);
+        UndoCommand.NotifyCanExecuteChanged();
+        RedoCommand.NotifyCanExecuteChanged();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRedoAction))]
+    private void Redo()
+    {
+        var current = _lastSnapshot ?? CaptureSnapshot();
+        var next    = _undoService.TryRedo(current);
+        if (next is null) return;
+        _lastSnapshot = next;
+        ApplySnapshot(next);
+        UndoCommand.NotifyCanExecuteChanged();
+        RedoCommand.NotifyCanExecuteChanged();
+    }
 
     public ActionListViewModel     ActionList     { get; }
     public GlobalSettingsViewModel GlobalSettings { get; } = new();
@@ -154,6 +219,17 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ActionList.BecameClean     += (_, _) => ActionsModified        = false;
         GlobalSettings.BecameClean += (_, _) => GlobalSettingsModified = false;
         Software.BecameClean       += (_, _) => SoftwareModified       = false;
+
+        ActionList.Dirtied     += OnAnyDirtied;
+        GlobalSettings.Dirtied += OnAnyDirtied;
+        Software.Dirtied       += OnAnyDirtied;
+
+        var queue = DispatcherQueue.GetForCurrentThread();
+        _snapshotTimer = queue.CreateTimer();
+        _snapshotTimer.Interval    = TimeSpan.FromMilliseconds(500);
+        _snapshotTimer.IsRepeating = false;
+        _snapshotTimer.Tick       += (_, _) => CommitSnapshot();
+
         LoadRecentFiles();
         RecentFiles.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRecentFiles));
     }
@@ -230,6 +306,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Software.LoadFrom(config.SoftwareList, config.SoftwareElement);
         ActionList.LoadActions(config.Actions);
         IsFileLoaded = true;
+        _undoService.Clear();
+        _lastSnapshot = CaptureSnapshot();
+        UndoCommand.NotifyCanExecuteChanged();
+        RedoCommand.NotifyCanExecuteChanged();
     }
 
     private EditorConfig BuildConfig()
