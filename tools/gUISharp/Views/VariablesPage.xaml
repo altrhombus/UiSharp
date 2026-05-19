@@ -179,7 +179,7 @@
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center"
                     Spacing="8"
-                    Visibility="Collapsed">
+                    Visibility="{x:Bind HasNoVariables, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
             <FontIcon Glyph="&#xE943;"
                       FontSize="36"
                       HorizontalAlignment="Center"

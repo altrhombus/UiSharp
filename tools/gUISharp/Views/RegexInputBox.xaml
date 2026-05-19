@@ -39,7 +39,9 @@
                                 <TextBlock x:Name="MatchResultText"
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            FontWeight="SemiBold"
-                                           Visibility="Collapsed" />
+                                           Visibility="Collapsed"
+                                           AutomationProperties.LiveSetting="Polite"
+                                           AutomationProperties.Name="Regex match result" />
                             </StackPanel>
 
                             <Border BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"

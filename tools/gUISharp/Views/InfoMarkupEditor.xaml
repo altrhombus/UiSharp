@@ -9,14 +9,20 @@
         <!-- Formatting toolbar -->
         <StackPanel Orientation="Horizontal" Spacing="2">
             <Button Click="Bold_Click" Width="32" Height="28" Padding="0"
-                    ToolTipService.ToolTip="Bold — wraps selection in &lt;b&gt;&lt;/b&gt;">
+                    ToolTipService.ToolTip="Bold — wraps selection in &lt;b&gt;&lt;/b&gt; (Ctrl+B)">
                 <TextBlock Text="B" FontWeight="Bold" FontSize="13"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="B" Modifiers="Control" />
+                </Button.KeyboardAccelerators>
             </Button>
             <Button Click="Italic_Click" Width="32" Height="28" Padding="0"
-                    ToolTipService.ToolTip="Italic — wraps selection in &lt;i&gt;&lt;/i&gt;">
+                    ToolTipService.ToolTip="Italic — wraps selection in &lt;i&gt;&lt;/i&gt; (Ctrl+I)">
                 <TextBlock Text="I" FontStyle="Italic" FontSize="13"
                            HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="I" Modifiers="Control" />
+                </Button.KeyboardAccelerators>
             </Button>
             <Button Height="28" Padding="6,0"
                     ToolTipService.ToolTip="Colored text — pick a color and wrap selection in &lt;color&gt;&lt;/color&gt;">

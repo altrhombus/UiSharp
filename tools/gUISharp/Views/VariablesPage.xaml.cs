@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using GUISharp.ViewModels;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -9,9 +10,14 @@ using Windows.ApplicationModel.DataTransfer;
 
 namespace GUISharp.Views;
 
-public sealed partial class VariablesPage : Page
+public sealed partial class VariablesPage : Page, INotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
     public ObservableCollection<VariableEntry> FilteredVariables { get; } = [];
+    public bool HasNoVariables => FilteredVariables.Count == 0;
 
     private string _searchText = string.Empty;
     private string _sortMode   = "position";
@@ -125,6 +131,6 @@ public sealed partial class VariablesPage : Page
             1 => "1 variable",
             _ => $"{count} variables"
         };
-        EmptyState.Visibility = count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        OnPropertyChanged(nameof(HasNoVariables));
     }
 }

@@ -19,9 +19,6 @@ public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
     [ObservableProperty] public partial string TimeoutAction   { get; set; }
     [ObservableProperty] public partial string Condition       { get; set; }
 
-    public static IReadOnlyList<string> TimeoutActionOptions { get; } =
-        [C.Values.Continue, C.Values.Cancel];
-
     public ObservableCollection<PreflightCheckItem> Checks { get; } = [];
     public bool HasChecks => Checks.Count > 0;
 

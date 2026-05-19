@@ -341,8 +341,11 @@
                                 Width="28" Height="28" Padding="0"
                                 Visibility="Collapsed"
                                 Click="ExpandXmlBtn_Click"
-                                ToolTipService.ToolTip="Show XML editor">
+                                ToolTipService.ToolTip="Show XML editor (Alt+X)">
                             <FontIcon Glyph="&#xE76C;" FontSize="11" />
+                            <Button.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="X" Modifiers="Menu" />
+                            </Button.KeyboardAccelerators>
                         </Button>
 
                         <!-- Collapse guided -->
@@ -351,8 +354,11 @@
                                 Width="28" Height="28" Padding="0"
                                 Margin="0,0,3,0"
                                 Click="CollapseGuidedBtn_Click"
-                                ToolTipService.ToolTip="Collapse guided panel">
+                                ToolTipService.ToolTip="Collapse guided panel (Alt+G)">
                             <FontIcon Glyph="&#xE76B;" FontSize="11" />
+                            <Button.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="G" Modifiers="Menu" />
+                            </Button.KeyboardAccelerators>
                         </Button>
                     </Grid>
                 </Border>
@@ -440,8 +446,11 @@
                                 Width="28" Height="28" Padding="0"
                                 Margin="3,0,0,0"
                                 Click="CollapseXmlBtn_Click"
-                                ToolTipService.ToolTip="Collapse XML panel">
+                                ToolTipService.ToolTip="Collapse XML panel (Alt+X)">
                             <FontIcon Glyph="&#xE76C;" FontSize="11" />
+                            <Button.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="X" Modifiers="Menu" />
+                            </Button.KeyboardAccelerators>
                         </Button>
 
                         <!-- Expand Guided button (shown when Guided panel is collapsed) -->
@@ -450,8 +459,11 @@
                                 Width="28" Height="28" Padding="0"
                                 Visibility="Collapsed"
                                 Click="ExpandGuidedBtn_Click"
-                                ToolTipService.ToolTip="Show guided editor">
+                                ToolTipService.ToolTip="Show guided editor (Alt+G)">
                             <FontIcon Glyph="&#xE76B;" FontSize="11" />
+                            <Button.KeyboardAccelerators>
+                                <KeyboardAccelerator Key="G" Modifiers="Menu" />
+                            </Button.KeyboardAccelerators>
                         </Button>
 
                         <TextBlock Grid.Column="2"

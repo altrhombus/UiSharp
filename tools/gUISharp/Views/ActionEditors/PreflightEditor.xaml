@@ -17,7 +17,12 @@
             <TextBox Text="{Binding Timeout, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
         <local:LabeledField Label="Timeout Action">
-            <ComboBox ItemsSource="{Binding TimeoutActionOptions}" SelectedItem="{Binding TimeoutAction, Mode=TwoWay}" HorizontalAlignment="Stretch" />
+            <ComboBox SelectedValue="{Binding TimeoutAction, Mode=TwoWay}"
+                      SelectedValuePath="Tag"
+                      HorizontalAlignment="Stretch">
+                <ComboBoxItem Tag="Continue" Content="Continue — keep going after timeout" />
+                <ComboBoxItem Tag="Cancel"   Content="Cancel — stop the sequence on timeout" />
+            </ComboBox>
         </local:LabeledField>
         <CheckBox Content="Show On Failure Only" IsChecked="{Binding ShowOnFailureOnly, Mode=TwoWay}" />
         <local:LabeledField Label="Condition">
