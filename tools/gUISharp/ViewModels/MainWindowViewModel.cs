@@ -64,7 +64,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             var config = await _configService.LoadAsync(path);
             LoadConfig(config);
             CurrentFile = path;
-            IsModified  = false;
+            ClearModified();
             AddToRecentFiles(path);
         }
         catch (Exception ex)
@@ -79,17 +79,43 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public partial string? CurrentFile { get; set; }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsModified))]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
-    [NotifyPropertyChangedFor(nameof(ModifiedBadgeVisibility))]
-    public partial bool IsModified { get; set; }
+    [NotifyPropertyChangedFor(nameof(ActionsModifiedVisibility))]
+    public partial bool ActionsModified { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsModified))]
+    [NotifyPropertyChangedFor(nameof(WindowTitle))]
+    [NotifyPropertyChangedFor(nameof(GlobalSettingsModifiedVisibility))]
+    public partial bool GlobalSettingsModified { get; set; }
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsModified))]
+    [NotifyPropertyChangedFor(nameof(WindowTitle))]
+    [NotifyPropertyChangedFor(nameof(SoftwareModifiedVisibility))]
+    public partial bool SoftwareModified { get; set; }
+
+    public bool IsModified => ActionsModified || GlobalSettingsModified || SoftwareModified;
+
+    public Visibility ActionsModifiedVisibility =>
+        ActionsModified ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility GlobalSettingsModifiedVisibility =>
+        GlobalSettingsModified ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility SoftwareModifiedVisibility =>
+        SoftwareModified ? Visibility.Visible : Visibility.Collapsed;
+
+    public void ClearModified()
+    {
+        ActionsModified        = false;
+        GlobalSettingsModified = false;
+        SoftwareModified       = false;
+    }
 
     [ObservableProperty]
     public partial bool IsFileLoaded { get; set; }
 
     public bool HasRecentFiles => RecentFiles.Count > 0;
-
-    public Visibility ModifiedBadgeVisibility =>
-        IsModified ? Visibility.Visible : Visibility.Collapsed;
 
     public string WindowTitle =>
         CurrentFile is null
@@ -104,7 +130,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _configService     = configService;
         _fileDialogService = fileDialogService;
         ActionList         = new ActionListViewModel(factory);
-        ActionList.Dirtied += (_, _) => MarkModified();
+        ActionList.Dirtied     += (_, _) => ActionsModified        = true;
+        GlobalSettings.Dirtied += (_, _) => GlobalSettingsModified = true;
+        Software.Dirtied       += (_, _) => SoftwareModified       = true;
         LoadRecentFiles();
         RecentFiles.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRecentFiles));
     }
@@ -127,7 +155,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             LoadConfig(_configService.NewConfig());
         }
         CurrentFile = null;
-        IsModified  = false;
+        ClearModified();
     }
 
     [RelayCommand]
@@ -142,7 +170,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             var config = await _configService.LoadAsync(path);
             LoadConfig(config);
             CurrentFile = path;
-            IsModified  = false;
+            ClearModified();
             AddToRecentFiles(path);
         }
         catch (Exception ex)
@@ -203,7 +231,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             var config = BuildConfig();
             await _configService.SaveAsync(config, path);
-            IsModified = false;
+            ClearModified();
         }
         catch (Exception ex)
         {
@@ -211,7 +239,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
     }
 
-    public void MarkModified() => IsModified = true;
+    public void MarkModified() => ActionsModified = GlobalSettingsModified = SoftwareModified = true;
 
     // ── Navigation ────────────────────────────────────────────────────────────
 

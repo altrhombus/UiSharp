@@ -37,6 +37,8 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
 
     public event EventHandler? SelectionDecorationChanged;
 
+    public event EventHandler? Dirtied;
+
     public void OnXmlEdited(string xml)
     {
         _updatingFromXml = true;
@@ -47,6 +49,7 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
             SelectionDecorationChanged?.Invoke(this, EventArgs.Empty);
         }
         _updatingFromXml = false;
+        Dirtied?.Invoke(this, EventArgs.Empty);
     }
 
     public void SelectAtLine(int line)
@@ -78,7 +81,11 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
                 foreach (SoftwareItemViewModel vm in e.NewItems)
                     vm.PropertyChanged += OnItemPropertyChanged;
             OnPropertyChanged(nameof(HasItems));
-            RefreshXmlFromItems();
+            if (!_updatingFromXml)
+            {
+                RefreshXmlFromItems();
+                Dirtied?.Invoke(this, EventArgs.Empty);
+            }
         };
     }
 
@@ -86,15 +93,18 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
     {
         if (_updatingFromXml) return;
         RefreshXmlFromItems();
+        Dirtied?.Invoke(this, EventArgs.Empty);
     }
 
     // ── Public API ───────────────────────────────────────────────────────────
 
     public void LoadFrom(IEnumerable<ISoftware> software, XElement? softwareElement = null)
     {
+        _updatingFromXml = true;
         Items.Clear();
         foreach (var sw in software)
             Items.Add(SoftwareItemViewModel.FromSoftware(sw));
+        _updatingFromXml = false;
 
         if (softwareElement is not null)
             AttachLeadingComments(softwareElement);

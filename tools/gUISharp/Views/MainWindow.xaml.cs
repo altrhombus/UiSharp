@@ -53,7 +53,7 @@ public sealed partial class MainWindow : Window
         var result = await dialog.ShowAsync();
         if (result == ContentDialogResult.Secondary)
         {
-            ViewModel.IsModified = false;
+            ViewModel.ClearModified();
             this.Close();
         }
         else if (result == ContentDialogResult.Primary)

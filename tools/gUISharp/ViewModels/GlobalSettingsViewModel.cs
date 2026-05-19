@@ -58,12 +58,15 @@ public sealed partial class GlobalSettingsViewModel : ObservableObject, IXmlEdit
     public event EventHandler? SelectionDecorationChanged;
 #pragma warning restore CS0067
 
+    public event EventHandler? Dirtied;
+
     public void OnXmlEdited(string xml)
     {
         _updatingFromXml = true;
         CurrentXmlText = xml;
         TryApplyXmlToSettings(xml);
         _updatingFromXml = false;
+        Dirtied?.Invoke(this, EventArgs.Empty);
     }
 
     public void SelectAtLine(int line) { }
@@ -88,12 +91,13 @@ public sealed partial class GlobalSettingsViewModel : ObservableObject, IXmlEdit
         ConditionEngine  = C.Values.ConditionEngineNative;
         SchemaVersion    = string.Empty;
 
-        // Rebuild the XML panel whenever any guided field changes.
+        // Rebuild the XML panel and signal dirty whenever any guided field changes.
         PropertyChanged += (_, e) =>
         {
             if (_updatingFromXml) return;
             if (e.PropertyName is nameof(CurrentXmlText) or nameof(XmlValidationError)) return;
             RefreshXml();
+            Dirtied?.Invoke(this, EventArgs.Empty);
         };
     }
 
