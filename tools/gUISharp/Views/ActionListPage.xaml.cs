@@ -1,11 +1,15 @@
 using GUISharp.ViewModels;
 using GUISharp.ViewModels.ActionEditors;
+using Microsoft.UI;
 using Microsoft.UI.Input;
+using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using UIpp.Core.Configuration;
 using Windows.Foundation;
+using Windows.UI;
 using C = UIpp.Core.Configuration.XmlConstants;
 
 namespace GUISharp.Views;
@@ -75,6 +79,143 @@ public sealed partial class ActionListPage : Page
             WelcomeRecentList.ItemsSource = ViewModel.RecentFiles
                 .Select(p => new RecentFileEntry(System.IO.Path.GetFileName(p), p))
                 .ToList();
+    }
+
+    // ── Add action flyout with search ─────────────────────────────────────────
+
+    private static readonly (string Label, string TypeName, string Category)[] AllAddableActions =
+    [
+        ("Variables",              "TSVar",              "Variables"),
+        ("Variable List",          "TSVarList",          "Variables"),
+        ("Default Values",         "DefaultValues",      "Variables"),
+        ("Switch",                 "Switch",             "Variables"),
+        ("Input Dialog",           "Input",              "Input"),
+        ("Preflight Checks",       "Preflight",          "Input"),
+        ("Info Dialog",            "Info",               "Interactive"),
+        ("Info (Full-Screen)",     "InfoFullScreen",     "Interactive"),
+        ("Error Info",             "ErrorInfo",          "Interactive"),
+        ("User Authentication",    "UserAuth",           "Interactive"),
+        ("Application Tree",       "AppTree",            "Interactive"),
+        ("External Call",          "ExternalCall",       "Utilities"),
+        ("Random String",          "RandomString",       "Utilities"),
+        ("File Read",              "FileRead",           "Utilities"),
+        ("Save Items",             "SaveItems",          "Utilities"),
+        ("Load / Save Variables",  "Vars",               "Utilities"),
+        ("Software Discovery",     "SoftwareDiscovery",  "Utilities"),
+        ("TPM Operations",         "TPM",                "Utilities"),
+        ("Registry Read",          "RegRead",            "Registry / WMI"),
+        ("Registry Write",         "RegWrite",           "Registry / WMI"),
+        ("WMI Read",               "WMIRead",            "Registry / WMI"),
+        ("WMI Write",              "WMIWrite",           "Registry / WMI"),
+        ("HTTP / REST Request",    "REST",               "Network / Data"),
+        ("Serialize to JSON",      "ToJSON",             "Network / Data"),
+        ("Parse JSON",             "FromJSON",           "Network / Data"),
+    ];
+
+    private void AddFlyout_Opening(object sender, object e)
+    {
+        AddSearchBox.Text = string.Empty;
+        RebuildAddCatalog(string.Empty);
+        _ = AddSearchBox.Focus(FocusState.Keyboard);
+    }
+
+    private void AddSearchBox_TextChanged(object sender, TextChangedEventArgs e)
+        => RebuildAddCatalog(AddSearchBox.Text);
+
+    private void AddSearchBox_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Escape)
+        {
+            AddFlyout.Hide();
+            e.Handled = true;
+        }
+    }
+
+    private void RebuildAddCatalog(string filter)
+    {
+        AddCatalogPanel.Children.Clear();
+        bool isFiltering = filter.Length > 0;
+
+        if (isFiltering)
+        {
+            var matches = AllAddableActions
+                .Where(a => a.Label.Contains(filter, StringComparison.OrdinalIgnoreCase)
+                         || a.Category.Contains(filter, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (matches.Count == 0)
+            {
+                AddCatalogPanel.Children.Add(new TextBlock
+                {
+                    Text    = "No matches",
+                    Opacity = 0.5,
+                    Padding = new Thickness(8, 4, 8, 4),
+                });
+                return;
+            }
+
+            foreach (var (label, typeName, _) in matches)
+                AddCatalogPanel.Children.Add(MakeCatalogButton(label, typeName));
+        }
+        else
+        {
+            AddCatalogPanel.Children.Add(MakeCatalogButton("Add Group", "Group"));
+            AddSeparator(topMargin: 4, bottomMargin: 4);
+
+            string? lastCategory = null;
+            foreach (var (label, typeName, category) in AllAddableActions)
+            {
+                if (category != lastCategory)
+                {
+                    AddCatalogPanel.Children.Add(new TextBlock
+                    {
+                        Text       = category,
+                        FontSize   = 11,
+                        Opacity    = 0.6,
+                        Padding    = new Thickness(8, lastCategory is null ? 2 : 8, 8, 2),
+                        FontWeight = FontWeights.SemiBold,
+                    });
+                    lastCategory = category;
+                }
+                AddCatalogPanel.Children.Add(MakeCatalogButton(label, typeName));
+            }
+        }
+    }
+
+    private Button MakeCatalogButton(string label, string typeName)
+    {
+        var btn = new Button
+        {
+            Content             = label,
+            Tag                 = typeName,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Background          = new SolidColorBrush(Colors.Transparent),
+            BorderThickness     = new Thickness(0),
+            Padding             = new Thickness(8, 6, 8, 6),
+        };
+        btn.Click += CatalogButton_Click;
+        return btn;
+    }
+
+    private void CatalogButton_Click(object sender, RoutedEventArgs e)
+    {
+        var typeName = (string)((Button)sender).Tag;
+        if (typeName == "Group")
+            ViewModel.ActionList.AddGroupCommand.Execute(null);
+        else
+            ViewModel.ActionList.AddActionCommand.Execute(typeName);
+        AddFlyout.Hide();
+    }
+
+    private void AddSeparator(double topMargin = 0, double bottomMargin = 0)
+    {
+        Brush divider = (Brush)Application.Current.Resources["DividerStrokeColorDefaultBrush"];
+        AddCatalogPanel.Children.Add(new Border
+        {
+            Height     = 1,
+            Margin     = new Thickness(0, topMargin, 0, bottomMargin),
+            Background = divider,
+        });
     }
 
     private void WelcomeOpenRecent_ItemClick(object sender, ItemClickEventArgs e)

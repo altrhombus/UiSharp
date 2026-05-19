@@ -95,50 +95,20 @@
                     </StackPanel>
                 </DropDownButton.Content>
                 <DropDownButton.Flyout>
-                    <MenuFlyout Placement="Bottom">
-                        <MenuFlyoutItem Text="Add Group"
-                                        Command="{x:Bind ViewModel.ActionList.AddGroupCommand}">
-                            <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B7;" /></MenuFlyoutItem.Icon>
-                        </MenuFlyoutItem>
-                        <MenuFlyoutSeparator />
-                        <MenuFlyoutSubItem Text="Variables">
-                            <MenuFlyoutItem Text="Variables"         ToolTipService.ToolTip="XML type: TSVar"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TSVar" />
-                            <MenuFlyoutItem Text="Variable List"     ToolTipService.ToolTip="XML type: TSVarList"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TSVarList" />
-                            <MenuFlyoutItem Text="Default Values"                                                     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="DefaultValues" />
-                            <MenuFlyoutItem Text="Switch"                                                             Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Switch" />
-                        </MenuFlyoutSubItem>
-                        <MenuFlyoutSubItem Text="Input">
-                            <MenuFlyoutItem Text="Input Dialog"    Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Input" />
-                            <MenuFlyoutItem Text="Preflight Checks" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Preflight" />
-                        </MenuFlyoutSubItem>
-                        <MenuFlyoutSubItem Text="Interactive">
-                            <MenuFlyoutItem Text="Info Dialog"        Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Info" />
-                            <MenuFlyoutItem Text="Info (Full-Screen)" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="InfoFullScreen" />
-                            <MenuFlyoutItem Text="Error Info"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ErrorInfo" />
-                            <MenuFlyoutItem Text="User Authentication" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="UserAuth" />
-                            <MenuFlyoutItem Text="Application Tree"   Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="AppTree" />
-                        </MenuFlyoutSubItem>
-                        <MenuFlyoutSubItem Text="Utilities">
-                            <MenuFlyoutItem Text="External Call"      Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ExternalCall" />
-                            <MenuFlyoutItem Text="Random String"      Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RandomString" />
-                            <MenuFlyoutItem Text="File Read"          Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="FileRead" />
-                            <MenuFlyoutItem Text="Save Items"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="SaveItems" />
-                            <MenuFlyoutItem Text="Load / Save Variables" ToolTipService.ToolTip="XML type: Vars"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Vars" />
-                            <MenuFlyoutItem Text="Software Discovery" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="SoftwareDiscovery" />
-                            <MenuFlyoutItem Text="TPM Operations"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TPM" />
-                        </MenuFlyoutSubItem>
-                        <MenuFlyoutSubItem Text="Registry / WMI">
-                            <MenuFlyoutItem Text="Registry Read"  ToolTipService.ToolTip="XML type: RegRead"  Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RegRead" />
-                            <MenuFlyoutItem Text="Registry Write" ToolTipService.ToolTip="XML type: RegWrite" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RegWrite" />
-                            <MenuFlyoutItem Text="WMI Read"       ToolTipService.ToolTip="XML type: WMIRead"  Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="WMIRead" />
-                            <MenuFlyoutItem Text="WMI Write"      ToolTipService.ToolTip="XML type: WMIWrite" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="WMIWrite" />
-                        </MenuFlyoutSubItem>
-                        <MenuFlyoutSubItem Text="Network / Data">
-                            <MenuFlyoutItem Text="HTTP / REST Request"  ToolTipService.ToolTip="XML type: REST"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="REST" />
-                            <MenuFlyoutItem Text="Serialize to JSON"    ToolTipService.ToolTip="XML type: ToJSON"   Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ToJSON" />
-                            <MenuFlyoutItem Text="Parse JSON"           ToolTipService.ToolTip="XML type: FromJSON" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="FromJSON" />
-                        </MenuFlyoutSubItem>
-                    </MenuFlyout>
+                    <Flyout x:Name="AddFlyout" Placement="Bottom" Opening="AddFlyout_Opening">
+                        <StackPanel Width="256" Spacing="0">
+                            <TextBox x:Name="AddSearchBox"
+                                     PlaceholderText="Search actions…"
+                                     Margin="4,4,4,4"
+                                     TextChanged="AddSearchBox_TextChanged"
+                                     KeyDown="AddSearchBox_KeyDown" />
+                            <Border Height="1"
+                                    Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                            <ScrollViewer MaxHeight="320" Padding="2,4,2,4">
+                                <StackPanel x:Name="AddCatalogPanel" />
+                            </ScrollViewer>
+                        </StackPanel>
+                    </Flyout>
                 </DropDownButton.Flyout>
             </DropDownButton>
 
