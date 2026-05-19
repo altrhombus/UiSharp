@@ -6,6 +6,14 @@
     <XamlCompilerExePath>$(MSBuildThisFileDirectory)xamlcompiler-wrap.cmd</XamlCompilerExePath>
   </PropertyGroup>
 
+  <!-- Embed the short git commit hash into InformationalVersion as "1.0.0+abc1234".
+       IgnoreExitCode keeps the build green when git is unavailable (CI without git, zip downloads). -->
+  <Target Name="SetGitCommit" BeforeTargets="GetAssemblyVersion">
+    <Exec Command="git rev-parse --short HEAD" ConsoleToMSBuild="true" IgnoreExitCode="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="SourceRevisionId" />
+    </Exec>
+  </Target>
+
   <!-- WebView2Loader.dll ships in runtimes/win-<arch>/native/ but the OS DLL loader only
        searches the exe directory. Copy the correct architecture slice next to the exe so
        EnsureCoreWebView2Async can find it at runtime.

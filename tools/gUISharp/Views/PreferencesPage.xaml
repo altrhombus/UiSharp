@@ -39,6 +39,19 @@
                 </StackPanel>
             </StackPanel>
 
+            <!-- About -->
+            <StackPanel Spacing="12">
+                <TextBlock Text="About"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <StackPanel Spacing="4">
+                    <TextBlock Text="gUI#"
+                               Style="{ThemeResource SubtitleTextBlockStyle}" />
+                    <TextBlock x:Name="VersionText"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </StackPanel>
+
         </StackPanel>
     </ScrollViewer>
 </Page>

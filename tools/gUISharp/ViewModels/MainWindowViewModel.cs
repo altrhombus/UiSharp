@@ -17,7 +17,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     // ── Undo / Redo ──────────────────────────────────────────────────────────
 
-    private readonly IUndoService _undoService = new UndoService();
+    private readonly IUndoService _undoService;
     private readonly DispatcherQueueTimer _snapshotTimer;
     private AppStateSnapshot? _lastSnapshot;
     private bool _isUndoRedoing;
@@ -201,10 +201,12 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public MainWindowViewModel(
         IConfigService configService,
         IFileDialogService fileDialogService,
-        EditorViewModelFactory factory)
+        EditorViewModelFactory factory,
+        IUndoService? undoService = null)
     {
         _configService     = configService;
         _fileDialogService = fileDialogService;
+        _undoService       = undoService ?? new UndoService();
         ActionList         = new ActionListViewModel(factory);
         ActionList.Dirtied     += (_, _) => ActionsModified        = true;
         GlobalSettings.Dirtied += (_, _) => GlobalSettingsModified = true;
@@ -399,7 +401,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private static async Task ShowErrorAsync(string title, string message)
     {
         var logPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "guisharp_error.log");
-        System.Diagnostics.Debug.WriteLine($"[ERROR] {title}: {message}");
         System.IO.File.AppendAllText(logPath,
             $"[{DateTime.Now:HH:mm:ss}] {title}: {message}{Environment.NewLine}");
 

@@ -6,7 +6,6 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>UIpp</AssemblyName>
     <RootNamespace>UIpp</RootNamespace>
   </PropertyGroup>

@@ -92,7 +92,7 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 - **Generate ID button** — the Software page Id field has a one-click button that generates a new GUID
 - **Drag splitter** — resize the guided and XML panels by dragging; collapse either panel entirely
 - **Keyboard shortcuts** — `Ctrl+N` New, `Ctrl+O` Open, `Ctrl+S` Save, `Ctrl+Shift+S` Save As, `Ctrl+F` focus action search, `Delete` remove selected action, `N` / `S` in the Unsaved Changes prompt
-- **Unsaved-changes detection** — title bar marks modified files with `*`; closing with unsaved changes prompts Save / Don't Save / Cancel
+- **Unsaved-changes detection** — title bar marks modified files with `•`; closing with unsaved changes prompts Save / Don't Save / Cancel
 - **Import from ConfigMgr** — browse Applications and Packages from a live WMI connection and bulk-import them to the Software catalog
 
 ## Command-line arguments
@@ -117,6 +117,20 @@ These are the only intentional behavioral changes:
 | WinPE optional components | `WinPE-WMI` + `WinPE-Scripting` required | `WinPE-WMI` always; `WinPE-Scripting` only when using the vbscript engine |
 
 All other XML attributes, variable names, dialog behavior, and output formats are identical to the C++ original. Existing XML config files work without modification.
+
+## Troubleshooting
+
+If gUI# crashes silently or fails to start, check `%TEMP%\guisharp_crash.txt` — the app writes a full exception report there on any unhandled error. Non-fatal errors (failed file opens, failed saves) are appended to `%TEMP%\guisharp_error.log`.
+
+## Repository layout
+
+| File / folder | Purpose |
+|---|---|
+| `UiSharp.slnx` | Modern C# solution — open this in Visual Studio or Rider |
+| `src/` | C# runtime projects (`UIpp.Core`, `UIpp.Windows`, `UIpp.UI`, `UIpp`) |
+| `tools/gUISharp/` | WinUI 3 visual XML editor |
+| `UI++.sln` | Legacy C++ solution for the original UI++ source (not the C# port) |
+| `UI++/`, `FTWCMLog/`, `FTWldap/` | Original C++ source, included for historical reference |
 
 ## Original project
 

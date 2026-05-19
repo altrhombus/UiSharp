@@ -26,6 +26,9 @@ public sealed class UserSettingsService
 
     public UserSettings Settings { get; } = Load();
 
+    private static readonly string CrashLogPath = Path.Combine(
+        Path.GetTempPath(), "guisharp_crash.txt");
+
     private static UserSettings Load()
     {
         try
@@ -35,7 +38,11 @@ public sealed class UserSettingsService
             return JsonSerializer.Deserialize<UserSettings>(json, JsonOpts)
                    ?? new UserSettings();
         }
-        catch { return new UserSettings(); }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.Fail($"Failed to load user settings: {ex.Message}");
+            return new UserSettings();
+        }
     }
 
     public void Save()
@@ -45,6 +52,10 @@ public sealed class UserSettingsService
             Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
             File.WriteAllText(SettingsPath, JsonSerializer.Serialize(Settings, JsonOpts));
         }
-        catch { }
+        catch (Exception ex)
+        {
+            File.AppendAllText(CrashLogPath,
+                $"[{DateTime.Now:HH:mm:ss}] Settings save failed: {ex.Message}{Environment.NewLine}");
+        }
     }
 }

@@ -1,3 +1,4 @@
+using System.Reflection;
 using GUISharp.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -23,6 +24,16 @@ public sealed partial class PreferencesPage : Page
         }).IsChecked = true;
 
         RecentFilesLimitBox.Value = s.RecentFilesLimit;
+
+        var infoVer = typeof(App).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion ?? string.Empty;
+        var plus    = infoVer.IndexOf('+');
+        var version = plus >= 0 ? infoVer[..plus] : infoVer;
+        var commit  = plus >= 0 ? infoVer[(plus + 1)..] : null;
+        VersionText.Text = commit is { Length: > 0 }
+            ? $"Version {version}  ·  {commit}"
+            : $"Version {version}";
     }
 
     private void Theme_Checked(object sender, RoutedEventArgs e)

@@ -107,34 +107,13 @@ public sealed partial class MainWindow : Window
 
         if (args.SelectedItem is not NavigationViewItem item) return;
 
-        try
+        _ = item.Tag switch
         {
-            _ = item.Tag switch
-            {
-                "Actions"        => ContentFrame.Navigate(typeof(ActionListPage)),
-                "GlobalSettings" => ContentFrame.Navigate(typeof(GlobalSettingsPage)),
-                "Software"       => ContentFrame.Navigate(typeof(SoftwarePage)),
-                "Variables"      => ContentFrame.Navigate(typeof(VariablesPage)),
-                _                => false,
-            };
-        }
-        catch (Exception ex)
-        {
-            var sb = new System.Text.StringBuilder();
-            sb.AppendLine($"=== Navigate({item.Tag}) threw ===");
-            var e2 = ex;
-            int d = 0;
-            while (e2 is not null && d++ < 8)
-            {
-                sb.AppendLine($"[{d}] {e2.GetType().FullName}  HResult=0x{e2.HResult:X8}");
-                sb.AppendLine($"    {e2.Message}");
-                sb.AppendLine(e2.StackTrace);
-                e2 = e2.InnerException;
-            }
-            System.IO.File.WriteAllText(
-                System.IO.Path.Combine(System.IO.Path.GetTempPath(), "guisharp_crash.txt"),
-                sb.ToString());
-            throw;
-        }
+            "Actions"        => ContentFrame.Navigate(typeof(ActionListPage)),
+            "GlobalSettings" => ContentFrame.Navigate(typeof(GlobalSettingsPage)),
+            "Software"       => ContentFrame.Navigate(typeof(SoftwarePage)),
+            "Variables"      => ContentFrame.Navigate(typeof(VariablesPage)),
+            _                => false,
+        };
     }
 }

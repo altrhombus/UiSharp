@@ -38,7 +38,6 @@ public partial class App : Application
                 inner = inner.InnerException;
             }
             var text = sb.ToString();
-            System.Diagnostics.Debug.WriteLine(text);
             System.IO.File.WriteAllText(
                 System.IO.Path.Combine(System.IO.Path.GetTempPath(), "guisharp_crash.txt"),
                 text);
