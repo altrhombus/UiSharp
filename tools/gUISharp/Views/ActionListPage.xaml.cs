@@ -256,12 +256,54 @@ public sealed partial class ActionListPage : Page
 
     private void PageRoot_KeyDown(object sender, KeyRoutedEventArgs e)
     {
-        if (e.Key != Windows.System.VirtualKey.F) return;
         var ctrl = InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control);
-        if ((ctrl & Windows.UI.Core.CoreVirtualKeyStates.Down) == 0) return;
-        SearchBox.Focus(FocusState.Keyboard);
-        SearchBox.SelectAll();
-        e.Handled = true;
+        bool isCtrl = (ctrl & Windows.UI.Core.CoreVirtualKeyStates.Down) != 0;
+
+        if (!isCtrl) return;
+
+        switch (e.Key)
+        {
+            case Windows.System.VirtualKey.F:
+                SearchBox.Focus(FocusState.Keyboard);
+                SearchBox.SelectAll();
+                e.Handled = true;
+                break;
+
+            case Windows.System.VirtualKey.D:
+                if (ViewModel.ActionList.DuplicateActionCommand.CanExecute(null))
+                    ViewModel.ActionList.DuplicateActionCommand.Execute(null);
+                e.Handled = true;
+                break;
+
+            case Windows.System.VirtualKey.Enter:
+                AddFlyout.ShowAt(AddButton);
+                e.Handled = true;
+                break;
+
+            case Windows.System.VirtualKey.Up:
+            {
+                var alt = InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Menu);
+                if ((alt & Windows.UI.Core.CoreVirtualKeyStates.Down) != 0 &&
+                    ViewModel.ActionList.MoveUpCommand.CanExecute(null))
+                {
+                    ViewModel.ActionList.MoveUpCommand.Execute(null);
+                    e.Handled = true;
+                }
+                break;
+            }
+
+            case Windows.System.VirtualKey.Down:
+            {
+                var alt = InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Menu);
+                if ((alt & Windows.UI.Core.CoreVirtualKeyStates.Down) != 0 &&
+                    ViewModel.ActionList.MoveDownCommand.CanExecute(null))
+                {
+                    ViewModel.ActionList.MoveDownCommand.Execute(null);
+                    e.Handled = true;
+                }
+                break;
+            }
+        }
     }
 
     // ── Cascading rename TeachingTip ──────────────────────────────────────────
