@@ -1,10 +1,26 @@
 <Project>
   <!-- WindowsAppSDK 2.0.x: route XamlCompiler.exe through a wrapper that eats the exit code.
        XamlCompiler.exe exits 1 on warnings-as-errors in Pass 2 even when output is valid;
-       the wrapper forces exit 0 so MSBuild does not abort before reading output.json. -->
+       the wrapper forces exit 0 so MSBuild does not abort before reading output.json.
+       Directory.Build.targets is imported after NuGet package targets, so XamlCompilerExePath
+       is already set by the SDK here — capture it before overriding, then write the wrapper
+       just-in-time so no machine-specific file needs to be checked in or pre-created. -->
   <PropertyGroup>
+    <_RealXamlCompilerExePath>$(XamlCompilerExePath)</_RealXamlCompilerExePath>
     <XamlCompilerExePath>$(MSBuildThisFileDirectory)xamlcompiler-wrap.cmd</XamlCompilerExePath>
   </PropertyGroup>
+
+  <Target Name="GenerateXamlCompilerWrap" BeforeTargets="MarkupCompilePass1">
+    <ItemGroup>
+      <_WrapLine Include="@echo off" />
+      <_WrapLine Include="&quot;$(_RealXamlCompilerExePath)&quot; %25*" />
+      <_WrapLine Include="exit /b 0" />
+    </ItemGroup>
+    <WriteLinesToFile
+      File="$(MSBuildThisFileDirectory)xamlcompiler-wrap.cmd"
+      Lines="@(_WrapLine)"
+      Overwrite="true" />
+  </Target>
 
   <!-- Embed the short git commit hash into InformationalVersion as "1.0.0+abc1234".
        IgnoreExitCode keeps the build green when git is unavailable (CI without git, zip downloads). -->
