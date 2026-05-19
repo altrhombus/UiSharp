@@ -14,7 +14,25 @@ public sealed partial class NewConfigWizardDialog : ContentDialog
         this.InitializeComponent();
         this.Style = (Style)Application.Current.Resources["DefaultContentDialogStyle"];
         IsSecondaryButtonEnabled = false;
+        UpdatePreview();
     }
+
+    private void Radio_Checked(object sender, RoutedEventArgs e)
+        => UpdatePreview();
+
+    private void UpdatePreview()
+    {
+        if (PreviewList is null) return;
+        PreviewList.ItemsSource = GetPreviewItems(SelectedScenario());
+    }
+
+    private static IReadOnlyList<string> GetPreviewItems(Scenario s) => s switch
+    {
+        Scenario.StandardOsd  => ["TSVar → OSDComputerName", "AppTree: Software Selection"],
+        Scenario.SoftwareOnly => ["AppTree: Software Selection"],
+        Scenario.UserInfo     => ["Input Dialog", "  InputText: Enter a value"],
+        _                     => ["(empty — build from scratch)"],
+    };
 
     public string GetTemplateXml()
     {

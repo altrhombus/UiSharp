@@ -15,63 +15,108 @@
     <StackPanel Width="480" Spacing="0">
 
         <!-- ── Step 1: Choose scenario ───────────────────────────────────── -->
-        <StackPanel x:Name="Step1Panel" Spacing="12">
-            <TextBlock Text="Choose a starting point for your configuration."
-                       Style="{ThemeResource BodyTextBlockStyle}"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        <Grid x:Name="Step1Panel">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="264" />
+                <ColumnDefinition Width="12"  />
+                <ColumnDefinition Width="*"   />
+            </Grid.ColumnDefinitions>
 
-            <RadioButton x:Name="RadioStandardOsd"
-                         GroupName="Scenario" IsChecked="True"
-                         HorizontalAlignment="Stretch"
-                         Padding="12,10">
-                <StackPanel Spacing="2">
-                    <TextBlock Text="Standard OSD" FontWeight="SemiBold" />
-                    <TextBlock Text="Computer naming prompt followed by application and package selection. The standard starting point for OSD task sequences."
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-            </RadioButton>
+            <!-- Radio options -->
+            <StackPanel Grid.Column="0" Spacing="8">
+                <TextBlock Text="Choose a starting point for your configuration."
+                           Style="{ThemeResource BodyTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,4" />
 
-            <RadioButton x:Name="RadioSoftwareOnly"
-                         GroupName="Scenario"
-                         HorizontalAlignment="Stretch"
-                         Padding="12,10">
-                <StackPanel Spacing="2">
-                    <TextBlock Text="Software Selection" FontWeight="SemiBold" />
-                    <TextBlock Text="Application and package selection only. Use in existing deployments that already handle computer naming."
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-            </RadioButton>
+                <RadioButton x:Name="RadioStandardOsd"
+                             GroupName="Scenario" IsChecked="True"
+                             HorizontalAlignment="Stretch"
+                             Padding="12,8"
+                             Checked="Radio_Checked">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Standard OSD" FontWeight="SemiBold" />
+                        <TextBlock Text="Computer naming + software selection."
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </RadioButton>
 
-            <RadioButton x:Name="RadioUserInfo"
-                         GroupName="Scenario"
-                         HorizontalAlignment="Stretch"
-                         Padding="12,10">
-                <StackPanel Spacing="2">
-                    <TextBlock Text="User Info Capture" FontWeight="SemiBold" />
-                    <TextBlock Text="Collect user-provided information via a guided input dialog. Suitable for pre-staging or enrollment flows."
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               TextWrapping="Wrap" />
-                </StackPanel>
-            </RadioButton>
+                <RadioButton x:Name="RadioSoftwareOnly"
+                             GroupName="Scenario"
+                             HorizontalAlignment="Stretch"
+                             Padding="12,8"
+                             Checked="Radio_Checked">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Software Selection" FontWeight="SemiBold" />
+                        <TextBlock Text="App and package selection only."
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </RadioButton>
 
-            <RadioButton x:Name="RadioBlank"
-                         GroupName="Scenario"
-                         HorizontalAlignment="Stretch"
-                         Padding="12,10">
-                <StackPanel Spacing="2">
-                    <TextBlock Text="Blank" FontWeight="SemiBold" />
-                    <TextBlock Text="Start with an empty configuration and build from scratch."
+                <RadioButton x:Name="RadioUserInfo"
+                             GroupName="Scenario"
+                             HorizontalAlignment="Stretch"
+                             Padding="12,8"
+                             Checked="Radio_Checked">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="User Info Capture" FontWeight="SemiBold" />
+                        <TextBlock Text="Collect user-provided info via input dialog."
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </RadioButton>
+
+                <RadioButton x:Name="RadioBlank"
+                             GroupName="Scenario"
+                             HorizontalAlignment="Stretch"
+                             Padding="12,8"
+                             Checked="Radio_Checked">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Blank" FontWeight="SemiBold" />
+                        <TextBlock Text="Start with an empty configuration."
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </RadioButton>
+            </StackPanel>
+
+            <!-- Preview panel -->
+            <Border Grid.Column="2"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="12"
+                    VerticalAlignment="Stretch">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Actions this template creates"
                                Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                               TextWrapping="Wrap" />
+                               FontWeight="SemiBold"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <ItemsControl x:Name="PreviewList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="x:String">
+                                <StackPanel Orientation="Horizontal" Spacing="5" Margin="0,2">
+                                    <TextBlock Text="•"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock Text="{x:Bind}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
-            </RadioButton>
-        </StackPanel>
+            </Border>
+        </Grid>
 
         <!-- ── Step 2: Configure settings ───────────────────────────────── -->
         <StackPanel x:Name="Step2Panel" Visibility="Collapsed" Spacing="12">
