@@ -91,7 +91,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "gUISharp", "recent_files.txt");
 
-    private const int MaxRecentFiles = 10;
+    private static int MaxRecentFiles => App.UserSettings?.Settings.RecentFilesLimit ?? 10;
 
     private void LoadRecentFiles()
     {

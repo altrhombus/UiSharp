@@ -109,6 +109,7 @@ public sealed partial class MainWindow : Window
                 "GlobalSettings" => ContentFrame.Navigate(typeof(GlobalSettingsPage)),
                 "Software"       => ContentFrame.Navigate(typeof(SoftwarePage)),
                 "Variables"      => ContentFrame.Navigate(typeof(VariablesPage)),
+                "Preferences"    => ContentFrame.Navigate(typeof(PreferencesPage)),
                 _                => false,
             };
         }

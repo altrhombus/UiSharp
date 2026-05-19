@@ -10,6 +10,7 @@ public partial class App : Application
     public static MainWindowViewModel MainVm { get; private set; } = null!;
     public static IFileDialogService FileDialogService { get; private set; } = null!;
     public static Window? MainWindow { get; private set; }
+    public static UserSettingsService UserSettings { get; private set; } = null!;
 
     public App()
     {
@@ -48,6 +49,8 @@ public partial class App : Application
     {
         try
         {
+            UserSettings = new UserSettingsService();
+
             var configService = new ConfigService();
             FileDialogService = new FileDialogService();
             var factory = new EditorViewModelFactory();
@@ -56,6 +59,7 @@ public partial class App : Application
 
             _window = new MainWindow();
             MainWindow = _window;
+            ApplyTheme();
             _window.Activate();
         }
         catch (Exception ex)
@@ -65,6 +69,17 @@ public partial class App : Application
                 ex.ToString());
             throw;
         }
+    }
+
+    public static void ApplyTheme()
+    {
+        if (MainWindow?.Content is not Microsoft.UI.Xaml.FrameworkElement root) return;
+        root.RequestedTheme = UserSettings.Settings.Theme switch
+        {
+            AppTheme.Light  => Microsoft.UI.Xaml.ElementTheme.Light,
+            AppTheme.Dark   => Microsoft.UI.Xaml.ElementTheme.Dark,
+            _               => Microsoft.UI.Xaml.ElementTheme.Default,
+        };
     }
 
     private Window? _window;
