@@ -13,6 +13,7 @@ public sealed partial class XmlEditorPanel : UserControl
     private bool _monacoReady;
     private string _pendingContent = string.Empty;
     private bool _suppressNextChange;
+    private (int Start, int End) _lastSentDecoration = (-2, -2);
     private readonly JsonSerializerOptions _jsonOpts = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
     // ── DependencyProperty: PanelViewModel ───────────────────────────────────
@@ -145,6 +146,7 @@ public sealed partial class XmlEditorPanel : UserControl
     {
         if (MonacoWebView.CoreWebView2 is null) return;
         _suppressNextChange = true;
+        _lastSentDecoration = (-2, -2); // content changed — always scroll to the new position
         await MonacoWebView.CoreWebView2.ExecuteScriptAsync($"setContent({JsonSerializer.Serialize(xml)})");
         await PushDecorationOnlyAsync();
     }
@@ -155,6 +157,8 @@ public sealed partial class XmlEditorPanel : UserControl
         var vm = PanelViewModel;
         if (vm is null) return;
         var (start, end) = vm.SelectedLineRange;
+        if ((start, end) == _lastSentDecoration) return; // range unchanged — skip to avoid distracting re-scroll
+        _lastSentDecoration = (start, end);
         var decoJs = start > 0 ? $"setDecoration({start},{end})" : "clearDecoration()";
         try { await MonacoWebView.CoreWebView2.ExecuteScriptAsync(decoJs); }
         catch { }
