@@ -224,11 +224,14 @@ public sealed partial class ActionListPage : Page
             _ = ViewModel.OpenRecentCommand.ExecuteAsync(entry.FullPath);
     }
 
-    private void SearchAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    private void PageRoot_KeyDown(object sender, KeyRoutedEventArgs e)
     {
+        if (e.Key != Windows.System.VirtualKey.F) return;
+        var ctrl = InputKeyboardSource.GetKeyStateForCurrentThread(Windows.System.VirtualKey.Control);
+        if ((ctrl & Windows.UI.Core.CoreVirtualKeyStates.Down) == 0) return;
         SearchBox.Focus(FocusState.Keyboard);
         SearchBox.SelectAll();
-        args.Handled = true;
+        e.Handled = true;
     }
 
     // ── Cascading rename (P7) ─────────────────────────────────────────────────

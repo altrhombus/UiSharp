@@ -5,11 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:GUISharp.Views"
     xmlns:vm="using:GUISharp.ViewModels"
-    xmlns:editors="using:GUISharp.Views.ActionEditors">
-
-    <Page.KeyboardAccelerators>
-        <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="SearchAccelerator_Invoked" />
-    </Page.KeyboardAccelerators>
+    xmlns:editors="using:GUISharp.Views.ActionEditors"
+    KeyDown="PageRoot_KeyDown">
 
     <Page.Resources>
         <!-- Per-type editor DataTemplates -->
