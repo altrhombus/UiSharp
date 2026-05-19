@@ -19,9 +19,21 @@ public sealed partial class ActionListPage : Page
         this.InitializeComponent();
     }
 
-    // ── Search / filter ───────────────────────────────────────────────────────
+    // ── Remove action ─────────────────────────────────────────────────────────
 
     private async void RemoveAction_Click(object sender, RoutedEventArgs e)
+        => await TryRemoveSelectedActionAsync();
+
+    private async void ActionTreeView_KeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == Windows.System.VirtualKey.Delete)
+        {
+            e.Handled = true;
+            await TryRemoveSelectedActionAsync();
+        }
+    }
+
+    private async Task TryRemoveSelectedActionAsync()
     {
         var selected = ViewModel.ActionList.SelectedAction;
         if (selected is null) return;

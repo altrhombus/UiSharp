@@ -165,7 +165,8 @@
                       SelectionMode="Single"
                       ItemsSource="{x:Bind ViewModel.ActionList.ActionTree}"
                       SelectedItem="{x:Bind ViewModel.ActionList.SelectedAction, Mode=TwoWay}"
-                      Margin="4,0">
+                      Margin="4,0"
+                      KeyDown="ActionTreeView_KeyDown">
                 <TreeView.ItemTemplate>
                     <DataTemplate x:DataType="vm:ActionNodeViewModel">
                         <TreeViewItem ItemsSource="{x:Bind Children}" IsExpanded="True">
