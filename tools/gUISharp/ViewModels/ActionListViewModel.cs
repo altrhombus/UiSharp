@@ -849,7 +849,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         return count;
     }
 
-    private static ObservableCollection<ActionNodeViewModel>? FindOwningList(
+    public static ObservableCollection<ActionNodeViewModel>? FindOwningList(
         ObservableCollection<ActionNodeViewModel> list, ActionNodeViewModel target)
     {
         if (list.Contains(target)) return list;
@@ -859,6 +859,19 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
             if (found is not null) return found;
         }
         return null;
+    }
+
+    public void MoveActionTo(
+        ActionNodeViewModel vm,
+        ObservableCollection<ActionNodeViewModel> sourceCollection,
+        ObservableCollection<ActionNodeViewModel> targetCollection,
+        int targetIndex)
+    {
+        sourceCollection.Remove(vm);
+        targetIndex = Math.Min(targetIndex, targetCollection.Count);
+        targetCollection.Insert(targetIndex, vm);
+        RefreshXmlFromNode();
+        RaiseDirty();
     }
 
     private static List<(string? Comment, XElement El)> ExtractNodePairs(XElement root)

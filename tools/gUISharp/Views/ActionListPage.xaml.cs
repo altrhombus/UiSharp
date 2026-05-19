@@ -96,6 +96,54 @@ public sealed partial class ActionListPage : Page
         }
     }
 
+    private void ActionTreeView_DragItemsCompleted(TreeView sender, TreeViewDragItemsCompletedEventArgs args)
+    {
+        if (args.DropResult == Windows.ApplicationModel.DataTransfer.DataPackageOperation.None) return;
+        if (args.Items.Count != 1 || args.Items[0] is not ActionNodeViewModel draggedVm) return;
+
+        // Determine new parent and index from the TreeView's updated internal state.
+        var newParentVm = args.NewParentItem as ActionNodeViewModel;
+        var targetColl  = newParentVm?.Children ?? ViewModel.ActionList.ActionTree;
+
+        var sourceColl = ActionListViewModel.FindOwningList(
+            ViewModel.ActionList.ActionTree, draggedVm);
+        if (sourceColl is null) return;
+
+        // Find new index: search for draggedVm in target collection's current state
+        // (CanReorderItems has already moved it visually; our ObservableCollection still
+        // reflects the old order, so we sync based on the TreeView's RootNodes).
+        int newIndex = GetIndexInNodes(
+            newParentVm is null ? sender.RootNodes : GetNodeForVm(sender.RootNodes, newParentVm)?.Children,
+            draggedVm);
+
+        if (newIndex < 0) return;
+
+        ViewModel.ActionList.MoveActionTo(draggedVm, sourceColl, targetColl, newIndex);
+    }
+
+    private static int GetIndexInNodes(IEnumerable<TreeViewNode>? nodes, ActionNodeViewModel vm)
+    {
+        if (nodes is null) return -1;
+        int idx = 0;
+        foreach (var node in nodes)
+        {
+            if (node.Content == vm) return idx;
+            idx++;
+        }
+        return -1;
+    }
+
+    private static TreeViewNode? GetNodeForVm(IEnumerable<TreeViewNode> nodes, ActionNodeViewModel vm)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.Content == vm) return node;
+            var found = GetNodeForVm(node.Children, vm);
+            if (found is not null) return found;
+        }
+        return null;
+    }
+
     private async Task TryRemoveSelectedActionAsync()
     {
         var selected = ViewModel.ActionList.SelectedAction;

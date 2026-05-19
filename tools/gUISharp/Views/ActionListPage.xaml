@@ -133,6 +133,10 @@
                       ItemsSource="{x:Bind ViewModel.ActionList.ActionTree}"
                       SelectedItem="{x:Bind ViewModel.ActionList.SelectedAction, Mode=TwoWay}"
                       Margin="4,0"
+                      CanDragItems="True"
+                      CanReorderItems="True"
+                      AllowDrop="True"
+                      DragItemsCompleted="ActionTreeView_DragItemsCompleted"
                       KeyDown="ActionTreeView_KeyDown">
                 <TreeView.ItemTemplate>
                     <DataTemplate x:DataType="vm:ActionNodeViewModel">
