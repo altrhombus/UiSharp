@@ -17,12 +17,27 @@
         <!-- Left: software list -->
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="34" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Margin="8" Spacing="4">
+            <!-- Software section header -->
+            <Border Grid.Row="0"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" Spacing="6">
+                    <TextBlock Text="Software"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                               Visibility="{x:Bind ViewModel.SoftwareModified, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                </StackPanel>
+            </Border>
+
+            <StackPanel Grid.Row="1" Margin="8" Spacing="4">
                 <StackPanel Orientation="Horizontal" Spacing="4">
                     <Button Command="{x:Bind ViewModel.Software.AddApplicationCommand}" Content="+ App"     />
                     <Button Command="{x:Bind ViewModel.Software.AddPackageCommand}"     Content="+ Package" />
@@ -33,7 +48,7 @@
             </StackPanel>
 
             <!-- Empty state -->
-            <Border Grid.Row="1" Margin="8"
+            <Border Grid.Row="2" Margin="8"
                     BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                     BorderThickness="1" CornerRadius="4" Padding="20,24"
                     Visibility="{x:Bind ViewModel.Software.HasItems, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
@@ -43,7 +58,7 @@
                            TextWrapping="Wrap" TextAlignment="Center" />
             </Border>
 
-            <ListView Grid.Row="1"
+            <ListView Grid.Row="2"
                       ItemsSource="{x:Bind ViewModel.Software.Items}"
                       SelectedItem="{x:Bind ViewModel.Software.SelectedItem, Mode=TwoWay}"
                       Visibility="{x:Bind ViewModel.Software.HasItems, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
@@ -59,7 +74,7 @@
                 </ListView.ItemTemplate>
             </ListView>
 
-            <Button Grid.Row="2" Margin="8"
+            <Button Grid.Row="3" Margin="8"
                     Foreground="{ThemeResource SystemFillColorCriticalBrush}"
                     HorizontalAlignment="Stretch"
                     IsEnabled="{x:Bind ViewModel.Software.HasSelection, Mode=OneWay}"
@@ -89,13 +104,12 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" Spacing="6">
-                        <TextBlock Text="Guided"
-                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
-                                   Visibility="{x:Bind ViewModel.SoftwareModified, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
-                    </StackPanel>
+                    <TextBlock Grid.Column="0"
+                               Text="Guided"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     <Button x:Name="ExpandXmlBtn"
                             Grid.Column="1"
                             Width="28" Height="28" Padding="0"

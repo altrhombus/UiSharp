@@ -81,13 +81,28 @@
         <!-- ── Left panel: action tree ──────────────────────────────────────── -->
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
+                <RowDefinition Height="34" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <DropDownButton Grid.Row="0" Margin="8,8,8,4" HorizontalAlignment="Stretch">
+            <!-- Actions section header -->
+            <Border Grid.Row="0"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" Spacing="6">
+                    <TextBlock Text="Actions"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                               Visibility="{x:Bind ViewModel.ActionsModified, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                </StackPanel>
+            </Border>
+
+            <DropDownButton Grid.Row="1" Margin="8,8,8,4" HorizontalAlignment="Stretch">
                 <DropDownButton.Content>
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE710;" FontSize="14" />
@@ -112,7 +127,7 @@
                 </DropDownButton.Flyout>
             </DropDownButton>
 
-            <Grid Grid.Row="1" Margin="8,0,8,4">
+            <Grid Grid.Row="2" Margin="8,0,8,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -131,7 +146,7 @@
                            Visibility="{x:Bind ViewModel.ActionList.IsFiltering, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
             </Grid>
 
-            <TreeView Grid.Row="2" x:Name="ActionTreeView"
+            <TreeView Grid.Row="3" x:Name="ActionTreeView"
                       SelectionMode="Single"
                       ItemsSource="{x:Bind ViewModel.ActionList.ActionTree}"
                       SelectedItem="{x:Bind ViewModel.ActionList.SelectedAction, Mode=TwoWay}"
@@ -229,7 +244,7 @@
                 </TreeView.ItemTemplate>
             </TreeView>
 
-            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8,4,8,8" Spacing="4">
+            <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="8,4,8,8" Spacing="4">
                 <Button Command="{x:Bind ViewModel.ActionList.MoveUpCommand}" ToolTipService.ToolTip="Move Up">
                     <FontIcon Glyph="&#xE74A;" FontSize="14" />
                 </Button>
@@ -287,13 +302,12 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" Spacing="6">
-                            <TextBlock Text="{x:Bind ViewModel.ActionList.GuidedPanelTitle, Mode=OneWay}"
-                                       Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
-                                       Visibility="{x:Bind ViewModel.ActionsModified, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
-                        </StackPanel>
+                        <TextBlock Grid.Column="0"
+                                   Text="{x:Bind ViewModel.ActionList.GuidedPanelTitle, Mode=OneWay}"
+                                   VerticalAlignment="Center"
+                                   Margin="10,0,0,0"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                         <!-- Expand XML button (shown when XML panel is collapsed) -->
                         <Button x:Name="ExpandXmlBtn"
