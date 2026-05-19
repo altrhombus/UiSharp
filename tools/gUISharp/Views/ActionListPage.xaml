@@ -290,7 +290,8 @@
                 </Grid.RowDefinitions>
 
                 <!-- Guided header -->
-                <Border Grid.Row="0"
+                <Border x:Name="GuidedPanelHeader"
+                        Grid.Row="0"
                         Background="{ThemeResource LayerFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                         BorderThickness="0,0,0,1">
@@ -337,20 +338,6 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-
-                    <!-- Cascading rename offer (P7) -->
-                    <InfoBar Grid.Row="0"
-                             IsOpen="{x:Bind ViewModel.ActionList.HasPendingRename, Mode=OneWay}"
-                             Severity="Informational"
-                             Title=""
-                             Message="{x:Bind ViewModel.ActionList.PendingRenameMessage, Mode=OneWay}"
-                             IsClosable="True"
-                             Closed="RenameInfoBar_Closed">
-                        <InfoBar.ActionButton>
-                            <Button Content="Update All"
-                                    Command="{x:Bind ViewModel.ActionList.AcceptRenameCommand}" />
-                        </InfoBar.ActionButton>
-                    </InfoBar>
 
                     <!-- Note / XML comment for this action -->
                     <Border Grid.Row="1" Padding="16,8,16,0"
@@ -562,5 +549,19 @@
                 </StackPanel>
             </ScrollViewer>
         </Grid>
+
+        <!-- Cascading rename TeachingTip — anchored to guided panel header -->
+        <TeachingTip x:Name="RenameTip"
+                     Grid.ColumnSpan="3"
+                     Title="Rename variable references?"
+                     Subtitle="{x:Bind ViewModel.ActionList.PendingRenameMessage, Mode=OneWay}"
+                     ActionButtonContent="Update All"
+                     CloseButtonContent="Skip"
+                     PreferredPlacement="BottomLeft"
+                     IsLightDismissEnabled="False"
+                     Target="{x:Bind GuidedPanelHeader}"
+                     ActionButtonClick="RenameTip_ActionButtonClick"
+                     CloseButtonClick="RenameTip_CloseButtonClick" />
+
     </Grid>
 </Page>

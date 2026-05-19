@@ -21,6 +21,8 @@ public sealed partial class ActionListPage : Page
     public ActionListPage()
     {
         this.InitializeComponent();
+        ViewModel.ActionList.PropertyChanged += ActionList_PropertyChanged;
+        Unloaded += (_, _) => ViewModel.ActionList.PropertyChanged -= ActionList_PropertyChanged;
     }
 
     // ── Remove action ─────────────────────────────────────────────────────────
@@ -253,10 +255,25 @@ public sealed partial class ActionListPage : Page
         e.Handled = true;
     }
 
-    // ── Cascading rename (P7) ─────────────────────────────────────────────────
+    // ── Cascading rename TeachingTip ──────────────────────────────────────────
 
-    private void RenameInfoBar_Closed(InfoBar sender, InfoBarClosedEventArgs args)
-        => ViewModel.ActionList.DismissPendingRename();
+    private void RenameTip_ActionButtonClick(TeachingTip sender, object args)
+    {
+        ViewModel.ActionList.AcceptRenameCommand.Execute(null);
+        RenameTip.IsOpen = false;
+    }
+
+    private void RenameTip_CloseButtonClick(TeachingTip sender, object args)
+    {
+        ViewModel.ActionList.DismissPendingRename();
+        RenameTip.IsOpen = false;
+    }
+
+    private void ActionList_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ActionListViewModel.HasPendingRename))
+            RenameTip.IsOpen = ViewModel.ActionList.HasPendingRename;
+    }
 
     // ── Focus-based sync ──────────────────────────────────────────────────────
 
