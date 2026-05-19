@@ -26,7 +26,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "gUISharp", "recent_files.txt");
 
-    private const int MaxRecentFiles = 5;
+    private const int MaxRecentFiles = 10;
 
     private void LoadRecentFiles()
     {
@@ -53,6 +53,20 @@ public sealed partial class MainWindowViewModel : ObservableObject
             File.WriteAllLines(RecentFilesPath, RecentFiles);
         }
         catch { /* non-fatal */ }
+    }
+
+    [RelayCommand]
+    private void RemoveRecentFile(string path)
+    {
+        RecentFiles.Remove(path);
+        try { File.WriteAllLines(RecentFilesPath, RecentFiles); } catch { /* non-fatal */ }
+    }
+
+    [RelayCommand]
+    private void ClearRecentFiles()
+    {
+        RecentFiles.Clear();
+        try { File.WriteAllLines(RecentFilesPath, RecentFiles); } catch { /* non-fatal */ }
     }
 
     [RelayCommand]

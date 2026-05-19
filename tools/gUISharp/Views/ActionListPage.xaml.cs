@@ -83,6 +83,12 @@ public sealed partial class ActionListPage : Page
         }
     }
 
+    private void RemoveRecentItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is MenuFlyoutItem { Tag: string path })
+            ViewModel.RemoveRecentFileCommand.Execute(path);
+    }
+
     private void WelcomeRecentList_Loaded(object sender, RoutedEventArgs e)
     {
         WelcomeRecentList.ItemsSource = ViewModel.RecentFiles

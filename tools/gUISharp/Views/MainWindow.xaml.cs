@@ -90,6 +90,11 @@ public sealed partial class MainWindow : Window
             item.Click += (_, _) => _ = ViewModel.OpenRecentCommand.ExecuteAsync(path);
             flyout.Items.Add(item);
         }
+
+        flyout.Items.Add(new MenuFlyoutSeparator());
+        var clearItem = new MenuFlyoutItem { Text = "Clear Recent Files" };
+        clearItem.Click += (_, _) => ViewModel.ClearRecentFilesCommand.Execute(null);
+        flyout.Items.Add(clearItem);
     }
 
     private void NavView_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
