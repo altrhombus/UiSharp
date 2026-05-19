@@ -25,11 +25,44 @@ public sealed partial class SoftwarePage : Page
         }
     }
 
-    private void GenerateId_Click(object sender, RoutedEventArgs e)
+    private async void GenerateId_Click(object sender, RoutedEventArgs e)
     {
         var item = ViewModel.Software.SelectedItem;
         if (item is null) return;
-        item.Id = Guid.NewGuid().ToString("D").ToUpperInvariant();
+
+        var oldId  = item.Id;
+        var newId  = Guid.NewGuid().ToString("D").ToUpperInvariant();
+        var refCount = string.IsNullOrWhiteSpace(oldId)
+            ? 0
+            : ViewModel.ActionList.CountSoftwareIdReferences(oldId);
+
+        if (refCount > 0)
+        {
+            var dialog = new ContentDialog
+            {
+                Title               = "Update References?",
+                Content             = $"{refCount} AppTree SoftwareRef element{(refCount == 1 ? "" : "s")} reference{(refCount == 1 ? "s" : "")} the current ID \"{oldId}\". Update them to the new ID?",
+                PrimaryButtonText   = "Update All",
+                SecondaryButtonText = "Change ID Only",
+                CloseButtonText     = "Cancel",
+                DefaultButton       = ContentDialogButton.Primary,
+                XamlRoot            = XamlRoot,
+            };
+
+            var result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.None) return;
+
+            item.Id = newId;
+            ViewModel.MarkModified();
+
+            if (result == ContentDialogResult.Primary)
+                ViewModel.ActionList.ReplaceSoftwareId(oldId, newId);
+        }
+        else
+        {
+            item.Id = newId;
+            ViewModel.MarkModified();
+        }
     }
 
     private async void RemoveItem_Click(object sender, RoutedEventArgs e)

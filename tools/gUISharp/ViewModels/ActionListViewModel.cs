@@ -103,6 +103,52 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         SelectedAction = node;
     }
 
+    public int CountSoftwareIdReferences(string softwareId)
+    {
+        int count = 0;
+        foreach (var vm in FlattenActionTree())
+            count += vm.Model.Node
+                        .Descendants(C.Elements.SoftwareRef)
+                        .Count(el => string.Equals(
+                            (string?)el.Attribute(C.Attributes.Id),
+                            softwareId,
+                            StringComparison.OrdinalIgnoreCase));
+        return count;
+    }
+
+    public void ReplaceSoftwareId(string oldId, string newId)
+    {
+        foreach (var vm in FlattenActionTree())
+        {
+            foreach (var el in vm.Model.Node
+                                  .Descendants(C.Elements.SoftwareRef)
+                                  .Where(e => string.Equals(
+                                      (string?)e.Attribute(C.Attributes.Id),
+                                      oldId,
+                                      StringComparison.OrdinalIgnoreCase))
+                                  .ToList())
+            {
+                el.SetAttributeValue(C.Attributes.Id, newId);
+            }
+        }
+        RefreshXmlFromNode();
+        RaiseDirty();
+    }
+
+    private IEnumerable<ActionNodeViewModel> FlattenActionTree()
+    {
+        return FlattenNodes(ActionTree);
+        static IEnumerable<ActionNodeViewModel> FlattenNodes(IEnumerable<ActionNodeViewModel> nodes)
+        {
+            foreach (var vm in nodes)
+            {
+                yield return vm;
+                foreach (var child in FlattenNodes(vm.Children))
+                    yield return child;
+            }
+        }
+    }
+
     // ── Cursor-driven selection ───────────────────────────────────────────────
 
     /// <summary>Called when the Monaco cursor moves to a new line. Updates SelectedAction without re-pushing XML.</summary>
