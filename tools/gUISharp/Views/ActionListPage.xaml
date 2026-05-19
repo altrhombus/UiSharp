@@ -81,28 +81,13 @@
         <!-- ── Left panel: action tree ──────────────────────────────────────── -->
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="34" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Actions section header -->
-            <Border Grid.Row="0"
-                    Background="{ThemeResource LayerFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
-                    BorderThickness="0,0,0,1">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" Spacing="6">
-                    <TextBlock Text="Actions"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
-                               Visibility="{x:Bind ViewModel.ActionsModified, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
-                </StackPanel>
-            </Border>
-
-            <DropDownButton Grid.Row="1" Margin="8,8,8,4" HorizontalAlignment="Stretch">
+            <DropDownButton Grid.Row="0" Margin="8,8,8,4" HorizontalAlignment="Stretch">
                 <DropDownButton.Content>
                     <StackPanel Orientation="Horizontal" Spacing="6">
                         <FontIcon Glyph="&#xE710;" FontSize="14" />
@@ -127,7 +112,7 @@
                 </DropDownButton.Flyout>
             </DropDownButton>
 
-            <Grid Grid.Row="2" Margin="8,0,8,4">
+            <Grid Grid.Row="1" Margin="8,0,8,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -146,7 +131,7 @@
                            Visibility="{x:Bind ViewModel.ActionList.IsFiltering, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
             </Grid>
 
-            <TreeView Grid.Row="3" x:Name="ActionTreeView"
+            <TreeView Grid.Row="2" x:Name="ActionTreeView"
                       SelectionMode="Single"
                       ItemsSource="{x:Bind ViewModel.ActionList.ActionTree}"
                       SelectedItem="{x:Bind ViewModel.ActionList.SelectedAction, Mode=TwoWay}"
@@ -185,19 +170,26 @@
                                       Margin="0,0,10,0">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <FontIcon Grid.Column="0"
+                                    <InfoBadge Grid.Column="0"
+                                               Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                                               VerticalAlignment="Center"
+                                               Margin="0,0,6,0"
+                                               Visibility="{x:Bind IsDirty, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                               ToolTipService.ToolTip="Unsaved changes" />
+                                    <FontIcon Grid.Column="1"
                                               Glyph="{x:Bind ActionIcon}"
                                               FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                               FontSize="14"
                                               VerticalAlignment="Center"
                                               Margin="0,0,8,0"
                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
                                         <TextBlock Text="{x:Bind DisplayLabel, Mode=OneWay}"
                                                    FontWeight="{x:Bind LabelFontWeight}"
                                                    TextTrimming="CharacterEllipsis" />
@@ -208,7 +200,7 @@
                                                    TextTrimming="CharacterEllipsis"
                                                    Visibility="{x:Bind HasComment, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
                                     </StackPanel>
-                                    <Border Grid.Column="2"
+                                    <Border Grid.Column="3"
                                             CornerRadius="10"
                                             Padding="7,2"
                                             Margin="6,0,0,0"
@@ -219,7 +211,7 @@
                                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                     </Border>
-                                    <FontIcon Grid.Column="3"
+                                    <FontIcon Grid.Column="4"
                                               Glyph="&#xE71C;"
                                               FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                               FontSize="11"
@@ -228,7 +220,7 @@
                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                                               Visibility="{x:Bind HasCondition, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                                               ToolTipService.ToolTip="This action runs conditionally" />
-                                    <FontIcon Grid.Column="4"
+                                    <FontIcon Grid.Column="5"
                                               Glyph="&#xE7BA;"
                                               FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                               FontSize="12"
@@ -244,7 +236,7 @@
                 </TreeView.ItemTemplate>
             </TreeView>
 
-            <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="8,4,8,8" Spacing="4">
+            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="8,4,8,8" Spacing="4">
                 <Button Command="{x:Bind ViewModel.ActionList.MoveUpCommand}" ToolTipService.ToolTip="Move Up">
                     <FontIcon Glyph="&#xE74A;" FontSize="14" />
                 </Button>

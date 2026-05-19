@@ -22,6 +22,8 @@ public sealed partial class SoftwareItemViewModel : ObservableObject
     [ObservableProperty] public partial string PkgId       { get; set; }
     [ObservableProperty] public partial string ProgramName { get; set; }
 
+    [ObservableProperty] public partial bool IsDirty { get; set; }
+
     public int OrderIndex { get; set; }
 
     private string? _comment;

@@ -172,6 +172,16 @@ public sealed partial class ActionNodeViewModel : ObservableObject
     [ObservableProperty]
     public partial ObservableObject? EditorViewModel { get; set; }
 
+    [ObservableProperty]
+    public partial bool IsDirty { get; set; }
+
+    public void MarkClean()
+    {
+        IsDirty = false;
+        foreach (var child in Children)
+            child.MarkClean();
+    }
+
     public event EventHandler? Dirtied;
 
     public ActionNodeViewModel(ActionNodeModel model, EditorViewModelFactory factory)
@@ -199,6 +209,7 @@ public sealed partial class ActionNodeViewModel : ObservableObject
             OnPropertyChanged(nameof(HasWarning));
             OnPropertyChanged(nameof(HasCondition));
         };
+        Dirtied += (_, _) => IsDirty = true;
         Children.CollectionChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(SummaryLabel));

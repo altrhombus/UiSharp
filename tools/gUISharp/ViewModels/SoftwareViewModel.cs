@@ -92,8 +92,16 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
     private void OnItemPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         if (_updatingFromXml) return;
+        if (e.PropertyName == nameof(SoftwareItemViewModel.IsDirty)) return;
+        if (sender is SoftwareItemViewModel item) item.IsDirty = true;
         RefreshXmlFromItems();
         Dirtied?.Invoke(this, EventArgs.Empty);
+    }
+
+    public void MarkAllItemsClean()
+    {
+        foreach (var item in Items)
+            item.IsDirty = false;
     }
 
     // ── Public API ───────────────────────────────────────────────────────────

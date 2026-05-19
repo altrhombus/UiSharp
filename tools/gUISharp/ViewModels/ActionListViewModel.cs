@@ -97,6 +97,12 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         return ActionTree.Select(vm => BuildModel(vm)).ToList();
     }
 
+    public void MarkAllActionsClean()
+    {
+        foreach (var vm in ActionTree)
+            vm.MarkClean();
+    }
+
     public void SelectAction(ActionNodeViewModel node)
     {
         FilterText     = string.Empty;

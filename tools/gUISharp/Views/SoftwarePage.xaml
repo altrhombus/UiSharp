@@ -17,27 +17,12 @@
         <!-- Left: software list -->
         <Grid Grid.Column="0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="34" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Software section header -->
-            <Border Grid.Row="0"
-                    Background="{ThemeResource LayerFillColorDefaultBrush}"
-                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
-                    BorderThickness="0,0,0,1">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" Spacing="6">
-                    <TextBlock Text="Software"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                    <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
-                               Visibility="{x:Bind ViewModel.SoftwareModified, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
-                </StackPanel>
-            </Border>
-
-            <StackPanel Grid.Row="1" Margin="8" Spacing="4">
+            <StackPanel Grid.Row="0" Margin="8" Spacing="4">
                 <StackPanel Orientation="Horizontal" Spacing="4">
                     <Button Command="{x:Bind ViewModel.Software.AddApplicationCommand}" Content="+ App"     />
                     <Button Command="{x:Bind ViewModel.Software.AddPackageCommand}"     Content="+ Package" />
@@ -48,7 +33,7 @@
             </StackPanel>
 
             <!-- Empty state -->
-            <Border Grid.Row="2" Margin="8"
+            <Border Grid.Row="1" Margin="8"
                     BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                     BorderThickness="1" CornerRadius="4" Padding="20,24"
                     Visibility="{x:Bind ViewModel.Software.HasItems, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
@@ -58,23 +43,34 @@
                            TextWrapping="Wrap" TextAlignment="Center" />
             </Border>
 
-            <ListView Grid.Row="2"
+            <ListView Grid.Row="1"
                       ItemsSource="{x:Bind ViewModel.Software.Items}"
                       SelectedItem="{x:Bind ViewModel.Software.SelectedItem, Mode=TwoWay}"
                       Visibility="{x:Bind ViewModel.Software.HasItems, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:SoftwareItemViewModel">
-                        <StackPanel>
-                            <TextBlock Text="{x:Bind Label, Mode=OneWay}" />
-                            <TextBlock Text="{x:Bind IsApplication, Converter={StaticResource BoolToTypeConverter}}"
-                                       Style="{ThemeResource CaptionTextBlockStyle}"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
+                        <Grid ColumnSpacing="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <InfoBadge Grid.Column="0"
+                                       Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                                       VerticalAlignment="Center"
+                                       Visibility="{x:Bind IsDirty, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                       ToolTipService.ToolTip="Unsaved changes" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{x:Bind Label, Mode=OneWay}" />
+                                <TextBlock Text="{x:Bind IsApplication, Converter={StaticResource BoolToTypeConverter}}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </Grid>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>
 
-            <Button Grid.Row="3" Margin="8"
+            <Button Grid.Row="2" Margin="8"
                     Foreground="{ThemeResource SystemFillColorCriticalBrush}"
                     HorizontalAlignment="Stretch"
                     IsEnabled="{x:Bind ViewModel.Software.HasSelection, Mode=OneWay}"

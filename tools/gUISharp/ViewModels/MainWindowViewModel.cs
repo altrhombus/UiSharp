@@ -110,6 +110,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ActionsModified        = false;
         GlobalSettingsModified = false;
         SoftwareModified       = false;
+        ActionList.MarkAllActionsClean();
+        Software.MarkAllItemsClean();
     }
 
     [ObservableProperty]
