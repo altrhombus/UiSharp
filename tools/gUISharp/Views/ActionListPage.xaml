@@ -98,41 +98,41 @@
                         </MenuFlyoutItem>
                         <MenuFlyoutSeparator />
                         <MenuFlyoutSubItem Text="Variables">
-                            <MenuFlyoutItem Text="TSVar"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TSVar" />
-                            <MenuFlyoutItem Text="TSVarList"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TSVarList" />
-                            <MenuFlyoutItem Text="DefaultValues" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="DefaultValues" />
-                            <MenuFlyoutItem Text="Switch"        Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Switch" />
+                            <MenuFlyoutItem Text="Variables"         ToolTipService.ToolTip="XML type: TSVar"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TSVar" />
+                            <MenuFlyoutItem Text="Variable List"     ToolTipService.ToolTip="XML type: TSVarList"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TSVarList" />
+                            <MenuFlyoutItem Text="Default Values"                                                     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="DefaultValues" />
+                            <MenuFlyoutItem Text="Switch"                                                             Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Switch" />
                         </MenuFlyoutSubItem>
                         <MenuFlyoutSubItem Text="Input">
-                            <MenuFlyoutItem Text="Input"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Input" />
-                            <MenuFlyoutItem Text="Preflight" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Preflight" />
+                            <MenuFlyoutItem Text="Input Dialog"    Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Input" />
+                            <MenuFlyoutItem Text="Preflight Checks" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Preflight" />
                         </MenuFlyoutSubItem>
                         <MenuFlyoutSubItem Text="Interactive">
-                            <MenuFlyoutItem Text="Info"           Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Info" />
-                            <MenuFlyoutItem Text="InfoFullScreen" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="InfoFullScreen" />
-                            <MenuFlyoutItem Text="ErrorInfo"      Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ErrorInfo" />
-                            <MenuFlyoutItem Text="UserAuth"       Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="UserAuth" />
-                            <MenuFlyoutItem Text="AppTree"        Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="AppTree" />
+                            <MenuFlyoutItem Text="Info Dialog"        Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Info" />
+                            <MenuFlyoutItem Text="Info (Full-Screen)" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="InfoFullScreen" />
+                            <MenuFlyoutItem Text="Error Info"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ErrorInfo" />
+                            <MenuFlyoutItem Text="User Authentication" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="UserAuth" />
+                            <MenuFlyoutItem Text="Application Tree"   Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="AppTree" />
                         </MenuFlyoutSubItem>
                         <MenuFlyoutSubItem Text="Utilities">
-                            <MenuFlyoutItem Text="ExternalCall"      Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ExternalCall" />
-                            <MenuFlyoutItem Text="RandomString"      Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RandomString" />
-                            <MenuFlyoutItem Text="FileRead"          Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="FileRead" />
-                            <MenuFlyoutItem Text="SaveItems"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="SaveItems" />
-                            <MenuFlyoutItem Text="Vars"              Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Vars" />
-                            <MenuFlyoutItem Text="SoftwareDiscovery" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="SoftwareDiscovery" />
-                            <MenuFlyoutItem Text="TPM"               Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TPM" />
+                            <MenuFlyoutItem Text="External Call"      Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ExternalCall" />
+                            <MenuFlyoutItem Text="Random String"      Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RandomString" />
+                            <MenuFlyoutItem Text="File Read"          Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="FileRead" />
+                            <MenuFlyoutItem Text="Save Items"         Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="SaveItems" />
+                            <MenuFlyoutItem Text="Load / Save Variables" ToolTipService.ToolTip="XML type: Vars"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="Vars" />
+                            <MenuFlyoutItem Text="Software Discovery" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="SoftwareDiscovery" />
+                            <MenuFlyoutItem Text="TPM Operations"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="TPM" />
                         </MenuFlyoutSubItem>
                         <MenuFlyoutSubItem Text="Registry / WMI">
-                            <MenuFlyoutItem Text="RegRead"  Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RegRead" />
-                            <MenuFlyoutItem Text="RegWrite" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RegWrite" />
-                            <MenuFlyoutItem Text="WMIRead"  Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="WMIRead" />
-                            <MenuFlyoutItem Text="WMIWrite" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="WMIWrite" />
+                            <MenuFlyoutItem Text="Registry Read"  ToolTipService.ToolTip="XML type: RegRead"  Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RegRead" />
+                            <MenuFlyoutItem Text="Registry Write" ToolTipService.ToolTip="XML type: RegWrite" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="RegWrite" />
+                            <MenuFlyoutItem Text="WMI Read"       ToolTipService.ToolTip="XML type: WMIRead"  Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="WMIRead" />
+                            <MenuFlyoutItem Text="WMI Write"      ToolTipService.ToolTip="XML type: WMIWrite" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="WMIWrite" />
                         </MenuFlyoutSubItem>
                         <MenuFlyoutSubItem Text="Network / Data">
-                            <MenuFlyoutItem Text="REST"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="REST" />
-                            <MenuFlyoutItem Text="ToJSON"   Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ToJSON" />
-                            <MenuFlyoutItem Text="FromJSON" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="FromJSON" />
+                            <MenuFlyoutItem Text="HTTP / REST Request"  ToolTipService.ToolTip="XML type: REST"     Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="REST" />
+                            <MenuFlyoutItem Text="Serialize to JSON"    ToolTipService.ToolTip="XML type: ToJSON"   Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="ToJSON" />
+                            <MenuFlyoutItem Text="Parse JSON"           ToolTipService.ToolTip="XML type: FromJSON" Command="{x:Bind ViewModel.ActionList.AddActionCommand}" CommandParameter="FromJSON" />
                         </MenuFlyoutSubItem>
                     </MenuFlyout>
                 </DropDownButton.Flyout>
