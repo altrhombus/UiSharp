@@ -18,11 +18,23 @@ public sealed partial class ActionListPage : Page
 {
     public MainWindowViewModel ViewModel => App.MainVm;
 
+    private static double _savedTreeColWidth   = double.NaN;
+    private static double _savedGuidedColWidth = double.NaN;
+    private static double _savedXmlColWidth    = double.NaN;
+
     public ActionListPage()
     {
         this.InitializeComponent();
         ViewModel.ActionList.PropertyChanged += ActionList_PropertyChanged;
         Unloaded += (_, _) => ViewModel.ActionList.PropertyChanged -= ActionList_PropertyChanged;
+        Loaded += ActionListPage_Loaded;
+    }
+
+    private void ActionListPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (!double.IsNaN(_savedTreeColWidth))   TreeCol.Width   = new GridLength(_savedTreeColWidth);
+        if (!double.IsNaN(_savedGuidedColWidth)) GuidedCol.Width = new GridLength(_savedGuidedColWidth, GridUnitType.Star);
+        if (!double.IsNaN(_savedXmlColWidth))    XmlCol.Width    = new GridLength(_savedXmlColWidth,    GridUnitType.Star);
     }
 
     // ── Remove action ─────────────────────────────────────────────────────────
@@ -376,6 +388,7 @@ public sealed partial class ActionListPage : Page
         _treeDragging = false;
         ((UIElement)sender).ReleasePointerCapture(e.Pointer);
         this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+        _savedTreeColWidth = TreeCol.ActualWidth;
     }
 
     // ── Splitter drag ─────────────────────────────────────────────────────────
@@ -419,6 +432,8 @@ public sealed partial class ActionListPage : Page
         _dragging = false;
         ((UIElement)sender).ReleasePointerCapture(e.Pointer);
         this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+        _savedGuidedColWidth = GuidedCol.ActualWidth;
+        _savedXmlColWidth    = XmlCol.ActualWidth;
     }
 
     // ── Collapse / expand ─────────────────────────────────────────────────────

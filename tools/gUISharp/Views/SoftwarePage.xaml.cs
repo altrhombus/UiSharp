@@ -10,9 +10,20 @@ public sealed partial class SoftwarePage : Page
 {
     public MainWindowViewModel ViewModel => App.MainVm;
 
+    private static double _savedGuidedColWidth = double.NaN;
+    private static double _savedXmlColWidth    = double.NaN;
+
     public SoftwarePage()
     {
         this.InitializeComponent();
+        Loaded += SoftwarePage_Loaded;
+    }
+
+    private void SoftwarePage_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (!double.IsNaN(_savedListColWidth))   ListCol.Width   = new GridLength(_savedListColWidth);
+        if (!double.IsNaN(_savedGuidedColWidth)) GuidedCol.Width = new GridLength(_savedGuidedColWidth, GridUnitType.Star);
+        if (!double.IsNaN(_savedXmlColWidth))    XmlCol.Width    = new GridLength(_savedXmlColWidth,    GridUnitType.Star);
     }
 
     private async void ImportFromConfigMgr_Click(object sender, RoutedEventArgs e)
@@ -97,7 +108,48 @@ public sealed partial class SoftwarePage : Page
         ViewModel.Software.SyncGuidedToXml();
     }
 
-    // ── Splitter drag ─────────────────────────────────────────────────────────
+    // ── List column resize splitter ───────────────────────────────────────────
+
+    private bool _listDragging;
+    private double _listDragStartX;
+    private double _listDragStartWidth;
+    private static double _savedListColWidth = double.NaN;
+
+    private void ListSplitter_PointerEntered(object sender, PointerRoutedEventArgs e)
+        => this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast);
+
+    private void ListSplitter_PointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_listDragging)
+            this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+    }
+
+    private void ListSplitter_PointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        _listDragging = true;
+        _listDragStartX     = e.GetCurrentPoint(this).Position.X;
+        _listDragStartWidth = ListCol.ActualWidth;
+        ((UIElement)sender).CapturePointer(e.Pointer);
+        this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.SizeWestEast);
+    }
+
+    private void ListSplitter_PointerMoved(object sender, PointerRoutedEventArgs e)
+    {
+        if (!_listDragging) return;
+        var delta    = e.GetCurrentPoint(this).Position.X - _listDragStartX;
+        var newWidth = Math.Max(180, Math.Min(this.ActualWidth - 300, _listDragStartWidth + delta));
+        ListCol.Width = new GridLength(newWidth);
+    }
+
+    private void ListSplitter_PointerReleased(object sender, PointerRoutedEventArgs e)
+    {
+        _listDragging = false;
+        ((UIElement)sender).ReleasePointerCapture(e.Pointer);
+        this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+        _savedListColWidth = ListCol.ActualWidth;
+    }
+
+    // ── Guided/XML splitter drag ──────────────────────────────────────────────
 
     private bool _dragging;
     private double _dragStartX;
@@ -138,6 +190,8 @@ public sealed partial class SoftwarePage : Page
         _dragging = false;
         ((UIElement)sender).ReleasePointerCapture(e.Pointer);
         this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+        _savedGuidedColWidth = GuidedCol.ActualWidth;
+        _savedXmlColWidth    = XmlCol.ActualWidth;
     }
 
     // ── Collapse / expand ─────────────────────────────────────────────────────

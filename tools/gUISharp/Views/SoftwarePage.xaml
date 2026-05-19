@@ -7,8 +7,8 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="260" />
-            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition x:Name="ListCol" Width="260" MinWidth="180" />
+            <ColumnDefinition Width="5" />
             <ColumnDefinition x:Name="GuidedCol" Width="3*" MinWidth="0" />
             <ColumnDefinition x:Name="SplitterCol" Width="5" />
             <ColumnDefinition x:Name="XmlCol" Width="2*" MinWidth="0" />
@@ -79,8 +79,17 @@
             </Button>
         </Grid>
 
-        <!-- List/Guided divider -->
-        <Border Grid.Column="1" Width="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+        <!-- List/Guided resize splitter -->
+        <Grid Grid.Column="1"
+              Background="Transparent"
+              PointerEntered="ListSplitter_PointerEntered"
+              PointerExited="ListSplitter_PointerExited"
+              PointerPressed="ListSplitter_PointerPressed"
+              PointerMoved="ListSplitter_PointerMoved"
+              PointerReleased="ListSplitter_PointerReleased">
+            <Border Width="1" HorizontalAlignment="Center"
+                    Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
+        </Grid>
 
         <!-- ── Guided panel ──────────────────────────────────────────────────── -->
         <Grid Grid.Column="2" x:Name="GuidedPanelGrid" GotFocus="GuidedPanel_GotFocus">

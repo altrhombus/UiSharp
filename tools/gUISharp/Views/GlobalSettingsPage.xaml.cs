@@ -10,9 +10,19 @@ public sealed partial class GlobalSettingsPage : Page
 {
     public MainWindowViewModel ViewModel => App.MainVm;
 
+    private static double _savedGuidedColWidth = double.NaN;
+    private static double _savedXmlColWidth    = double.NaN;
+
     public GlobalSettingsPage()
     {
         this.InitializeComponent();
+        Loaded += GlobalSettingsPage_Loaded;
+    }
+
+    private void GlobalSettingsPage_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (!double.IsNaN(_savedGuidedColWidth)) GuidedCol.Width = new GridLength(_savedGuidedColWidth, GridUnitType.Star);
+        if (!double.IsNaN(_savedXmlColWidth))    XmlCol.Width    = new GridLength(_savedXmlColWidth,    GridUnitType.Star);
     }
 
     // ── Focus-based sync ──────────────────────────────────────────────────────
@@ -68,6 +78,8 @@ public sealed partial class GlobalSettingsPage : Page
         _dragging = false;
         ((UIElement)sender).ReleasePointerCapture(e.Pointer);
         this.ProtectedCursor = InputSystemCursor.Create(InputSystemCursorShape.Arrow);
+        _savedGuidedColWidth = GuidedCol.ActualWidth;
+        _savedXmlColWidth    = XmlCol.ActualWidth;
     }
 
     // ── Collapse / expand ─────────────────────────────────────────────────────
