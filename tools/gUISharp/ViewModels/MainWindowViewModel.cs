@@ -112,6 +112,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         SoftwareModified       = false;
         ActionList.MarkAllActionsClean();
         Software.MarkAllItemsClean();
+        GlobalSettings.MarkClean();
     }
 
     [ObservableProperty]
@@ -135,6 +136,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
         ActionList.Dirtied     += (_, _) => ActionsModified        = true;
         GlobalSettings.Dirtied += (_, _) => GlobalSettingsModified = true;
         Software.Dirtied       += (_, _) => SoftwareModified       = true;
+
+        ActionList.BecameClean     += (_, _) => ActionsModified        = false;
+        GlobalSettings.BecameClean += (_, _) => GlobalSettingsModified = false;
+        Software.BecameClean       += (_, _) => SoftwareModified       = false;
         LoadRecentFiles();
         RecentFiles.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRecentFiles));
     }

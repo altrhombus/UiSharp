@@ -39,6 +39,11 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
 
     public event EventHandler? Dirtied;
 
+    /// <summary>Fires when the section content returns to match the last saved/loaded state.</summary>
+    public event EventHandler? BecameClean;
+
+    private string _cleanXml = string.Empty;
+
     public void OnXmlEdited(string xml)
     {
         _updatingFromXml = true;
@@ -95,13 +100,27 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
         if (e.PropertyName == nameof(SoftwareItemViewModel.IsDirty)) return;
         if (sender is SoftwareItemViewModel item) item.IsDirty = true;
         RefreshXmlFromItems();
+
+        // Re-evaluate the changed item — it may have returned to its saved state.
+        if (sender is SoftwareItemViewModel changedItem)
+            changedItem.ReevaluateDirtiness();
+
+        // If the entire section returned to saved state, signal clean.
+        if (CurrentXmlText == _cleanXml)
+        {
+            MarkAllItemsClean();
+            BecameClean?.Invoke(this, EventArgs.Empty);
+            return;
+        }
+
         Dirtied?.Invoke(this, EventArgs.Empty);
     }
 
     public void MarkAllItemsClean()
     {
+        _cleanXml = CurrentXmlText;
         foreach (var item in Items)
-            item.IsDirty = false;
+            item.SnapshotClean();
     }
 
     // ── Public API ───────────────────────────────────────────────────────────
@@ -118,6 +137,9 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
             AttachLeadingComments(softwareElement);
 
         RefreshXmlFromItems();
+        _cleanXml = CurrentXmlText;
+        foreach (var item in Items)
+            item.SnapshotClean();
     }
 
     public List<ISoftware> CollectSoftware()

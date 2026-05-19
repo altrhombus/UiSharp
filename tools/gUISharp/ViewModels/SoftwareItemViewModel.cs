@@ -24,6 +24,23 @@ public sealed partial class SoftwareItemViewModel : ObservableObject
 
     [ObservableProperty] public partial bool IsDirty { get; set; }
 
+    private string _cleanSnapshot = string.Empty;
+
+    public void SnapshotClean()
+    {
+        _cleanSnapshot = GetSnapshot();
+        IsDirty = false;
+    }
+
+    public void ReevaluateDirtiness()
+    {
+        if (_cleanSnapshot.Length == 0) return;
+        IsDirty = GetSnapshot() != _cleanSnapshot;
+    }
+
+    private string GetSnapshot() =>
+        ToXElement().ToString() + "\x00" + (_comment ?? string.Empty);
+
     public int OrderIndex { get; set; }
 
     private string? _comment;

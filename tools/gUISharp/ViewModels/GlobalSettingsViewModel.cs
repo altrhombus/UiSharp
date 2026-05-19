@@ -60,6 +60,13 @@ public sealed partial class GlobalSettingsViewModel : ObservableObject, IXmlEdit
 
     public event EventHandler? Dirtied;
 
+    /// <summary>Fires when the section content returns to match the last saved/loaded state.</summary>
+    public event EventHandler? BecameClean;
+
+    private string _cleanXml = string.Empty;
+
+    public void MarkClean() => _cleanXml = CurrentXmlText;
+
     public void OnXmlEdited(string xml)
     {
         _updatingFromXml = true;
@@ -91,13 +98,16 @@ public sealed partial class GlobalSettingsViewModel : ObservableObject, IXmlEdit
         ConditionEngine  = C.Values.ConditionEngineNative;
         SchemaVersion    = string.Empty;
 
-        // Rebuild the XML panel and signal dirty whenever any guided field changes.
+        // Rebuild the XML panel and signal dirty/clean whenever any guided field changes.
         PropertyChanged += (_, e) =>
         {
             if (_updatingFromXml) return;
             if (e.PropertyName is nameof(CurrentXmlText) or nameof(XmlValidationError)) return;
             RefreshXml();
-            Dirtied?.Invoke(this, EventArgs.Empty);
+            if (_cleanXml.Length > 0 && CurrentXmlText == _cleanXml)
+                BecameClean?.Invoke(this, EventArgs.Empty);
+            else
+                Dirtied?.Invoke(this, EventArgs.Empty);
         };
     }
 
@@ -122,6 +132,7 @@ public sealed partial class GlobalSettingsViewModel : ObservableObject, IXmlEdit
         Comment         = documentComment;
         _updatingFromXml = false;
         RefreshXml();
+        _cleanXml = CurrentXmlText;
     }
 
     public DialogTraits ToTraits()

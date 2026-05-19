@@ -175,12 +175,38 @@ public sealed partial class ActionNodeViewModel : ObservableObject
     [ObservableProperty]
     public partial bool IsDirty { get; set; }
 
+    private string _cleanNodeXml  = string.Empty;
+    private string _cleanComment  = string.Empty;
+
     public void MarkClean()
     {
+        if (!IsGroup) SnapshotCleanState();
         IsDirty = false;
         foreach (var child in Children)
             child.MarkClean();
     }
+
+    private void SnapshotCleanState()
+    {
+        _cleanNodeXml = Model.Node.ToString();
+        _cleanComment = Model.Comment ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Re-evaluates IsDirty for leaf nodes after the editor VM has been flushed to the node.
+    /// Returns true if the node became clean so callers can propagate up to parent groups.
+    /// </summary>
+    public bool ReevaluateLeafDirtiness()
+    {
+        if (IsGroup) return false;
+        bool dirty = Model.Node.ToString() != _cleanNodeXml
+                  || (Model.Comment ?? string.Empty) != _cleanComment;
+        IsDirty = dirty;
+        return !dirty;
+    }
+
+    public bool HasAnyDirtyDescendant() =>
+        IsDirty || Children.Any(c => c.HasAnyDirtyDescendant());
 
     public event EventHandler? Dirtied;
 
@@ -188,6 +214,7 @@ public sealed partial class ActionNodeViewModel : ObservableObject
     {
         _factory = factory;
         Model = model;
+        if (!model.IsGroup) SnapshotCleanState();
 
         foreach (var child in model.Children)
         {

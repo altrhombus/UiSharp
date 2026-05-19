@@ -67,8 +67,13 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
 
     public event EventHandler? Dirtied;
 
+    /// <summary>Fires when the section content returns to match the last saved/loaded state.</summary>
+    public event EventHandler? BecameClean;
+
     /// <summary>Fires when only the selection highlight changed but the XML content itself did not.</summary>
     public event EventHandler? SelectionDecorationChanged;
+
+    private string _cleanXml = string.Empty;
 
     public ActionListViewModel(EditorViewModelFactory factory)
     {
@@ -89,6 +94,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         SelectedAction = null;
         RefreshXmlFromNode();
         RefreshVariables();
+        _cleanXml = CurrentXmlText;
     }
 
     public List<ActionNodeModel> CollectModels()
@@ -99,6 +105,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
 
     public void MarkAllActionsClean()
     {
+        _cleanXml = CurrentXmlText;
         foreach (var vm in ActionTree)
             vm.MarkClean();
     }
@@ -530,7 +537,21 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         if (_updatingFromXml) return;
         if (SelectedAction?.EditorViewModel is IActionEditor editor)
             editor.FlushToNode();
+
+        // Re-evaluate the selected leaf's dirtiness now that the node is up to date.
+        SelectedAction?.ReevaluateLeafDirtiness();
+
+        // Update group IsDirty bottom-up so parent badges reflect child state.
+        PropagateGroupDirtiness(ActionTree);
+
+        // If the full section XML returned to its saved state, signal clean.
         RefreshXmlFromNode();
+        if (CurrentXmlText == _cleanXml)
+        {
+            foreach (var vm in ActionTree) vm.MarkClean();
+            BecameClean?.Invoke(this, EventArgs.Empty);
+            return;
+        }
 
         // Re-notify display properties now that the XElement is flushed so the tree
         // label reflects the current edit rather than the previous one.
@@ -579,6 +600,18 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         if (IsFiltering)
             OnPropertyChanged(nameof(FilterSummary));
         RefreshVariables();
+    }
+
+    private static void PropagateGroupDirtiness(IEnumerable<ActionNodeViewModel> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            if (node.IsGroup)
+            {
+                PropagateGroupDirtiness(node.Children);
+                node.IsDirty = node.Children.Any(c => c.HasAnyDirtyDescendant());
+            }
+        }
     }
 
     private void FlushAll()
