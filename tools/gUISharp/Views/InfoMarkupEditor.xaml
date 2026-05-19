@@ -1,7 +1,8 @@
 <UserControl
     x:Class="GUISharp.Views.InfoMarkupEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:views="using:GUISharp.Views">
 
     <StackPanel Spacing="6">
 
@@ -46,13 +47,13 @@
         </StackPanel>
 
         <!-- Raw editor -->
-        <TextBox x:Name="EditBox"
+        <views:VariableAwareTextBox x:Name="EditBox"
                  AcceptsReturn="True"
                  MinHeight="72"
-                 MaxHeight="200"
+                 InputMaxHeight="200"
                  TextWrapping="Wrap"
                  TextChanged="EditBox_TextChanged"
-                 PlaceholderText="Message text. Use &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;br&gt; for line breaks, and %VariableName% for variables." />
+                 PlaceholderText="Message text. Use &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;, &lt;br&gt; for line breaks, and %VariableName% for variables (type % to browse)." />
 
         <!-- Preview -->
         <TextBlock Text="Preview"

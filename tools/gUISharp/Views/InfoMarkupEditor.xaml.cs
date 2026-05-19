@@ -41,7 +41,7 @@ public sealed partial class InfoMarkupEditor : UserControl
         }
     }
 
-    private void EditBox_TextChanged(object sender, TextChangedEventArgs e)
+    private void EditBox_TextChanged(object sender, RoutedEventArgs e)
     {
         _updatingText = true;
         Text = EditBox.Text;

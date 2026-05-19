@@ -88,6 +88,24 @@ public sealed partial class VariableAwareTextBox : UserControl
             box.InputBox.MaxHeight = (double)e.NewValue;
     }
 
+    // ── Pass-through members for TextBox compatibility ────────────────────────
+
+    public int SelectionStart
+    {
+        get => InputBox.SelectionStart;
+        set => InputBox.SelectionStart = value;
+    }
+
+    public int SelectionLength
+    {
+        get => InputBox.SelectionLength;
+        set => InputBox.SelectionLength = value;
+    }
+
+    public new bool Focus(FocusState value) => InputBox.Focus(value);
+
+    public event RoutedEventHandler? TextChanged;
+
     // ── Construction ──────────────────────────────────────────────────────────
 
     private bool _updatingText;
@@ -103,6 +121,7 @@ public sealed partial class VariableAwareTextBox : UserControl
         _updatingText = false;
         VariableHint.Visibility = InputBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateSuggestions();
+        TextChanged?.Invoke(this, new RoutedEventArgs());
     }
 
     // ── Keyboard navigation ───────────────────────────────────────────────────
