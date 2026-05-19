@@ -25,6 +25,13 @@ public sealed partial class SoftwarePage : Page
         }
     }
 
+    private void GenerateId_Click(object sender, RoutedEventArgs e)
+    {
+        var item = ViewModel.Software.SelectedItem;
+        if (item is null) return;
+        item.Id = Guid.NewGuid().ToString("D").ToUpperInvariant();
+    }
+
     private async void RemoveItem_Click(object sender, RoutedEventArgs e)
     {
         var selected = ViewModel.Software.SelectedItem;

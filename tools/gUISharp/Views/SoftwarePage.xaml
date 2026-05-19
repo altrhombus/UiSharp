@@ -155,8 +155,22 @@
                               Visibility="{x:Bind ViewModel.Software.HasSelection, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
                     <StackPanel Spacing="12" MaxWidth="500">
 
-                        <local:LabeledField Label="Id">
-                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.Id, Mode=TwoWay, FallbackValue=''}" />
+                        <local:LabeledField Label="Id"
+                            ToolTipService.ToolTip="A unique identifier within this config file — referenced by AppTree SoftwareRef elements. Can be any value as long as it is unique. A GUID is a common choice.">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0"
+                                         Text="{x:Bind ViewModel.Software.SelectedItem.Id, Mode=TwoWay, FallbackValue=''}"
+                                         PlaceholderText="Any unique value, e.g. a GUID" />
+                                <Button Grid.Column="1"
+                                        Click="GenerateId_Click"
+                                        ToolTipService.ToolTip="Generate a new GUID as the ID">
+                                    <FontIcon Glyph="&#xE72C;" FontSize="13" />
+                                </Button>
+                            </Grid>
                         </local:LabeledField>
                         <local:LabeledField Label="Label">
                             <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.Label, Mode=TwoWay, FallbackValue=''}" />
@@ -172,19 +186,25 @@
                         </local:LabeledField>
 
                         <!-- Application-specific fields -->
-                        <local:LabeledField Label="App Name (CM Application Name)"
+                        <local:LabeledField Label="App Name"
+                            ToolTipService.ToolTip="Must exactly match the Application name in ConfigMgr"
                             Visibility="{x:Bind ViewModel.Software.SelectedItem.IsApplication, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay, FallbackValue=Collapsed}">
-                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.AppName, Mode=TwoWay, FallbackValue=''}" />
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.AppName, Mode=TwoWay, FallbackValue=''}"
+                                     PlaceholderText="ConfigMgr Application name (exact match)" />
                         </local:LabeledField>
 
                         <!-- Package-specific fields -->
                         <local:LabeledField Label="Package ID"
+                            ToolTipService.ToolTip="Must exactly match the Package ID in ConfigMgr"
                             Visibility="{x:Bind ViewModel.Software.SelectedItem.IsApplication, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay, FallbackValue=Collapsed}">
-                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.PkgId, Mode=TwoWay, FallbackValue=''}" />
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.PkgId, Mode=TwoWay, FallbackValue=''}"
+                                     PlaceholderText="ConfigMgr Package ID (exact match)" />
                         </local:LabeledField>
                         <local:LabeledField Label="Program Name"
+                            ToolTipService.ToolTip="Must exactly match the Program Name in ConfigMgr"
                             Visibility="{x:Bind ViewModel.Software.SelectedItem.IsApplication, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay, FallbackValue=Collapsed}">
-                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.ProgramName, Mode=TwoWay, FallbackValue=''}" />
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.ProgramName, Mode=TwoWay, FallbackValue=''}"
+                                     PlaceholderText="ConfigMgr Program Name (exact match)" />
                         </local:LabeledField>
                     </StackPanel>
                 </ScrollViewer>
