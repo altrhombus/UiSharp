@@ -23,7 +23,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
+    [NotifyPropertyChangedFor(nameof(ModifiedBadgeVisibility))]
     public partial bool IsModified { get; set; }
+
+    public Visibility ModifiedBadgeVisibility =>
+        IsModified ? Visibility.Visible : Visibility.Collapsed;
 
     public string WindowTitle =>
         CurrentFile is null

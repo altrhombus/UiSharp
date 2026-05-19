@@ -47,21 +47,37 @@
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE8FD;" />
                     </NavigationViewItem.Icon>
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                                   Visibility="{x:Bind ViewModel.ModifiedBadgeVisibility, Mode=OneWay}" />
+                    </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
                 <NavigationViewItem Tag="GlobalSettings" Content="Global Settings">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE713;" />
                     </NavigationViewItem.Icon>
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                                   Visibility="{x:Bind ViewModel.ModifiedBadgeVisibility, Mode=OneWay}" />
+                    </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
                 <NavigationViewItem Tag="Software" Content="Software">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE74C;" />
                     </NavigationViewItem.Icon>
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                                   Visibility="{x:Bind ViewModel.ModifiedBadgeVisibility, Mode=OneWay}" />
+                    </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
                 <NavigationViewItem Tag="Variables" Content="Variables">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE943;" />
                     </NavigationViewItem.Icon>
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                                   Visibility="{x:Bind ViewModel.ModifiedBadgeVisibility, Mode=OneWay}" />
+                    </NavigationViewItem.InfoBadge>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
 
