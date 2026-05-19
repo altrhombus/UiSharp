@@ -3,7 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:GUISharp.Views"
-    xmlns:vm="using:GUISharp.ViewModels">
+    xmlns:vm="using:GUISharp.ViewModels"
+    NavigationCacheMode="Required">
 
     <Grid>
         <Grid.ColumnDefinitions>

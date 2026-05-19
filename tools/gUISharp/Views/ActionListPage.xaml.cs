@@ -21,20 +21,33 @@ public sealed partial class ActionListPage : Page
     private static double _savedTreeColWidth   = double.NaN;
     private static double _savedGuidedColWidth = double.NaN;
     private static double _savedXmlColWidth    = double.NaN;
+    private int _seenConfigVersion = -1;
 
     public ActionListPage()
     {
         this.InitializeComponent();
-        ViewModel.ActionList.PropertyChanged += ActionList_PropertyChanged;
-        Unloaded += (_, _) => ViewModel.ActionList.PropertyChanged -= ActionList_PropertyChanged;
-        Loaded += ActionListPage_Loaded;
+        Loaded   += ActionListPage_Loaded;
+        Unloaded += ActionListPage_Unloaded;
     }
 
     private void ActionListPage_Loaded(object sender, RoutedEventArgs e)
     {
+        ViewModel.ActionList.PropertyChanged += ActionList_PropertyChanged;
+
         if (!double.IsNaN(_savedTreeColWidth))   TreeCol.Width   = new GridLength(_savedTreeColWidth);
         if (!double.IsNaN(_savedGuidedColWidth)) GuidedCol.Width = new GridLength(_savedGuidedColWidth, GridUnitType.Star);
         if (!double.IsNaN(_savedXmlColWidth))    XmlCol.Width    = new GridLength(_savedXmlColWidth,    GridUnitType.Star);
+
+        if (_seenConfigVersion != App.MainVm.ConfigVersion)
+        {
+            _seenConfigVersion = App.MainVm.ConfigVersion;
+            GuidedScroller?.ChangeView(null, 0, null);
+        }
+    }
+
+    private void ActionListPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        ViewModel.ActionList.PropertyChanged -= ActionList_PropertyChanged;
     }
 
     // ── Remove action ─────────────────────────────────────────────────────────

@@ -21,26 +21,40 @@ public sealed partial class VariablesPage : Page, INotifyPropertyChanged
 
     private string _searchText = string.Empty;
     private string _sortMode   = "position";
+    private int    _seenConfigVersion = -1;
 
     public VariablesPage()
     {
         this.InitializeComponent();
-        App.MainVm.ActionList.PropertyChanged += OnActionListPropertyChanged;
-        Unloaded += (_, _) => App.MainVm.ActionList.PropertyChanged -= OnActionListPropertyChanged;
-        Loaded += VariablesPage_Loaded;
-        RefreshFilter();
+        Loaded   += VariablesPage_Loaded;
+        Unloaded += VariablesPage_Unloaded;
     }
 
     private void VariablesPage_Loaded(object sender, RoutedEventArgs e)
     {
+        App.MainVm.ActionList.PropertyChanged += OnActionListPropertyChanged;
+
+        if (_seenConfigVersion != App.MainVm.ConfigVersion)
+        {
+            _seenConfigVersion = App.MainVm.ConfigVersion;
+            SearchBox.Text = string.Empty;
+            _searchText    = string.Empty;
+        }
+
         var filter = App.MainVm.PendingVariableFilter;
         if (!string.IsNullOrEmpty(filter))
         {
             SearchBox.Text = filter;
-            _searchText = filter;
+            _searchText    = filter;
             App.MainVm.ClearPendingVariableFilter();
-            RefreshFilter();
         }
+
+        RefreshFilter();
+    }
+
+    private void VariablesPage_Unloaded(object sender, RoutedEventArgs e)
+    {
+        App.MainVm.ActionList.PropertyChanged -= OnActionListPropertyChanged;
     }
 
     private void OnActionListPropertyChanged(object? sender, PropertyChangedEventArgs e)

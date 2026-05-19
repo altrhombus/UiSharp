@@ -82,6 +82,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
 
     public void LoadActions(IEnumerable<ActionNodeModel> models)
     {
+        FilterText = string.Empty;
         ActionTree.Clear();
         foreach (var model in models)
         {

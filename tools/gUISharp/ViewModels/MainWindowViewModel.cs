@@ -169,6 +169,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public bool IsModified => ActionsModified || GlobalSettingsModified || SoftwareModified;
 
+    public int ConfigVersion { get; private set; }
+
     public Visibility ActionsModifiedVisibility =>
         ActionsModified ? Visibility.Visible : Visibility.Collapsed;
     public Visibility GlobalSettingsModifiedVisibility =>
@@ -298,6 +300,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Software.LoadFrom(config.SoftwareList, config.SoftwareElement);
         ActionList.LoadActions(config.Actions);
         IsFileLoaded = true;
+        ConfigVersion++;
         _undoService.Clear();
         _lastSnapshot = CaptureSnapshot();
         UndoCommand.NotifyCanExecuteChanged();
