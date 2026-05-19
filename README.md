@@ -77,9 +77,23 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 - **Preflight checks** — expandable per-check rows split into two sections: Display Text (title, pass/warn/fail descriptions) and Logic (check condition, warn condition, visibility condition) with an outcome legend
 - **Regex helper** — any regex field has a `.*` helper button that opens a flyout with live pattern testing against a sample value, 13 IT-deployment presets (computer names, site code groups, locale codes, GUIDs, etc.), and a quick-reference grid
 - **Info markup editor** — message fields for Info actions include a formatting toolbar (Bold, Italic, Color, Line Break), a raw edit box, and a live preview that renders the supported `<b>`, `<i>`, `<color>`, `<br>` tag subset and highlights `%Variable%` references
+- **Variable autocomplete** — typing `%` in any condition or value field opens a filtered popup of all variables declared in the current config; Tab or Enter inserts `%VariableName%`
+- **Variables catalog** — dedicated page lists every declared variable with usage count, declaring action, and field name; click any usage row to jump directly to that action
+- **Add action search** — the Add Action menu has a live search box that filters all action types across every category in real time
+- **Human-friendly action names** — the Add menu shows plain-English names (e.g., "Input Dialog", "WMI Read") with the XML type as a secondary caption
+- **Recent files** — the Open button is a split button; the dropdown lists the 5 most recently opened files
+- **Welcome screen** — opening the app with no file loaded shows a full-page welcome with New Config and Open File cards plus the recent-files list
+- **Unsaved-changes badges** — navigation items show dot badges when a section has unsaved edits; badges clear automatically when fields are reverted to their saved state without requiring a save
+- **Conditional action badge** — a funnel icon on any tree node whose action has a `Condition` set, so conditionally-executed actions are visible at a glance
+- **Action group distinction** — group nodes in the tree use a semi-bold label and a left accent bar to stand out from leaf actions
+- **Panel header shows action type** — the guided panel header displays the human-readable action name of the selected action
+- **Font face picker** — Global Settings font field is an editable ComboBox pre-populated with fonts reliably present in WinPE; free-text entry is still supported for custom fonts
+- **Live dialog preview** — Global Settings shows a live mini-preview that renders the accent color and sidebar text color together as the user types
+- **Generate ID button** — the Software page Id field has a one-click button that generates a new GUID
 - **Drag splitter** — resize the guided and XML panels by dragging; collapse either panel entirely
+- **Keyboard shortcuts** — `Ctrl+N` New, `Ctrl+O` Open, `Ctrl+S` Save, `Ctrl+Shift+S` Save As, `Ctrl+F` focus action search, `Delete` remove selected action, `N` / `S` in the Unsaved Changes prompt
 - **Unsaved-changes detection** — title bar marks modified files with `*`; closing with unsaved changes prompts Save / Don't Save / Cancel
-- **Open / Save / Save As** — standard file operations via the toolbar
+- **Import from ConfigMgr** — browse Applications and Packages from a live WMI connection and bulk-import them to the Software catalog
 
 ## Command-line arguments
 
