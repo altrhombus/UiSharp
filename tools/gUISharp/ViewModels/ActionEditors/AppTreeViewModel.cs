@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -34,8 +35,54 @@ public sealed partial class AppTreeViewModel : ObservableObject, IActionEditor
             foreach (var setEl in setsEl.Elements(C.Elements.SoftwareSet))
                 Sets.Add(AppTreeSetItem.FromXml(setEl));
         }
-        Sets.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasSets));
+        SubscribeStructureChanged();
     }
+
+    // ── Structure change propagation ─────────────────────────────────────────
+    // Any add/remove at any nesting level must raise PropertyChanged so that
+    // ActionNodeViewModel fires Dirtied → dirty tracking + badge refresh.
+
+    private void SubscribeStructureChanged()
+    {
+        Sets.CollectionChanged += OnSetsChanged;
+        foreach (var set in Sets)
+            SubscribeSet(set);
+    }
+
+    private void OnSetsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems is not null)
+            foreach (AppTreeSetItem set in e.NewItems)
+                SubscribeSet(set);
+        OnPropertyChanged(nameof(HasSets));
+    }
+
+    private void SubscribeSet(AppTreeSetItem set)
+    {
+        set.Items.CollectionChanged += OnItemsChanged;
+        foreach (var node in set.Items)
+            if (node is AppTreeGroupItem g) SubscribeGroup(g);
+    }
+
+    private void OnItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (e.NewItems is not null)
+            foreach (AppTreeNodeBase node in e.NewItems)
+                if (node is AppTreeGroupItem g) SubscribeGroup(g);
+        OnPropertyChanged(nameof(HasSets));
+    }
+
+    private void SubscribeGroup(AppTreeGroupItem group)
+    {
+        group.Items.CollectionChanged += OnItemsChanged;
+        foreach (var node in group.Items)
+            if (node is AppTreeGroupItem g) SubscribeGroup(g);
+    }
+
+    // ── Commands ─────────────────────────────────────────────────────────────
+
+    [RelayCommand]
+    private static void GoToCatalog() => App.MainVm.NavigateToSoftware();
 
     [RelayCommand]
     private void AddSet() => Sets.Add(new AppTreeSetItem
@@ -45,6 +92,8 @@ public sealed partial class AppTreeViewModel : ObservableObject, IActionEditor
 
     [RelayCommand]
     private void RemoveSet(AppTreeSetItem set) => Sets.Remove(set);
+
+    // ── IActionEditor ────────────────────────────────────────────────────────
 
     public void FlushToNode()
     {

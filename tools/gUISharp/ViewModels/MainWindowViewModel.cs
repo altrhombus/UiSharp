@@ -258,6 +258,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         NavigationRequested?.Invoke("Actions");
     }
 
+    public void NavigateToSoftware() => NavigationRequested?.Invoke("Software");
+
     /// <summary>Saves the current file (prompting for a path if unsaved). Returns true when the caller may proceed.</summary>
     public async Task<bool> TrySaveAsync()
     {
@@ -307,7 +309,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             }
         };
 
-        var result = keyResult ?? await dialog.ShowAsync();
+        var dialogResult = await dialog.ShowAsync();
+        var result = keyResult ?? dialogResult;
         if (result == ContentDialogResult.Primary)
             return await TrySaveAsync();
         return result == ContentDialogResult.Secondary;

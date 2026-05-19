@@ -27,25 +27,37 @@
                         BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                         BorderThickness="1" CornerRadius="4" Padding="10,8">
                     <StackPanel Spacing="8">
-                        <!-- Software picker -->
-                        <local:LabeledField Label="Software">
-                            <ComboBox ItemsSource="{x:Bind Catalog}"
-                                      SelectedItem="{x:Bind SelectedSoftware, Mode=TwoWay}"
-                                      HorizontalAlignment="Stretch"
-                                      PlaceholderText="Select from catalog…">
-                                <ComboBox.ItemTemplate>
-                                    <DataTemplate x:DataType="vmg:SoftwareItemViewModel">
-                                        <StackPanel Orientation="Horizontal" Spacing="8">
-                                            <TextBlock Text="{x:Bind Label}" VerticalAlignment="Center" />
-                                            <TextBlock Text="{x:Bind Id}"
-                                                       FontFamily="Consolas" FontSize="11"
-                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                       VerticalAlignment="Center" />
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ComboBox.ItemTemplate>
-                            </ComboBox>
-                        </local:LabeledField>
+                        <!-- Drag handle + software picker -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <FontIcon Grid.Column="0"
+                                      Glyph="&#xE784;"
+                                      FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                      FontSize="12" Opacity="0.35"
+                                      VerticalAlignment="Center"
+                                      Margin="0,0,6,0" />
+                            <local:LabeledField Grid.Column="1" Label="Software">
+                                <ComboBox ItemsSource="{x:Bind Catalog}"
+                                          SelectedItem="{x:Bind SelectedSoftware, Mode=TwoWay}"
+                                          HorizontalAlignment="Stretch"
+                                          PlaceholderText="Select from catalog…">
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="vmg:SoftwareItemViewModel">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{x:Bind Label}" VerticalAlignment="Center" />
+                                                <TextBlock Text="{x:Bind Id}"
+                                                           FontFamily="Consolas" FontSize="11"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </local:LabeledField>
+                        </Grid>
 
                         <!-- Unresolved ID warning -->
                         <StackPanel Orientation="Horizontal" Spacing="4"
@@ -62,15 +74,18 @@
 
                         <!-- Flags -->
                         <StackPanel Orientation="Horizontal" Spacing="16">
-                            <CheckBox Content="Default"  IsChecked="{x:Bind IsDefault,  Mode=TwoWay}" />
-                            <CheckBox Content="Required" IsChecked="{x:Bind IsRequired, Mode=TwoWay}" />
-                            <CheckBox Content="Hidden"   IsChecked="{x:Bind IsHidden,   Mode=TwoWay}" />
+                            <CheckBox Content="Default"  IsChecked="{x:Bind IsDefault,  Mode=TwoWay}"
+                                      ToolTipService.ToolTip="Pre-selected when the dialog opens; the user can change it" />
+                            <CheckBox Content="Required" IsChecked="{x:Bind IsRequired, Mode=TwoWay}"
+                                      ToolTipService.ToolTip="Always included; shown with a locked checkbox the user cannot deselect" />
+                            <CheckBox Content="Hidden"   IsChecked="{x:Bind IsHidden,   Mode=TwoWay}"
+                                      ToolTipService.ToolTip="Always included but not shown in the dialog — user never sees this item" />
                         </StackPanel>
 
                         <!-- Condition -->
                         <local:LabeledField Label="Condition">
                             <local:ConditionInputBox Text="{x:Bind Condition, Mode=TwoWay}"
-                                                     PlaceholderText="Optional" />
+                                                     PlaceholderText="e.g. %XRegion% = EMEA" />
                         </local:LabeledField>
                     </StackPanel>
                 </Border>
@@ -92,37 +107,71 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Expander Grid.Column="0" HorizontalAlignment="Stretch" IsExpanded="True">
-                    <Expander.Header>
-                        <TextBox Text="{x:Bind Label, Mode=TwoWay}"
-                                 PlaceholderText="Group label"
-                                 HorizontalAlignment="Stretch" />
-                    </Expander.Header>
-                    <StackPanel Spacing="8" Padding="4,4,0,4">
-                        <StackPanel Orientation="Horizontal" Spacing="16">
-                            <CheckBox Content="Default"  IsChecked="{x:Bind IsDefault,  Mode=TwoWay}" />
-                            <CheckBox Content="Required" IsChecked="{x:Bind IsRequired, Mode=TwoWay}" />
-                        </StackPanel>
-                        <local:LabeledField Label="Condition">
-                            <local:ConditionInputBox Text="{x:Bind Condition, Mode=TwoWay}"
-                                                     PlaceholderText="Optional" />
-                        </local:LabeledField>
+                <!-- Left accent border gives groups visual identity and depth cue -->
+                <Border Grid.Column="0"
+                        BorderBrush="{ThemeResource AccentFillColorDefaultBrush}"
+                        BorderThickness="3,0,0,0"
+                        CornerRadius="0,4,4,0"
+                        Opacity="0.7">
+                    <Expander HorizontalAlignment="Stretch" IsExpanded="True">
+                        <Expander.Header>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <FontIcon Grid.Column="0"
+                                          Glyph="&#xE784;"
+                                          FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                                          FontSize="12" Opacity="0.35"
+                                          VerticalAlignment="Center"
+                                          Margin="0,0,6,0" />
+                                <TextBox Grid.Column="1"
+                                         Text="{x:Bind Label, Mode=TwoWay}"
+                                         PlaceholderText="Group label"
+                                         HorizontalAlignment="Stretch" />
+                            </Grid>
+                        </Expander.Header>
+                        <StackPanel Spacing="8" Padding="4,4,0,4">
+                            <StackPanel Orientation="Horizontal" Spacing="16">
+                                <CheckBox Content="Default"  IsChecked="{x:Bind IsDefault,  Mode=TwoWay}"
+                                          ToolTipService.ToolTip="Pre-selected when the dialog opens; the user can change it" />
+                                <CheckBox Content="Required" IsChecked="{x:Bind IsRequired, Mode=TwoWay}"
+                                          ToolTipService.ToolTip="Always included; shown with a locked checkbox the user cannot deselect" />
+                            </StackPanel>
+                            <local:LabeledField Label="Condition">
+                                <local:ConditionInputBox Text="{x:Bind Condition, Mode=TwoWay}"
+                                                         PlaceholderText="e.g. %XRole% = Developer" />
+                            </local:LabeledField>
 
-                        <!-- Reorderable nested items -->
-                        <ListView ItemsSource="{x:Bind Items}"
-                                  ItemTemplateSelector="{StaticResource NodeSelector}"
-                                  ItemContainerStyle="{StaticResource AppTreeItemContainerStyle}"
-                                  CanReorderItems="True" CanDragItems="True" AllowDrop="True"
-                                  SelectionMode="None"
-                                  ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
+                            <!-- Reorderable nested items -->
+                            <ListView ItemsSource="{x:Bind Items}"
+                                      ItemTemplateSelector="{StaticResource NodeSelector}"
+                                      ItemContainerStyle="{StaticResource AppTreeItemContainerStyle}"
+                                      CanReorderItems="True" CanDragItems="True" AllowDrop="True"
+                                      SelectionMode="None"
+                                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                                      ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
 
-                        <StackPanel Orientation="Horizontal" Spacing="4">
-                            <Button Content="+ Ref"   Command="{x:Bind AddRefCommand}"   />
-                            <Button Content="+ Group" Command="{x:Bind AddGroupCommand}" />
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <Button Command="{x:Bind AddRefCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE8EC;" FontSize="12"
+                                                  FontFamily="{ThemeResource SymbolThemeFontFamily}" />
+                                        <TextBlock Text="Add Software" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Command="{x:Bind AddGroupCommand}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE8B7;" FontSize="12"
+                                                  FontFamily="{ThemeResource SymbolThemeFontFamily}" />
+                                        <TextBlock Text="Add Group" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
                         </StackPanel>
-                    </StackPanel>
-                </Expander>
+                    </Expander>
+                </Border>
                 <Button Grid.Column="1"
                         Content="&#xE74D;"
                         FontFamily="{ThemeResource SymbolThemeFontFamily}"
@@ -141,7 +190,7 @@
     </UserControl.Resources>
 
     <StackPanel Spacing="12">
-        <TextBlock Text="AppTree" Style="{ThemeResource SubtitleTextBlockStyle}" />
+        <!-- P1: "AppTree" subtitle removed — guided panel header already shows "Guided — Application Tree" -->
         <TextBlock Text="Displays a tree of applications and packages for the user to choose. Sets numbered task sequence variables consumed by Install Application and Install Package steps. Only useful within a task sequence."
                    TextWrapping="Wrap"
                    Style="{ThemeResource CaptionTextBlockStyle}"
@@ -149,20 +198,26 @@
         <local:LabeledField Label="Title">
             <TextBox Text="{Binding Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
-        <local:LabeledField Label="Application Variable Base">
-            <TextBox Text="{Binding AppVarBase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-        </local:LabeledField>
-        <local:LabeledField Label="Package Variable Base">
-            <TextBox Text="{Binding PackageVarBase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-        </local:LabeledField>
         <local:LabeledField Label="Condition">
             <local:ConditionInputBox Text="{Binding Condition, Mode=TwoWay}" PlaceholderText="Optional" />
         </local:LabeledField>
 
+        <!-- P3: AppVarBase/PackageVarBase collapsed by default — most configs use the defaults -->
+        <Expander Header="Advanced Settings" IsExpanded="False">
+            <StackPanel Spacing="8" Padding="0,8,0,4">
+                <local:LabeledField Label="Application Variable Base">
+                    <TextBox Text="{Binding AppVarBase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </local:LabeledField>
+                <local:LabeledField Label="Package Variable Base">
+                    <TextBox Text="{Binding PackageVarBase, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </local:LabeledField>
+            </StackPanel>
+        </Expander>
+
         <!-- Software Sets -->
         <StackPanel Spacing="8">
             <TextBlock Text="Software Sets" Style="{ThemeResource BodyStrongTextBlockStyle}" Margin="0,4,0,0" />
-            <TextBlock Text="Each set can be conditionally shown. Within a set, drag to reorder items, or use + Ref and + Group to add entries."
+            <TextBlock Text="Each set can be conditionally shown. Within a set, drag items to reorder, or use Add Software and Add Group to add entries."
                        TextWrapping="Wrap"
                        Style="{ThemeResource CaptionTextBlockStyle}"
                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -203,7 +258,7 @@
                                 <StackPanel Spacing="8" Padding="4,4,0,4">
                                     <local:LabeledField Label="Condition">
                                         <local:ConditionInputBox Text="{x:Bind Condition, Mode=TwoWay}"
-                                                                 PlaceholderText="Optional" />
+                                                                 PlaceholderText="e.g. %XHardwareType% = Server" />
                                     </local:LabeledField>
 
                                     <!-- Reorderable items (refs and groups) -->
@@ -216,8 +271,20 @@
                                               ScrollViewer.HorizontalScrollBarVisibility="Disabled" />
 
                                     <StackPanel Orientation="Horizontal" Spacing="4">
-                                        <Button Content="+ Ref"   Command="{x:Bind AddRefCommand}"   />
-                                        <Button Content="+ Group" Command="{x:Bind AddGroupCommand}" />
+                                        <Button Command="{x:Bind AddRefCommand}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE8EC;" FontSize="12"
+                                                          FontFamily="{ThemeResource SymbolThemeFontFamily}" />
+                                                <TextBlock Text="Add Software" />
+                                            </StackPanel>
+                                        </Button>
+                                        <Button Command="{x:Bind AddGroupCommand}">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE8B7;" FontSize="12"
+                                                          FontFamily="{ThemeResource SymbolThemeFontFamily}" />
+                                                <TextBlock Text="Add Group" />
+                                            </StackPanel>
+                                        </Button>
                                     </StackPanel>
                                 </StackPanel>
                             </Expander>
@@ -240,11 +307,13 @@
                 </ItemsControl.ItemsPanel>
             </ItemsControl>
 
-            <Button Content="+ Set" Command="{Binding AddSetCommand}" />
+            <Button Content="Add Set" Command="{Binding AddSetCommand}" />
         </StackPanel>
 
-        <TextBlock Text="Software catalog (apps and packages) is managed on the Software tab."
-                   Style="{ThemeResource CaptionTextBlockStyle}"
-                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        <!-- P8: Hyperlink replaces static hint text -->
+        <HyperlinkButton Content="Manage software catalog →"
+                         Command="{Binding GoToCatalogCommand}"
+                         FontSize="12"
+                         Padding="0" />
     </StackPanel>
 </UserControl>

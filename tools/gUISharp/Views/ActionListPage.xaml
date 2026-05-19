@@ -197,17 +197,27 @@
                                                    TextTrimming="CharacterEllipsis"
                                                    Visibility="{x:Bind HasComment, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
                                     </StackPanel>
-                                    <Border Grid.Column="3"
-                                            CornerRadius="10"
-                                            Padding="7,2"
-                                            Margin="6,0,0,0"
-                                            VerticalAlignment="Center"
-                                            Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                            Visibility="{x:Bind HasSummary, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
-                                        <TextBlock Text="{x:Bind SummaryLabel, Mode=OneWay}"
-                                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    </Border>
+                                    <StackPanel Grid.Column="3"
+                                                Margin="6,0,0,0"
+                                                VerticalAlignment="Center"
+                                                Spacing="2">
+                                        <Border CornerRadius="10"
+                                                Padding="7,2"
+                                                Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                                Visibility="{x:Bind HasSummary, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <TextBlock Text="{x:Bind SummaryLabel, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </Border>
+                                        <Border CornerRadius="10"
+                                                Padding="7,2"
+                                                Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                                Visibility="{x:Bind HasUnresolved, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <TextBlock Text="{x:Bind UnresolvedLabel, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                                        </Border>
+                                    </StackPanel>
                                     <FontIcon Grid.Column="4"
                                               Glyph="&#xE71C;"
                                               FontFamily="{ThemeResource SymbolThemeFontFamily}"

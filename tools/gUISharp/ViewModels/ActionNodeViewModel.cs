@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GUISharp.Services;
+using GUISharp.ViewModels.ActionEditors;
 using UIpp.Core.Configuration;
 using C = UIpp.Core.Configuration.XmlConstants;
 
@@ -72,6 +73,18 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public bool HasSummary => !string.IsNullOrEmpty(SummaryLabel);
 
+    public string UnresolvedLabel
+    {
+        get
+        {
+            if (TypeName != C.ActionTypes.AppTree) return string.Empty;
+            int n = EditorViewModel is AppTreeViewModel vm ? CountUnresolvedFromSets(vm.Sets) : 0;
+            return n == 0 ? string.Empty : $"⚠ {FormatCount(n, "unresolved", "unresolved")}";
+        }
+    }
+
+    public bool HasUnresolved => !string.IsNullOrEmpty(UnresolvedLabel);
+
     public bool HasWarning => !string.IsNullOrEmpty(WarningMessage);
 
     public bool HasCondition => !IsGroup && !string.IsNullOrWhiteSpace(Attr(C.Attributes.Condition));
@@ -138,6 +151,8 @@ public sealed partial class ActionNodeViewModel : ObservableObject
         OnPropertyChanged(nameof(DisplayLabel));
         OnPropertyChanged(nameof(SummaryLabel));
         OnPropertyChanged(nameof(HasSummary));
+        OnPropertyChanged(nameof(UnresolvedLabel));
+        OnPropertyChanged(nameof(HasUnresolved));
         OnPropertyChanged(nameof(WarningMessage));
         OnPropertyChanged(nameof(HasWarning));
         OnPropertyChanged(nameof(HasCondition));
@@ -232,6 +247,8 @@ public sealed partial class ActionNodeViewModel : ObservableObject
             OnPropertyChanged(nameof(DisplayLabel));
             OnPropertyChanged(nameof(SummaryLabel));
             OnPropertyChanged(nameof(HasSummary));
+            OnPropertyChanged(nameof(UnresolvedLabel));
+            OnPropertyChanged(nameof(HasUnresolved));
             OnPropertyChanged(nameof(WarningMessage));
             OnPropertyChanged(nameof(HasWarning));
             OnPropertyChanged(nameof(HasCondition));
@@ -242,6 +259,39 @@ public sealed partial class ActionNodeViewModel : ObservableObject
             OnPropertyChanged(nameof(SummaryLabel));
             OnPropertyChanged(nameof(HasSummary));
         };
+
+        if (TypeName == C.ActionTypes.AppTree)
+        {
+            var catalog = App.MainVm.Software.Items;
+            foreach (var s in catalog)
+                s.PropertyChanged += OnCatalogItemPropertyChanged;
+            catalog.CollectionChanged += OnCatalogCollectionChanged;
+        }
+    }
+
+    private void OnCatalogCollectionChanged(object? sender,
+        System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (e.OldItems is not null)
+            foreach (SoftwareItemViewModel s in e.OldItems)
+                s.PropertyChanged -= OnCatalogItemPropertyChanged;
+        if (e.NewItems is not null)
+            foreach (SoftwareItemViewModel s in e.NewItems)
+                s.PropertyChanged += OnCatalogItemPropertyChanged;
+        NotifyUnresolved();
+    }
+
+    private void OnCatalogItemPropertyChanged(object? sender,
+        System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SoftwareItemViewModel.Id))
+            NotifyUnresolved();
+    }
+
+    private void NotifyUnresolved()
+    {
+        OnPropertyChanged(nameof(UnresolvedLabel));
+        OnPropertyChanged(nameof(HasUnresolved));
     }
 
     public void RefreshEditorViewModel()
@@ -276,6 +326,25 @@ public sealed partial class ActionNodeViewModel : ObservableObject
         if (groups > 0) parts.Add(FormatCount(groups, "group", "groups"));
         if (refs   > 0) parts.Add(FormatCount(refs,   "ref",   "refs"));
         return string.Join(", ", parts);
+    }
+
+    private static int CountUnresolvedFromSets(IEnumerable<AppTreeSetItem> sets)
+    {
+        var catalog = App.MainVm.Software.Items;
+        return AllRefs(sets.SelectMany(s => s.Items))
+            .Count(r => !string.IsNullOrEmpty(r.SoftwareId)
+                     && !catalog.Any(c => c.Id.Equals(r.SoftwareId, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private static IEnumerable<AppTreeRefItem> AllRefs(IEnumerable<AppTreeNodeBase> nodes)
+    {
+        foreach (var n in nodes)
+        {
+            if (n is AppTreeRefItem r) yield return r;
+            else if (n is AppTreeGroupItem g)
+                foreach (var r2 in AllRefs(g.Items))
+                    yield return r2;
+        }
     }
 
     private int CountElements(string name) =>
