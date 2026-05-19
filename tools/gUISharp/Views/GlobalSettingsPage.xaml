@@ -154,6 +154,59 @@
                             </Grid>
                         </local:LabeledField>
 
+                        <!-- Live dialog preview -->
+                        <StackPanel Spacing="6">
+                            <TextBlock Text="Preview"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <Border Height="120" CornerRadius="4"
+                                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                    BorderThickness="1">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="110" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Sidebar strip -->
+                                    <Border Grid.Column="0" CornerRadius="3,0,0,3"
+                                            Background="{x:Bind ViewModel.GlobalSettings.AccentColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}">
+                                        <StackPanel Padding="10,8" Spacing="4">
+                                            <TextBlock Text="{x:Bind ViewModel.GlobalSettings.Title, Mode=OneWay, FallbackValue='UI++'}"
+                                                       Foreground="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
+                                                       FontSize="12" FontWeight="SemiBold"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{x:Bind ViewModel.GlobalSettings.Subtitle, Mode=OneWay}"
+                                                       Foreground="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
+                                                       FontSize="10" Opacity="0.8"
+                                                       TextTrimming="CharacterEllipsis" />
+                                            <Border Height="1" Margin="0,2"
+                                                    Background="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
+                                                    Opacity="0.3" />
+                                            <TextBlock Text="· Step 1"
+                                                       Foreground="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
+                                                       FontSize="9" Opacity="0.7" />
+                                            <TextBlock Text="· Step 2"
+                                                       Foreground="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
+                                                       FontSize="9" Opacity="0.7" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Dialog content area placeholder -->
+                                    <StackPanel Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                HorizontalAlignment="Center"
+                                                Opacity="0.25" Spacing="4">
+                                        <FontIcon Glyph="&#xE8A5;" FontSize="18"
+                                                  HorizontalAlignment="Center" />
+                                        <TextBlock Text="content"
+                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                   HorizontalAlignment="Center" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
                         <local:LabeledField Label="Condition Engine">
                             <ComboBox ItemsSource="{x:Bind ViewModel.GlobalSettings.ConditionEngineOptions}"
                                       SelectedItem="{x:Bind ViewModel.GlobalSettings.ConditionEngine, Mode=TwoWay}"
