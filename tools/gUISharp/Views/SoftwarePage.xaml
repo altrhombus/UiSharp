@@ -89,12 +89,13 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Grid.Column="0"
-                               Text="Guided"
-                               VerticalAlignment="Center"
-                               Margin="10,0,0,0"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" Spacing="6">
+                        <TextBlock Text="Guided"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                                   Visibility="{x:Bind ViewModel.SoftwareModified, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    </StackPanel>
                     <Button x:Name="ExpandXmlBtn"
                             Grid.Column="1"
                             Width="28" Height="28" Padding="0"

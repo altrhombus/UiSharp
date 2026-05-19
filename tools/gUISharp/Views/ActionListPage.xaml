@@ -287,12 +287,13 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0"
-                                   Text="{x:Bind ViewModel.ActionList.GuidedPanelTitle, Mode=OneWay}"
-                                   VerticalAlignment="Center"
-                                   Margin="10,0,0,0"
-                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0" Spacing="6">
+                            <TextBlock Text="{x:Bind ViewModel.ActionList.GuidedPanelTitle, Mode=OneWay}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <InfoBadge Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                                       Visibility="{x:Bind ViewModel.ActionsModified, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
+                        </StackPanel>
 
                         <!-- Expand XML button (shown when XML panel is collapsed) -->
                         <Button x:Name="ExpandXmlBtn"
