@@ -7,6 +7,10 @@
     xmlns:vm="using:GUISharp.ViewModels"
     xmlns:editors="using:GUISharp.Views.ActionEditors">
 
+    <Page.KeyboardAccelerators>
+        <KeyboardAccelerator Key="F" Modifiers="Control" Invoked="SearchAccelerator_Invoked" />
+    </Page.KeyboardAccelerators>
+
     <Page.Resources>
         <!-- Per-type editor DataTemplates -->
         <DataTemplate x:Key="TSVarTemplate"         ><editors:TSVarEditor         DataContext="{Binding EditorViewModel}" /></DataTemplate>
@@ -145,7 +149,7 @@
                 </Grid.ColumnDefinitions>
                 <TextBox Grid.Column="0"
                          x:Name="SearchBox"
-                         PlaceholderText="Search actions…"
+                         PlaceholderText="Search actions… (Ctrl+F)"
                          Text="{x:Bind ViewModel.ActionList.FilterText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                          KeyDown="SearchBox_KeyDown" />
                 <TextBlock Grid.Column="1"

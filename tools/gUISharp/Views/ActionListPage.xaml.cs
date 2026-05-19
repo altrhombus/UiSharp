@@ -49,8 +49,16 @@ public sealed partial class ActionListPage : Page
         if (e.Key == Windows.System.VirtualKey.Escape)
         {
             ViewModel.ActionList.FilterText = string.Empty;
+            ActionTreeView.Focus(FocusState.Keyboard);
             e.Handled = true;
         }
+    }
+
+    private void SearchAccelerator_Invoked(KeyboardAccelerator sender, KeyboardAcceleratorInvokedEventArgs args)
+    {
+        SearchBox.Focus(FocusState.Keyboard);
+        SearchBox.SelectAll();
+        args.Handled = true;
     }
 
     // ── Cascading rename (P7) ─────────────────────────────────────────────────
