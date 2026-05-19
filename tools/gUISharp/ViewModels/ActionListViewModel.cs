@@ -641,15 +641,30 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         return false;
     }
 
+    private string? _preRenameSnapshot;
+
+    public bool HasRenameSnapshot => _preRenameSnapshot is not null;
+
     [RelayCommand]
     private void AcceptRename()
     {
         if (string.IsNullOrEmpty(_pendingRenameFrom) || string.IsNullOrEmpty(_pendingRenameTo)) return;
         string oldTag = $"%{_pendingRenameFrom}%";
         string newTag = $"%{_pendingRenameTo}%";
+        _preRenameSnapshot = CurrentXmlText;
         OnXmlEdited(CurrentXmlText.Replace(oldTag, newTag, StringComparison.OrdinalIgnoreCase));
         DismissPendingRename();
     }
+
+    [RelayCommand]
+    private void UndoRename()
+    {
+        if (_preRenameSnapshot is null) return;
+        OnXmlEdited(_preRenameSnapshot);
+        _preRenameSnapshot = null;
+    }
+
+    public void ClearRenameSnapshot() => _preRenameSnapshot = null;
 
     public void DismissPendingRename()
     {

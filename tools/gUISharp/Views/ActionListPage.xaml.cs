@@ -320,22 +320,64 @@ public sealed partial class ActionListPage : Page
 
     // ── Cascading rename TeachingTip ──────────────────────────────────────────
 
+    private bool _renameUndoMode;
+
     private void RenameTip_ActionButtonClick(TeachingTip sender, object args)
     {
-        ViewModel.ActionList.AcceptRenameCommand.Execute(null);
-        RenameTip.IsOpen = false;
+        if (_renameUndoMode)
+        {
+            ViewModel.ActionList.UndoRenameCommand.Execute(null);
+            _renameUndoMode = false;
+            RenameTip.IsOpen = false;
+        }
+        else
+        {
+            _renameUndoMode = true; // prevent PropertyChanged from closing the tip during Execute
+            ViewModel.ActionList.AcceptRenameCommand.Execute(null);
+            if (ViewModel.ActionList.HasRenameSnapshot)
+            {
+                RenameTip.Title               = "Rename applied";
+                RenameTip.Subtitle            = "";
+                RenameTip.ActionButtonContent = "Undo";
+                RenameTip.CloseButtonContent  = "Done";
+            }
+            else
+            {
+                _renameUndoMode = false;
+                RenameTip.IsOpen = false;
+            }
+        }
     }
 
     private void RenameTip_CloseButtonClick(TeachingTip sender, object args)
     {
-        ViewModel.ActionList.DismissPendingRename();
+        if (_renameUndoMode)
+        {
+            _renameUndoMode = false;
+            ViewModel.ActionList.ClearRenameSnapshot();
+        }
+        else
+        {
+            ViewModel.ActionList.DismissPendingRename();
+        }
         RenameTip.IsOpen = false;
     }
 
     private void ActionList_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ActionListViewModel.HasPendingRename))
-            RenameTip.IsOpen = ViewModel.ActionList.HasPendingRename;
+        if (e.PropertyName != nameof(ActionListViewModel.HasPendingRename)) return;
+        if (ViewModel.ActionList.HasPendingRename)
+        {
+            _renameUndoMode               = false;
+            RenameTip.Title               = "Rename variable references?";
+            RenameTip.ActionButtonContent = "Update All";
+            RenameTip.CloseButtonContent  = "Skip";
+            RenameTip.IsOpen = true;
+        }
+        else if (!_renameUndoMode)
+        {
+            RenameTip.IsOpen = false;
+        }
     }
 
     // ── Focus-based sync ──────────────────────────────────────────────────────
