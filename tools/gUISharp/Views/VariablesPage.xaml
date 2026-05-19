@@ -174,13 +174,29 @@
         </ListView>
 
         <!-- Empty state -->
-        <TextBlock x:Name="EmptyState"
-                   Grid.Row="1"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   Text="No variables declared yet."
-                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                   Visibility="Collapsed" />
+        <StackPanel x:Name="EmptyState"
+                    Grid.Row="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="8"
+                    Visibility="Collapsed">
+            <FontIcon Glyph="&#xE943;"
+                      FontSize="36"
+                      HorizontalAlignment="Center"
+                      Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            <TextBlock Text="No variables yet"
+                       Style="{ThemeResource SubtitleTextBlockStyle}"
+                       HorizontalAlignment="Center" />
+            <TextBlock Text="Variables appear here when declared by TSVar, RegRead, WMI Read, Input, and other actions."
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       TextAlignment="Center"
+                       MaxWidth="280"
+                       TextWrapping="Wrap" />
+            <HyperlinkButton Content="Go to Actions"
+                             HorizontalAlignment="Center"
+                             Click="GoToActions_Click" />
+        </StackPanel>
 
         <!-- Footer hint -->
         <TextBlock Grid.Row="2"

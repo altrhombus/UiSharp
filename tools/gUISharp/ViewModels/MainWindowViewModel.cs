@@ -258,6 +258,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         NavigationRequested?.Invoke("Actions");
     }
 
+    public void NavigateToActions()  => NavigationRequested?.Invoke("Actions");
     public void NavigateToSoftware() => NavigationRequested?.Invoke("Software");
 
     /// <summary>Saves the current file (prompting for a path if unsaved). Returns true when the caller may proceed.</summary>

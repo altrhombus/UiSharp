@@ -48,6 +48,9 @@ public sealed partial class VariablesPage : Page
         RefreshFilter();
     }
 
+    private void GoToActions_Click(object sender, RoutedEventArgs e)
+        => App.MainVm.NavigateToActions();
+
     private void CopyButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button { Tag: VariableEntry entry })

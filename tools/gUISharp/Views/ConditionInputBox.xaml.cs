@@ -63,6 +63,7 @@ public sealed partial class ConditionInputBox : UserControl
         _updatingText = true;
         Text = InputBox.Text;
         _updatingText = false;
+        ConditionHint.Visibility = InputBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateSuggestions();
     }
 

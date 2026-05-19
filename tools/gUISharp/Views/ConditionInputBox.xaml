@@ -4,20 +4,30 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:GUISharp.Views">
 
-    <Grid ColumnSpacing="4">
+    <Grid ColumnSpacing="4" RowSpacing="2">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
             <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <TextBox x:Name="InputBox"
-                 Grid.Column="0"
+                 Grid.Row="0" Grid.Column="0"
                  TextChanged="InputBox_TextChanged"
                  KeyDown="InputBox_KeyDown" />
 
+        <TextBlock x:Name="ConditionHint"
+                   Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                   Text="Type % to insert a variable"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
         <!-- Variable autocomplete popup — opened when user types % -->
         <Popup x:Name="SuggestPopup"
-               Grid.Column="0"
+               Grid.Row="0" Grid.Column="0"
                IsLightDismissEnabled="True"
                Closed="SuggestPopup_Closed">
             <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
@@ -42,11 +52,12 @@
             </Border>
         </Popup>
 
-        <Button Grid.Column="1"
-                Width="36" Height="32" Padding="4,0"
+        <Button Grid.Row="0" Grid.Column="1"
+                Height="32" Padding="8,0"
                 VerticalAlignment="Center"
                 ToolTipService.ToolTip="Condition helper — insert templates and browse syntax reference">
-            <TextBlock Text="fx" FontFamily="Consolas" FontSize="11"
+            <TextBlock Text="Condition"
+                       FontSize="11"
                        VerticalAlignment="Center" HorizontalAlignment="Center" />
             <Button.Flyout>
                 <Flyout x:Name="HelperFlyout" Placement="BottomEdgeAlignedRight">

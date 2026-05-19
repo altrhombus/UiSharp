@@ -15,10 +15,11 @@
                  TextChanged="PatternBox_TextChanged" />
 
         <Button Grid.Column="1"
-                Width="36" Height="32" Padding="4,0"
+                Height="32" Padding="8,0"
                 VerticalAlignment="Center"
                 ToolTipService.ToolTip="Regex helper — test patterns and browse common presets">
-            <TextBlock Text=".*" FontFamily="Consolas" FontSize="11"
+            <TextBlock Text="Regex"
+                       FontSize="11"
                        VerticalAlignment="Center" HorizontalAlignment="Center" />
             <Button.Flyout>
                 <Flyout x:Name="HelperFlyout" Placement="BottomEdgeAlignedRight">

@@ -101,6 +101,7 @@ public sealed partial class VariableAwareTextBox : UserControl
         _updatingText = true;
         Text = InputBox.Text;
         _updatingText = false;
+        VariableHint.Visibility = InputBox.Text.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         UpdateSuggestions();
     }
 
