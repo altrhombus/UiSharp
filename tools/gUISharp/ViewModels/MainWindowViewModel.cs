@@ -288,7 +288,26 @@ public sealed partial class MainWindowViewModel : ObservableObject
             XamlRoot            = root.XamlRoot,
         };
 
-        var result = await dialog.ShowAsync();
+        // Keyboard shortcuts: S = Save (Enter also works), N = Don't Save, Esc = Cancel.
+        ContentDialogResult? keyResult = null;
+        dialog.KeyDown += (_, e) =>
+        {
+            switch (e.Key)
+            {
+                case Windows.System.VirtualKey.N:
+                    keyResult = ContentDialogResult.Secondary;
+                    dialog.Hide();
+                    e.Handled = true;
+                    break;
+                case Windows.System.VirtualKey.S:
+                    keyResult = ContentDialogResult.Primary;
+                    dialog.Hide();
+                    e.Handled = true;
+                    break;
+            }
+        };
+
+        var result = keyResult ?? await dialog.ShowAsync();
         if (result == ContentDialogResult.Primary)
             return await TrySaveAsync();
         return result == ContentDialogResult.Secondary;
