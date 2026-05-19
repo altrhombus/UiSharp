@@ -29,6 +29,8 @@ public sealed partial class MainWindow : Window
 
         AppWindow.Closing += OnWindowClosingAsync;
 
+        ViewModel.NavigationRequested += OnNavigationRequested;
+
         // Navigate to Actions page by default.
         NavView.SelectedItem = NavView.MenuItems[0];
     }
@@ -59,6 +61,13 @@ public sealed partial class MainWindow : Window
             if (await ViewModel.TrySaveAsync())
                 this.Close();
         }
+    }
+
+    private void OnNavigationRequested(string tag)
+    {
+        if (NavView.MenuItems.OfType<NavigationViewItem>()
+                             .FirstOrDefault(i => (string?)i.Tag == tag) is { } item)
+            NavView.SelectedItem = item;
     }
 
     private void RecentFilesFlyout_Opening(object sender, object e)

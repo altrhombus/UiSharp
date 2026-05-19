@@ -58,6 +58,16 @@ public sealed partial class VariablesPage : Page
         }
     }
 
+    private void UsageRow_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is FrameworkElement el &&
+            el.DataContext is VariableUsage usage &&
+            usage.ActionNode is not null)
+        {
+            App.MainVm.NavigateToAction(usage.ActionNode);
+        }
+    }
+
     private void RefreshFilter()
     {
         if (CountLabel is null || EmptyState is null) return;

@@ -132,31 +132,38 @@
                                           Visibility="{x:Bind HasRefs, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="vm:VariableUsage">
-                                        <Grid ColumnSpacing="8" Padding="0,3">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto" />
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <Border Grid.Column="0"
-                                                    CornerRadius="3" Padding="5,1"
-                                                    Background="{ThemeResource SubtleFillColorTertiaryBrush}"
-                                                    VerticalAlignment="Center">
-                                                <TextBlock Text="{x:Bind IndexLabel}"
-                                                           FontFamily="Consolas" FontSize="11"
-                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                            </Border>
-                                            <TextBlock Grid.Column="1"
-                                                       Text="{x:Bind ActionLabel}"
-                                                       Style="{ThemeResource CaptionTextBlockStyle}"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       VerticalAlignment="Center" />
-                                            <TextBlock Grid.Column="2"
-                                                       Text="{x:Bind Field}"
-                                                       Style="{ThemeResource CaptionTextBlockStyle}"
-                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                                       VerticalAlignment="Center" />
-                                        </Grid>
+                                        <Button HorizontalAlignment="Stretch"
+                                                Padding="2,3" Margin="0,1"
+                                                Background="Transparent" BorderThickness="0"
+                                                IsEnabled="{x:Bind CanNavigate}"
+                                                Click="UsageRow_Click"
+                                                ToolTipService.ToolTip="Go to this action">
+                                            <Grid ColumnSpacing="8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0"
+                                                        CornerRadius="3" Padding="5,1"
+                                                        Background="{ThemeResource SubtleFillColorTertiaryBrush}"
+                                                        VerticalAlignment="Center">
+                                                    <TextBlock Text="{x:Bind IndexLabel}"
+                                                               FontFamily="Consolas" FontSize="11"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </Border>
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{x:Bind ActionLabel}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{x:Bind Field}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Button>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>

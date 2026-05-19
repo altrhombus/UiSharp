@@ -97,6 +97,12 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         return ActionTree.Select(vm => BuildModel(vm)).ToList();
     }
 
+    public void SelectAction(ActionNodeViewModel node)
+    {
+        FilterText     = string.Empty;
+        SelectedAction = node;
+    }
+
     // ── Cursor-driven selection ───────────────────────────────────────────────
 
     /// <summary>Called when the Monaco cursor moves to a new line. Updates SelectedAction without re-pushing XML.</summary>
@@ -632,7 +638,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         foreach (var attr in vm.Model.Node.Attributes())
         {
             if (attr.Value.Contains(tag, StringComparison.OrdinalIgnoreCase))
-                usages.Add(new(vm.DisplayLabel, actionIndex, FriendlyAttributeName(attr.Name.LocalName)));
+                usages.Add(new(vm, actionIndex, FriendlyAttributeName(attr.Name.LocalName)));
         }
         // For leaf actions, scan all descendant elements (Switch cases, Input fields, etc.).
         // Groups skip this because their child actions are visited as separate vm.Children.
@@ -644,7 +650,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
                 foreach (var attr in descendant.Attributes())
                 {
                     if (attr.Value.Contains(tag, StringComparison.OrdinalIgnoreCase))
-                        usages.Add(new(vm.DisplayLabel, actionIndex,
+                        usages.Add(new(vm, actionIndex,
                             $"{elName} · {FriendlyAttributeName(attr.Name.LocalName)}"));
                 }
             }
@@ -809,10 +815,17 @@ public sealed class VariableEntry
 public sealed class VariableUsage
 {
     public VariableUsage() { }
-    public VariableUsage(string actionLabel, int actionIndex, string field)
-        => (ActionLabel, ActionIndex, Field) = (actionLabel, actionIndex, field);
-    public string ActionLabel { get; set; } = string.Empty;
-    public int    ActionIndex { get; set; }
-    public string Field       { get; set; } = string.Empty;
-    public string IndexLabel  => $"#{ActionIndex}";
+    public VariableUsage(ActionNodeViewModel node, int actionIndex, string field)
+    {
+        ActionNode  = node;
+        ActionLabel = node.DisplayLabel;
+        ActionIndex = actionIndex;
+        Field       = field;
+    }
+    public ActionNodeViewModel? ActionNode  { get; set; }
+    public string               ActionLabel { get; set; } = string.Empty;
+    public int                  ActionIndex { get; set; }
+    public string               Field       { get; set; } = string.Empty;
+    public string               IndexLabel  => $"#{ActionIndex}";
+    public bool                 CanNavigate => ActionNode is not null;
 }

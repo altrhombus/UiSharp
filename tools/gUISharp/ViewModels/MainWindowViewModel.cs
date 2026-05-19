@@ -213,6 +213,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public void MarkModified() => IsModified = true;
 
+    // ── Navigation ────────────────────────────────────────────────────────────
+
+    public event Action<string>? NavigationRequested;
+
+    public void NavigateToAction(ActionNodeViewModel node)
+    {
+        ActionList.SelectAction(node);
+        NavigationRequested?.Invoke("Actions");
+    }
+
     /// <summary>Saves the current file (prompting for a path if unsaved). Returns true when the caller may proceed.</summary>
     public async Task<bool> TrySaveAsync()
     {
