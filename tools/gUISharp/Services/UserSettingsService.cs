@@ -7,8 +7,9 @@ public enum AppTheme { System, Light, Dark }
 
 public sealed class UserSettings
 {
-    public int      RecentFilesLimit { get; set; } = 10;
-    public AppTheme Theme            { get; set; } = AppTheme.System;
+    public int           RecentFilesLimit { get; set; } = 10;
+    public AppTheme      Theme            { get; set; } = AppTheme.System;
+    public List<string>  RecentFiles      { get; set; } = new();
 
     [JsonIgnore]
     public static UserSettings Default => new();

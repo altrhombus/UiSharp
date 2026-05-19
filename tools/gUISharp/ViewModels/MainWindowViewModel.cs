@@ -87,23 +87,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     public ObservableCollection<string> RecentFiles { get; } = new();
 
-    private static readonly string RecentFilesPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "gUISharp", "recent_files.txt");
-
     private static int MaxRecentFiles => App.UserSettings?.Settings.RecentFilesLimit ?? 10;
 
     private void LoadRecentFiles()
     {
-        try
-        {
-            if (!File.Exists(RecentFilesPath)) return;
-            foreach (var line in File.ReadAllLines(RecentFilesPath)
-                                     .Where(File.Exists)
-                                     .Take(MaxRecentFiles))
-                RecentFiles.Add(line);
-        }
-        catch { /* non-fatal */ }
+        var stored = App.UserSettings?.Settings.RecentFiles ?? new();
+        foreach (var line in stored.Where(File.Exists).Take(MaxRecentFiles))
+            RecentFiles.Add(line);
     }
 
     private void AddToRecentFiles(string path)
@@ -112,26 +102,28 @@ public sealed partial class MainWindowViewModel : ObservableObject
         RecentFiles.Insert(0, path);
         while (RecentFiles.Count > MaxRecentFiles)
             RecentFiles.RemoveAt(RecentFiles.Count - 1);
-        try
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(RecentFilesPath)!);
-            File.WriteAllLines(RecentFilesPath, RecentFiles);
-        }
-        catch { /* non-fatal */ }
+        PersistRecentFiles();
+    }
+
+    private void PersistRecentFiles()
+    {
+        if (App.UserSettings is not { } svc) return;
+        svc.Settings.RecentFiles = new(RecentFiles);
+        svc.Save();
     }
 
     [RelayCommand]
     private void RemoveRecentFile(string path)
     {
         RecentFiles.Remove(path);
-        try { File.WriteAllLines(RecentFilesPath, RecentFiles); } catch { /* non-fatal */ }
+        PersistRecentFiles();
     }
 
     [RelayCommand]
     private void ClearRecentFiles()
     {
         RecentFiles.Clear();
-        try { File.WriteAllLines(RecentFilesPath, RecentFiles); } catch { /* non-fatal */ }
+        PersistRecentFiles();
     }
 
     [RelayCommand]
