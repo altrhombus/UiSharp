@@ -12,7 +12,35 @@
 
         <TextBox x:Name="InputBox"
                  Grid.Column="0"
-                 TextChanged="InputBox_TextChanged" />
+                 TextChanged="InputBox_TextChanged"
+                 KeyDown="InputBox_KeyDown" />
+
+        <!-- Variable autocomplete popup — opened when user types % -->
+        <Popup x:Name="SuggestPopup"
+               Grid.Column="0"
+               IsLightDismissEnabled="True"
+               Closed="SuggestPopup_Closed">
+            <Border Background="{ThemeResource AcrylicInAppFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    MinWidth="180"
+                    MaxWidth="320"
+                    MaxHeight="220">
+                <ListView x:Name="SuggestList"
+                          IsItemClickEnabled="True"
+                          SelectionMode="Single"
+                          ItemClick="SuggestList_ItemClick">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <TextBlock Text="{x:Bind}"
+                                       FontFamily="Consolas"
+                                       FontSize="12" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Border>
+        </Popup>
 
         <Button Grid.Column="1"
                 Width="36" Height="32" Padding="4,0"

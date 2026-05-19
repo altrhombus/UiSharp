@@ -4,15 +4,29 @@ using Microsoft.UI.Xaml.Input;
 
 namespace GUISharp.Views;
 
-public sealed partial class ConditionInputBox : UserControl
+public sealed partial class VariableAwareTextBox : UserControl
 {
+    // ── DependencyProperties ─────────────────────────────────────────────────
+
     public static readonly DependencyProperty TextProperty =
-        DependencyProperty.Register(nameof(Text), typeof(string), typeof(ConditionInputBox),
+        DependencyProperty.Register(nameof(Text), typeof(string), typeof(VariableAwareTextBox),
             new PropertyMetadata(string.Empty, OnTextPropertyChanged));
 
     public static readonly DependencyProperty PlaceholderTextProperty =
-        DependencyProperty.Register(nameof(PlaceholderText), typeof(string), typeof(ConditionInputBox),
+        DependencyProperty.Register(nameof(PlaceholderText), typeof(string), typeof(VariableAwareTextBox),
             new PropertyMetadata(string.Empty, OnPlaceholderTextPropertyChanged));
+
+    public static readonly DependencyProperty AcceptsReturnProperty =
+        DependencyProperty.Register(nameof(AcceptsReturn), typeof(bool), typeof(VariableAwareTextBox),
+            new PropertyMetadata(false, OnAcceptsReturnPropertyChanged));
+
+    public static readonly DependencyProperty TextWrappingProperty =
+        DependencyProperty.Register(nameof(TextWrapping), typeof(TextWrapping), typeof(VariableAwareTextBox),
+            new PropertyMetadata(TextWrapping.NoWrap, OnTextWrappingPropertyChanged));
+
+    public static readonly DependencyProperty InputMaxHeightProperty =
+        DependencyProperty.Register(nameof(InputMaxHeight), typeof(double), typeof(VariableAwareTextBox),
+            new PropertyMetadata(double.PositiveInfinity, OnInputMaxHeightPropertyChanged));
 
     public string Text
     {
@@ -26,37 +40,61 @@ public sealed partial class ConditionInputBox : UserControl
         set => SetValue(PlaceholderTextProperty, value);
     }
 
-    public IReadOnlyList<ConditionTemplate> Templates { get; } =
-    [
-        new("Equals string",        "\"%VARNAME%\" = \"value\"",               "Variable equals a string value"),
-        new("Not equal string",     "\"%VARNAME%\" <> \"value\"",              "Variable does not equal a string value"),
-        new("Numeric ≥",            "%VARNAME% >= 1024",                       "Variable is numerically greater than or equal"),
-        new("Numeric ≤",            "%VARNAME% <= 1024",                       "Variable is numerically less than or equal"),
-        new("Contains substring",   "InStr(\"%VARNAME%\", \"needle\") > 0",    "Variable contains a substring"),
-        new("Starts with",          "Left(\"%VARNAME%\", 4) = \"ABCD\"",       "Variable starts with a prefix"),
-        new("Is empty",             "\"%VARNAME%\" = \"\"",                     "Variable is empty or not set"),
-        new("Is not empty",         "\"%VARNAME%\" <> \"\"",                    "Variable has any value"),
-        new("AND combinator",       " AND ",                                    "Both conditions must be true"),
-        new("OR combinator",        " OR ",                                     "Either condition must be true"),
-        new("NOT combinator",       "NOT ",                                     "Negate a condition"),
-        new("OR chain (multi-val)", "\"%VAR%\" = \"A\" OR \"%VAR%\" = \"B\"",  "Match any one of several values"),
-    ];
+    public bool AcceptsReturn
+    {
+        get => (bool)GetValue(AcceptsReturnProperty);
+        set => SetValue(AcceptsReturnProperty, value);
+    }
 
-    private bool _updatingText;
+    public TextWrapping TextWrapping
+    {
+        get => (TextWrapping)GetValue(TextWrappingProperty);
+        set => SetValue(TextWrappingProperty, value);
+    }
 
-    public ConditionInputBox() => InitializeComponent();
+    public double InputMaxHeight
+    {
+        get => (double)GetValue(InputMaxHeightProperty);
+        set => SetValue(InputMaxHeightProperty, value);
+    }
 
     private static void OnTextPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ConditionInputBox box && !box._updatingText && box.InputBox is not null)
+        if (d is VariableAwareTextBox box && !box._updatingText && box.InputBox is not null)
             box.InputBox.Text = (string)(e.NewValue ?? string.Empty);
     }
 
     private static void OnPlaceholderTextPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ConditionInputBox box && box.InputBox is not null)
+        if (d is VariableAwareTextBox box && box.InputBox is not null)
             box.InputBox.PlaceholderText = (string)(e.NewValue ?? string.Empty);
     }
+
+    private static void OnAcceptsReturnPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is VariableAwareTextBox box && box.InputBox is not null)
+            box.InputBox.AcceptsReturn = (bool)e.NewValue;
+    }
+
+    private static void OnTextWrappingPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is VariableAwareTextBox box && box.InputBox is not null)
+            box.InputBox.TextWrapping = (TextWrapping)e.NewValue;
+    }
+
+    private static void OnInputMaxHeightPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is VariableAwareTextBox box && box.InputBox is not null)
+            box.InputBox.MaxHeight = (double)e.NewValue;
+    }
+
+    // ── Construction ──────────────────────────────────────────────────────────
+
+    private bool _updatingText;
+
+    public VariableAwareTextBox() => InitializeComponent();
+
+    // ── Text sync ─────────────────────────────────────────────────────────────
 
     private void InputBox_TextChanged(object sender, TextChangedEventArgs e)
     {
@@ -66,7 +104,9 @@ public sealed partial class ConditionInputBox : UserControl
         UpdateSuggestions();
     }
 
-    private void InputBox_KeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
+    // ── Keyboard navigation ───────────────────────────────────────────────────
+
+    private void InputBox_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (!SuggestPopup.IsOpen) return;
         switch (e.Key)
@@ -102,6 +142,8 @@ public sealed partial class ConditionInputBox : UserControl
         }
     }
 
+    // ── Suggestion popup ──────────────────────────────────────────────────────
+
     private void SuggestList_ItemClick(object sender, ItemClickEventArgs e)
     {
         if (e.ClickedItem is string name)
@@ -110,7 +152,6 @@ public sealed partial class ConditionInputBox : UserControl
 
     private void SuggestPopup_Closed(object sender, object e)
     {
-        // Ensure list is cleared when light-dismissed so it doesn't reappear stale
         SuggestList.ItemsSource = null;
     }
 
@@ -125,13 +166,8 @@ public sealed partial class ConditionInputBox : UserControl
         if (lastPct < 0) { HideSuggestions(); return; }
 
         var partial = before.Substring(lastPct + 1);
-        if (partial.Length == 0 && lastPct == pos - 1)
+        if (partial.Contains('%'))
         {
-            // Just typed % — show all
-        }
-        else if (partial.Contains('%'))
-        {
-            // There's a closing % already — we're past a complete token
             HideSuggestions();
             return;
         }
@@ -179,24 +215,4 @@ public sealed partial class ConditionInputBox : UserControl
     {
         SuggestPopup.IsOpen = false;
     }
-
-    private void Template_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is Button { Tag: ConditionTemplate tpl })
-        {
-            int pos = InputBox.SelectionStart;
-            int len = InputBox.SelectionLength;
-            string text = InputBox.Text;
-            string result = len > 0
-                ? text.Remove(pos, len).Insert(pos, tpl.Template)
-                : text.Insert(pos, tpl.Template);
-            InputBox.Text = result;
-            InputBox.SelectionStart = pos + tpl.Template.Length;
-            InputBox.SelectionLength = 0;
-            HelperFlyout.Hide();
-            InputBox.Focus(FocusState.Programmatic);
-        }
-    }
 }
-
-public record ConditionTemplate(string Label, string Template, string Description);

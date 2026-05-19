@@ -22,7 +22,7 @@
             <ComboBox ItemsSource="{Binding ValueTypeOptions}" SelectedItem="{Binding ValueType, Mode=TwoWay}" HorizontalAlignment="Stretch" />
         </local:LabeledField>
         <local:LabeledField Label="Data">
-            <TextBox Text="{Binding Data, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+            <local:VariableAwareTextBox Text="{Binding Data, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
         <CheckBox Content="Use 64-bit Registry" IsChecked="{Binding Reg64, Mode=TwoWay}" />
         <local:LabeledField Label="Condition">

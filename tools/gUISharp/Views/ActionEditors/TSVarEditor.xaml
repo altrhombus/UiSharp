@@ -14,8 +14,8 @@
             <TextBox Text="{Binding Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         </local:LabeledField>
         <local:LabeledField Label="Value">
-            <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                     AcceptsReturn="True" MaxHeight="120" TextWrapping="Wrap" />
+            <local:VariableAwareTextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                        AcceptsReturn="True" InputMaxHeight="120" TextWrapping="Wrap" />
         </local:LabeledField>
         <local:LabeledField Label="Condition">
             <local:ConditionInputBox Text="{Binding Condition, Mode=TwoWay}" PlaceholderText="Optional condition expression" />
