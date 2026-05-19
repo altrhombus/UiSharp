@@ -107,8 +107,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     private void LoadConfig(EditorConfig config)
     {
-        GlobalSettings.LoadFrom(config.GlobalTraits, config.ConditionEngine, config.SchemaVersion);
-        Software.LoadFrom(config.SoftwareList);
+        GlobalSettings.LoadFrom(config.GlobalTraits, config.ConditionEngine, config.SchemaVersion,
+                                config.DocumentComment);
+        Software.LoadFrom(config.SoftwareList, config.SoftwareElement);
         ActionList.LoadActions(config.Actions);
     }
 
@@ -116,11 +117,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         return new EditorConfig
         {
-            GlobalTraits    = GlobalSettings.ToTraits(),
-            ConditionEngine = GlobalSettings.ConditionEngine,
-            SchemaVersion   = GlobalSettings.GetSchemaVersion(),
-            SoftwareList    = Software.CollectSoftware(),
-            Actions         = ActionList.CollectModels(),
+            GlobalTraits     = GlobalSettings.ToTraits(),
+            ConditionEngine  = GlobalSettings.ConditionEngine,
+            SchemaVersion    = GlobalSettings.GetSchemaVersion(),
+            DocumentComment  = GlobalSettings.Comment,
+            SoftwareList     = Software.CollectSoftware(),
+            SoftwareComments = Software.GetSoftwareComments(),
+            Actions          = ActionList.CollectModels(),
         };
     }
 

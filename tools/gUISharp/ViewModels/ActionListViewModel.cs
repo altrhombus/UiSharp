@@ -10,7 +10,7 @@ using C = UIpp.Core.Configuration.XmlConstants;
 
 namespace GUISharp.ViewModels;
 
-public sealed partial class ActionListViewModel : ObservableObject
+public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSource
 {
     private readonly EditorViewModelFactory _factory;
     private ActionNodeViewModel? _previousSelection;
@@ -97,7 +97,7 @@ public sealed partial class ActionListViewModel : ObservableObject
     // ── Cursor-driven selection ───────────────────────────────────────────────
 
     /// <summary>Called when the Monaco cursor moves to a new line. Updates SelectedAction without re-pushing XML.</summary>
-    public void SelectActionAtLine(int line)
+    public void SelectAtLine(int line)
     {
         foreach (var (vm, start, end) in _lineRanges)
         {
@@ -266,19 +266,31 @@ public sealed partial class ActionListViewModel : ObservableObject
     {
         foreach (var vm in nodes)
         {
-            if (!string.IsNullOrEmpty(vm.Model.Comment))
+            // vmStart includes the Note/comment block so that clicking anywhere in the
+            // comment region correctly selects this action rather than landing in no range.
+            int vmStart = line;
+
+            if (!string.IsNullOrWhiteSpace(vm.Model.Comment))
             {
-                var commentXml = "<!--" + vm.Model.Comment + "-->";
-                sb.Append(indent);
-                sb.AppendLine(commentXml);
-                line += commentXml.Count(c => c == '\n') + 1;
+                if (vm.Model.Comment.Contains('\n'))
+                {
+                    sb.Append(indent); sb.AppendLine("<!--"); line++;
+                    foreach (var commentLine in vm.Model.Comment.Split('\n'))
+                    {
+                        sb.Append(indent); sb.Append("  "); sb.AppendLine(commentLine); line++;
+                    }
+                    sb.Append(indent); sb.AppendLine("-->"); line++;
+                }
+                else
+                {
+                    sb.Append(indent); sb.AppendLine($"<!-- {vm.Model.Comment.Trim()} -->"); line++;
+                }
             }
 
             var raw = vm.Model.Node.ToString();
             var rawLines = raw.Split('\n');
-            int vmStart = line;
 
-            if (vm == SelectedAction) selStart = line;
+            if (vm == SelectedAction) selStart = vmStart;
 
             foreach (var rawLine in rawLines)
             {
@@ -304,7 +316,6 @@ public sealed partial class ActionListViewModel : ObservableObject
         {
             var root = XElement.Parse(xml, LoadOptions.SetLineInfo);
             var children = root.Elements().ToList();
-            int totalLines = xml.Split('\n').Length;
 
             for (int i = 0; i < Math.Min(children.Count, ActionTree.Count); i++)
             {
@@ -313,16 +324,13 @@ public sealed partial class ActionListViewModel : ObservableObject
                 var li = (IXmlLineInfo)el;
                 int startLine = li.HasLineInfo() ? li.LineNumber : 1;
 
-                int endLine;
-                if (i + 1 < children.Count)
-                {
-                    var nextLi = (IXmlLineInfo)children[i + 1];
-                    endLine = nextLi.HasLineInfo() ? nextLi.LineNumber - 1 : startLine;
-                }
-                else
-                {
-                    endLine = Math.Max(startLine, totalLines - 1);
-                }
+                // Use the element's own line count rather than extending to the next element.
+                // Extending to nextElement.LineNumber - 1 pulls comment lines between actions
+                // into the preceding action's range, causing clicks on those comment lines to
+                // select the wrong action and trigger a spurious RefreshXmlFromNode that drops
+                // comments not yet stored in any Model.Comment.
+                int elementLineCount = el.ToString().Split('\n').Length;
+                int endLine = startLine + elementLineCount - 1;
 
                 _lineRanges.Add((vm, startLine, endLine));
                 if (vm == SelectedAction)
@@ -463,18 +471,42 @@ public sealed partial class ActionListViewModel : ObservableObject
             editor.FlushToNode();
         RefreshXmlFromNode();
 
-        if (!HasPendingRename && SelectedAction is not null)
+        // Re-notify display properties now that the XElement is flushed so the tree
+        // label reflects the current edit rather than the previous one.
+        SelectedAction?.NotifyDisplayChanged();
+
+        // _trackedVarName is set once on selection and never updated here so it always
+        // represents the original name. Compare every edit against that anchor.
+        if (SelectedAction is null) return;
+        string? currentVar = GetDeclaredVariable(SelectedAction);
+
+        // Bootstrap: _trackedVarName can be null when a legacy TSVar uses the Name attribute
+        // (GetDeclaredVariable only reads Variable). After the first flush migrates Name→Variable,
+        // capture the real original name and skip the offer on this stabilising edit.
+        if (_trackedVarName is null)
         {
-            string? currentVar = GetDeclaredVariable(SelectedAction);
-            if (currentVar != _trackedVarName
-                && !string.IsNullOrEmpty(_trackedVarName)
-                && !string.IsNullOrEmpty(currentVar))
+            _trackedVarName = currentVar;
+            return;
+        }
+
+        if (currentVar != _trackedVarName)
+        {
+            if (!string.IsNullOrEmpty(currentVar))
             {
                 int count = CountVariableReferences(_trackedVarName!);
                 if (count > 0)
                     SetPendingRename(_trackedVarName!, currentVar!, count);
+                else
+                    DismissPendingRename();
             }
-            _trackedVarName = currentVar;
+            else
+            {
+                DismissPendingRename();
+            }
+        }
+        else
+        {
+            DismissPendingRename();
         }
     }
 
@@ -703,7 +735,10 @@ public sealed partial class ActionListViewModel : ObservableObject
         foreach (var node in root.Nodes())
         {
             if (node is XComment comment)
-                pendingComment = pendingComment is null ? comment.Value : pendingComment + "\n" + comment.Value;
+            {
+                var normalized = NormalizeComment(comment.Value);
+                pendingComment = pendingComment is null ? normalized : pendingComment + "\n" + normalized;
+            }
             else if (node is XElement el)
             {
                 result.Add((pendingComment, el));
@@ -714,6 +749,20 @@ public sealed partial class ActionListViewModel : ObservableObject
         return result;
     }
 
+    // Strips outer whitespace and per-line indentation from XComment.Value so the Note TextBox
+    // sees clean text without leading spaces/newlines that a block-style comment introduces.
+    private static string NormalizeComment(string rawValue)
+    {
+        var lines = rawValue
+            .Split('\n')
+            .Select(l => l.Trim())
+            .SkipWhile(string.IsNullOrEmpty)
+            .ToList();
+        while (lines.Count > 0 && string.IsNullOrEmpty(lines[^1]))
+            lines.RemoveAt(lines.Count - 1);
+        return string.Join("\n", lines);
+    }
+
     private static void AttachLeadingComment(ActionNodeModel model)
     {
         var comments = new List<string>();
@@ -722,7 +771,7 @@ public sealed partial class ActionListViewModel : ObservableObject
         {
             if (node is XComment comment)
             {
-                comments.Insert(0, comment.Value);
+                comments.Insert(0, NormalizeComment(comment.Value));
                 node = node.PreviousNode;
             }
             else if (node is XText text && string.IsNullOrWhiteSpace(text.Value))

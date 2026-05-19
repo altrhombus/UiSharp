@@ -10,15 +10,35 @@ public sealed class EditorConfig
     public string         ConditionEngine { get; init; } = XmlConstants.Values.ConditionEngineNative;
     public int?           SchemaVersion   { get; init; }
     public List<ISoftware> SoftwareList   { get; init; } = [];
+    /// <summary>The original &lt;Software&gt; XElement from the loaded document, used to attach leading XML comments to items on load.</summary>
+    public XElement?      SoftwareElement { get; init; }
+    /// <summary>XML comment text keyed by software item Id, emitted before each item when saving.</summary>
+    public IReadOnlyDictionary<string, string?> SoftwareComments { get; init; } = new Dictionary<string, string?>();
+    /// <summary>Text of any XML comment node(s) that appear before the root element in the document.</summary>
+    public string?        DocumentComment { get; init; }
     public XElement?      MessagesElement { get; init; }
     public List<ActionNodeModel> Actions  { get; init; } = [];
 
     public static EditorConfig FromLoaded(LoadedConfig loaded)
     {
-        var actionsRoot = loaded.Document.Root?.Element(XmlConstants.Elements.Actions);
+        var actionsRoot     = loaded.Document.Root?.Element(XmlConstants.Elements.Actions);
+        var softwareElement = loaded.Document.Root?.Element(XmlConstants.Elements.Software);
         var actions = actionsRoot is null
             ? []
             : BuildActionModels(actionsRoot.Elements());
+
+        // Collect any XComment nodes that appear before the root element.
+        string? documentComment = null;
+        foreach (var node in loaded.Document.Nodes())
+        {
+            if (node is XComment c)
+            {
+                var normalized = NormalizeComment(c.Value);
+                documentComment = documentComment is null ? normalized : documentComment + "\n" + normalized;
+            }
+            else if (node is XElement)
+                break;
+        }
 
         return new EditorConfig
         {
@@ -26,9 +46,23 @@ public sealed class EditorConfig
             ConditionEngine = loaded.ConditionEngine,
             SchemaVersion   = loaded.SchemaVersion,
             SoftwareList    = [.. loaded.Software.Values.OrderBy(s => s.OrderIndex)],
+            SoftwareElement = softwareElement,
+            DocumentComment = documentComment,
             MessagesElement = loaded.Document.Root?.Element(XmlConstants.Elements.Messages),
             Actions         = actions,
         };
+    }
+
+    private static string NormalizeComment(string rawValue)
+    {
+        var lines = rawValue
+            .Split('\n')
+            .Select(static l => l.Trim())
+            .SkipWhile(string.IsNullOrEmpty)
+            .ToList();
+        while (lines.Count > 0 && string.IsNullOrEmpty(lines[^1]))
+            lines.RemoveAt(lines.Count - 1);
+        return string.Join("\n", lines);
     }
 
     private static List<ActionNodeModel> BuildActionModels(IEnumerable<XElement> elements)

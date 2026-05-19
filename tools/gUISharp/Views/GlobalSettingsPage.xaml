@@ -5,82 +5,225 @@
     xmlns:local="using:GUISharp.Views"
     xmlns:vm="using:GUISharp.ViewModels">
 
-    <ScrollViewer Padding="24">
-        <StackPanel Spacing="16" MaxWidth="600">
-            <TextBlock Text="Global Settings" Style="{ThemeResource TitleTextBlockStyle}" />
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition x:Name="GuidedCol" Width="3*" MinWidth="0" />
+            <ColumnDefinition x:Name="SplitterCol" Width="5" />
+            <ColumnDefinition x:Name="XmlCol" Width="2*" MinWidth="0" />
+        </Grid.ColumnDefinitions>
 
-            <local:LabeledField Label="Title">
-                <TextBox Text="{x:Bind ViewModel.GlobalSettings.Title, Mode=TwoWay}" />
-            </local:LabeledField>
+        <!-- ── Guided panel ──────────────────────────────────────────────────── -->
+        <Grid Grid.Column="0" x:Name="GuidedPanelGrid" GotFocus="GuidedPanel_GotFocus">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-            <local:LabeledField Label="Subtitle">
-                <TextBox Text="{x:Bind ViewModel.GlobalSettings.Subtitle, Mode=TwoWay}" />
-            </local:LabeledField>
-
-            <local:LabeledField Label="Font Face">
-                <TextBox Text="{x:Bind ViewModel.GlobalSettings.FontFace, Mode=TwoWay}" />
-            </local:LabeledField>
-
-            <local:LabeledField Label="Icon Path">
-                <TextBox Text="{x:Bind ViewModel.GlobalSettings.IconPath, Mode=TwoWay}"
-                         PlaceholderText="e.g. UI++2.ico" />
-            </local:LabeledField>
-
-            <local:LabeledField Label="Accent Color (hex)">
-                <Grid ColumnSpacing="8">
+            <!-- Guided header -->
+            <Border Grid.Row="0"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0"
-                             Text="{x:Bind ViewModel.GlobalSettings.AccentColor, Mode=TwoWay}"
-                             PlaceholderText="#002147" />
-                    <Border Grid.Column="1"
-                            Width="36" Height="32" CornerRadius="4"
-                            BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
-                            BorderThickness="1"
-                            Background="{x:Bind ViewModel.GlobalSettings.AccentColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
-                            ToolTipService.ToolTip="Color preview" />
-                </Grid>
-            </local:LabeledField>
-
-            <local:LabeledField Label="Sidebar Text Color (hex)">
-                <Grid ColumnSpacing="8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBox Grid.Column="0"
-                             Text="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=TwoWay}"
-                             PlaceholderText="#FFFFFF" />
-                    <Border Grid.Column="1"
-                            Width="36" Height="32" CornerRadius="4"
-                            BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
-                            BorderThickness="1"
-                            Background="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
-                            ToolTipService.ToolTip="Color preview" />
+                    <TextBlock Grid.Column="0"
+                               Text="Guided"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Button x:Name="ExpandXmlBtn"
+                            Grid.Column="1"
+                            Width="28" Height="28" Padding="0"
+                            Visibility="Collapsed"
+                            Click="ExpandXmlBtn_Click"
+                            ToolTipService.ToolTip="Show XML editor">
+                        <FontIcon Glyph="&#xE76C;" FontSize="11" />
+                    </Button>
+                    <Button x:Name="CollapseGuidedBtn"
+                            Grid.Column="2"
+                            Width="28" Height="28" Padding="0"
+                            Margin="0,0,3,0"
+                            Click="CollapseGuidedBtn_Click"
+                            ToolTipService.ToolTip="Collapse guided panel">
+                        <FontIcon Glyph="&#xE76B;" FontSize="11" />
+                    </Button>
                 </Grid>
-            </local:LabeledField>
+            </Border>
 
-            <local:LabeledField Label="Condition Engine">
-                <ComboBox ItemsSource="{x:Bind ViewModel.GlobalSettings.ConditionEngineOptions}"
-                          SelectedItem="{x:Bind ViewModel.GlobalSettings.ConditionEngine, Mode=TwoWay}"
-                          HorizontalAlignment="Stretch" />
-            </local:LabeledField>
+            <!-- Guided content -->
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-            <local:LabeledField Label="Schema Version">
-                <TextBox Text="{x:Bind ViewModel.GlobalSettings.SchemaVersion, Mode=TwoWay}"
-                         PlaceholderText="(blank = original format)" />
-            </local:LabeledField>
+                <!-- Note / document-level XML comment -->
+                <Border Grid.Row="0" Padding="16,8,16,0">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="Note"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBox Grid.Column="1"
+                                 PlaceholderText="XML comment at the top of the file…"
+                                 Text="{x:Bind ViewModel.GlobalSettings.Comment, Mode=TwoWay, FallbackValue=''}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MaxHeight="160"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                    </Grid>
+                </Border>
 
-            <StackPanel Spacing="8">
-                <TextBlock Text="Dialog Options" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                <CheckBox Content="Show Icons"   IsChecked="{x:Bind ViewModel.GlobalSettings.ShowIcons,   Mode=TwoWay}" />
-                <CheckBox Content="Show Sidebar" IsChecked="{x:Bind ViewModel.GlobalSettings.ShowSidebar, Mode=TwoWay}" />
-                <CheckBox Content="Always On Top" IsChecked="{x:Bind ViewModel.GlobalSettings.AlwaysOnTop, Mode=TwoWay}" />
-                <CheckBox Content="Flat"          IsChecked="{x:Bind ViewModel.GlobalSettings.Flat,        Mode=TwoWay}"
-                          ToolTipService.ToolTip="Removes rounded corners and drop shadows — use for classic WinPE-style dialogs" />
-            </StackPanel>
-        </StackPanel>
-    </ScrollViewer>
+                <!-- Form fields -->
+                <ScrollViewer Grid.Row="1" Padding="16,8,16,16">
+                    <StackPanel Spacing="12" MaxWidth="500">
+
+                        <local:LabeledField Label="Title">
+                            <TextBox Text="{x:Bind ViewModel.GlobalSettings.Title, Mode=TwoWay}" />
+                        </local:LabeledField>
+
+                        <local:LabeledField Label="Subtitle">
+                            <TextBox Text="{x:Bind ViewModel.GlobalSettings.Subtitle, Mode=TwoWay}" />
+                        </local:LabeledField>
+
+                        <local:LabeledField Label="Font Face">
+                            <TextBox Text="{x:Bind ViewModel.GlobalSettings.FontFace, Mode=TwoWay}" />
+                        </local:LabeledField>
+
+                        <local:LabeledField Label="Icon Path">
+                            <TextBox Text="{x:Bind ViewModel.GlobalSettings.IconPath, Mode=TwoWay}"
+                                     PlaceholderText="e.g. UI++2.ico" />
+                        </local:LabeledField>
+
+                        <local:LabeledField Label="Accent Color (hex)">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0"
+                                         Text="{x:Bind ViewModel.GlobalSettings.AccentColor, Mode=TwoWay}"
+                                         PlaceholderText="#002147" />
+                                <Border Grid.Column="1"
+                                        Width="36" Height="32" CornerRadius="4"
+                                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        Background="{x:Bind ViewModel.GlobalSettings.AccentColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
+                                        ToolTipService.ToolTip="Color preview" />
+                            </Grid>
+                        </local:LabeledField>
+
+                        <local:LabeledField Label="Sidebar Text Color (hex)">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0"
+                                         Text="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=TwoWay}"
+                                         PlaceholderText="#FFFFFF" />
+                                <Border Grid.Column="1"
+                                        Width="36" Height="32" CornerRadius="4"
+                                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                        BorderThickness="1"
+                                        Background="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
+                                        ToolTipService.ToolTip="Color preview" />
+                            </Grid>
+                        </local:LabeledField>
+
+                        <local:LabeledField Label="Condition Engine">
+                            <ComboBox ItemsSource="{x:Bind ViewModel.GlobalSettings.ConditionEngineOptions}"
+                                      SelectedItem="{x:Bind ViewModel.GlobalSettings.ConditionEngine, Mode=TwoWay}"
+                                      HorizontalAlignment="Stretch" />
+                        </local:LabeledField>
+
+                        <local:LabeledField Label="Schema Version">
+                            <TextBox Text="{x:Bind ViewModel.GlobalSettings.SchemaVersion, Mode=TwoWay}"
+                                     PlaceholderText="(blank = original format)" />
+                        </local:LabeledField>
+
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Dialog Options" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <CheckBox Content="Show Icons"   IsChecked="{x:Bind ViewModel.GlobalSettings.ShowIcons,   Mode=TwoWay}" />
+                            <CheckBox Content="Show Sidebar" IsChecked="{x:Bind ViewModel.GlobalSettings.ShowSidebar, Mode=TwoWay}" />
+                            <CheckBox Content="Always On Top" IsChecked="{x:Bind ViewModel.GlobalSettings.AlwaysOnTop, Mode=TwoWay}" />
+                            <CheckBox Content="Flat"          IsChecked="{x:Bind ViewModel.GlobalSettings.Flat,        Mode=TwoWay}"
+                                      ToolTipService.ToolTip="Removes rounded corners and drop shadows — use for classic WinPE-style dialogs" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
+
+        <!-- ── Drag splitter ─────────────────────────────────────────────────── -->
+        <Border x:Name="DragSplitter"
+                Grid.Column="1"
+                Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+                PointerEntered="DragSplitter_PointerEntered"
+                PointerExited="DragSplitter_PointerExited"
+                PointerPressed="DragSplitter_PointerPressed"
+                PointerMoved="DragSplitter_PointerMoved"
+                PointerReleased="DragSplitter_PointerReleased" />
+
+        <!-- ── XML panel ─────────────────────────────────────────────────────── -->
+        <Grid Grid.Column="2" x:Name="XmlPanelOuter">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- XML header -->
+            <Border Grid.Row="0"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="CollapseXmlBtn"
+                            Grid.Column="0"
+                            Width="28" Height="28" Padding="0"
+                            Margin="3,0,0,0"
+                            Click="CollapseXmlBtn_Click"
+                            ToolTipService.ToolTip="Collapse XML panel">
+                        <FontIcon Glyph="&#xE76C;" FontSize="11" />
+                    </Button>
+                    <Button x:Name="ExpandGuidedBtn"
+                            Grid.Column="1"
+                            Width="28" Height="28" Padding="0"
+                            Visibility="Collapsed"
+                            Click="ExpandGuidedBtn_Click"
+                            ToolTipService.ToolTip="Show guided editor">
+                        <FontIcon Glyph="&#xE76B;" FontSize="11" />
+                    </Button>
+                    <TextBlock Grid.Column="2"
+                               Text="XML Editor"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Grid>
+            </Border>
+
+            <!-- XML editor panel -->
+            <local:XmlEditorPanel x:Name="XmlPanel"
+                                  Grid.Row="1"
+                                  PanelViewModel="{x:Bind ViewModel.GlobalSettings, Mode=OneWay}"
+                                  GotFocus="XmlPanel_GotFocus" />
+        </Grid>
+    </Grid>
 </Page>

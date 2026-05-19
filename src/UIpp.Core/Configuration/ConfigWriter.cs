@@ -14,17 +14,25 @@ public static class ConfigWriter
         SetRootAttributes(root, config);
 
         if (config.SoftwareList.Count > 0)
-            root.Add(BuildSoftwareElement(config.SoftwareList));
+            root.Add(BuildSoftwareElement(config.SoftwareList, config.SoftwareComments));
 
         if (config.MessagesElement is not null)
             root.Add(new XElement(config.MessagesElement));
 
         var actionsEl = new XElement(XmlConstants.Elements.Actions);
         foreach (var model in config.Actions)
+        {
+            if (!string.IsNullOrWhiteSpace(model.Comment))
+                actionsEl.Add(BuildXComment(model.Comment));
             actionsEl.Add(BuildActionNode(model));
+        }
         root.Add(actionsEl);
 
-        return new XDocument(new XDeclaration("1.0", "utf-8", null), root);
+        var doc = new XDocument(new XDeclaration("1.0", "utf-8", null));
+        if (!string.IsNullOrWhiteSpace(config.DocumentComment))
+            doc.Add(BuildXComment(config.DocumentComment));
+        doc.Add(root);
+        return doc;
     }
 
     public static void Save(EditorConfig config, string path) =>
@@ -61,13 +69,28 @@ public static class ConfigWriter
             root.SetAttributeValue(XmlConstants.Attributes.SchemaVersion, config.SchemaVersion.Value);
     }
 
-    private static XElement BuildSoftwareElement(IEnumerable<ISoftware> list)
+    private static XElement BuildSoftwareElement(
+        IEnumerable<ISoftware> list,
+        IReadOnlyDictionary<string, string?>? comments = null)
     {
         var sw = new XElement(XmlConstants.Elements.Software);
         foreach (var item in list.OrderBy(s => s.OrderIndex))
+        {
+            if (comments is not null &&
+                comments.TryGetValue(item.Id, out var comment) &&
+                !string.IsNullOrEmpty(comment))
+            {
+                sw.Add(BuildXComment(comment));
+            }
             sw.Add(BuildSoftwareItem(item));
+        }
         return sw;
     }
+
+    private static XComment BuildXComment(string comment) =>
+        comment.Contains('\n')
+            ? new XComment("\n  " + comment.Replace("\n", "\n  ") + "\n  ")
+            : new XComment($" {comment.Trim()} ");
 
     private static XElement BuildSoftwareItem(ISoftware item)
     {

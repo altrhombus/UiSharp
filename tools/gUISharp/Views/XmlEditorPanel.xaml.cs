@@ -20,25 +20,25 @@ public sealed partial class XmlEditorPanel : UserControl
     public static readonly DependencyProperty PanelViewModelProperty =
         DependencyProperty.Register(
             nameof(PanelViewModel),
-            typeof(ActionListViewModel),
+            typeof(object),
             typeof(XmlEditorPanel),
             new PropertyMetadata(null, OnPanelViewModelChanged));
 
-    public ActionListViewModel? PanelViewModel
+    public IXmlEditorSource? PanelViewModel
     {
-        get => (ActionListViewModel?)GetValue(PanelViewModelProperty);
+        get => (IXmlEditorSource?)GetValue(PanelViewModelProperty);
         set => SetValue(PanelViewModelProperty, value);
     }
 
     private static void OnPanelViewModelChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         var panel = (XmlEditorPanel)d;
-        if (e.OldValue is ActionListViewModel old)
+        if (e.OldValue is IXmlEditorSource old)
         {
             old.PropertyChanged -= panel.OnViewModelPropertyChanged;
             old.SelectionDecorationChanged -= panel.OnSelectionDecorationChanged;
         }
-        if (e.NewValue is ActionListViewModel vm)
+        if (e.NewValue is IXmlEditorSource vm)
         {
             vm.PropertyChanged += panel.OnViewModelPropertyChanged;
             vm.SelectionDecorationChanged += panel.OnSelectionDecorationChanged;
@@ -48,15 +48,15 @@ public sealed partial class XmlEditorPanel : UserControl
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (sender is not ActionListViewModel vm) return;
+        if (sender is not IXmlEditorSource vm) return;
 
-        if (e.PropertyName == nameof(ActionListViewModel.CurrentXmlText))
+        if (e.PropertyName == nameof(IXmlEditorSource.CurrentXmlText))
             DispatcherQueue.TryEnqueue(() => QueueContent(vm.CurrentXmlText));
-        else if (e.PropertyName == nameof(ActionListViewModel.XmlValidationError))
+        else if (e.PropertyName == nameof(IXmlEditorSource.XmlValidationError))
             DispatcherQueue.TryEnqueue(() => ShowError(vm.XmlValidationError));
     }
 
-    // Fires when the selected action changed but the XML content is identical — only the decoration needs to move.
+    // Fires when the selected item changed but the XML content is identical — only the decoration needs to move.
     private void OnSelectionDecorationChanged(object? sender, EventArgs e)
     {
         DispatcherQueue.TryEnqueue(() => _ = PushDecorationOnlyAsync());
@@ -120,7 +120,7 @@ public sealed partial class XmlEditorPanel : UserControl
             case "cursorLine":
                 var line = msg.Line ?? 0;
                 if (line > 0)
-                    DispatcherQueue.TryEnqueue(() => PanelViewModel?.SelectActionAtLine(line));
+                    DispatcherQueue.TryEnqueue(() => PanelViewModel?.SelectAtLine(line));
                 break;
         }
     }

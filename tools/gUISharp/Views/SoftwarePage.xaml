@@ -9,7 +9,9 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="260" />
             <ColumnDefinition Width="Auto" />
-            <ColumnDefinition Width="*" />
+            <ColumnDefinition x:Name="GuidedCol" Width="3*" MinWidth="0" />
+            <ColumnDefinition x:Name="SplitterCol" Width="5" />
+            <ColumnDefinition x:Name="XmlCol" Width="2*" MinWidth="0" />
         </Grid.ColumnDefinitions>
 
         <!-- Left: software list -->
@@ -48,7 +50,7 @@
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="vm:SoftwareItemViewModel">
                         <StackPanel>
-                            <TextBlock Text="{x:Bind Label}" />
+                            <TextBlock Text="{x:Bind Label, Mode=OneWay}" />
                             <TextBlock Text="{x:Bind IsApplication, Converter={StaticResource BoolToTypeConverter}}"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -66,46 +68,188 @@
             </Button>
         </Grid>
 
-        <!-- Splitter -->
+        <!-- List/Guided divider -->
         <Border Grid.Column="1" Width="1" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
 
-        <!-- Right: selected software detail -->
-        <ScrollViewer Grid.Column="2" Padding="16">
-            <StackPanel Spacing="12" MaxWidth="500"
-                        Visibility="{x:Bind ViewModel.Software.HasSelection, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+        <!-- ── Guided panel ──────────────────────────────────────────────────── -->
+        <Grid Grid.Column="2" x:Name="GuidedPanelGrid" GotFocus="GuidedPanel_GotFocus">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-                <local:LabeledField Label="Id">
-                    <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.Id, Mode=TwoWay, FallbackValue=''}" />
-                </local:LabeledField>
-                <local:LabeledField Label="Label">
-                    <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.Label, Mode=TwoWay, FallbackValue=''}" />
-                </local:LabeledField>
-                <local:LabeledField Label="Info">
-                    <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.Info, Mode=TwoWay, FallbackValue=''}" />
-                </local:LabeledField>
-                <local:LabeledField Label="Include IDs">
-                    <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.IncludeIds, Mode=TwoWay, FallbackValue=''}" />
-                </local:LabeledField>
-                <local:LabeledField Label="Exclude IDs">
-                    <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.ExcludeIds, Mode=TwoWay, FallbackValue=''}" />
-                </local:LabeledField>
+            <!-- Guided header -->
+            <Border Grid.Row="0"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               Text="Guided"
+                               VerticalAlignment="Center"
+                               Margin="10,0,0,0"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Button x:Name="ExpandXmlBtn"
+                            Grid.Column="1"
+                            Width="28" Height="28" Padding="0"
+                            Visibility="Collapsed"
+                            Click="ExpandXmlBtn_Click"
+                            ToolTipService.ToolTip="Show XML editor">
+                        <FontIcon Glyph="&#xE76C;" FontSize="11" />
+                    </Button>
+                    <Button x:Name="CollapseGuidedBtn"
+                            Grid.Column="2"
+                            Width="28" Height="28" Padding="0"
+                            Margin="0,0,3,0"
+                            Click="CollapseGuidedBtn_Click"
+                            ToolTipService.ToolTip="Collapse guided panel">
+                        <FontIcon Glyph="&#xE76B;" FontSize="11" />
+                    </Button>
+                </Grid>
+            </Border>
 
-                <!-- Application-specific fields -->
-                <local:LabeledField Label="App Name (CM Application Name)"
-                    Visibility="{x:Bind ViewModel.Software.SelectedItem.IsApplication, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay, FallbackValue=Collapsed}">
-                    <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.AppName, Mode=TwoWay, FallbackValue=''}" />
-                </local:LabeledField>
+            <!-- Guided content -->
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
 
-                <!-- Package-specific fields -->
-                <local:LabeledField Label="Package ID"
-                    Visibility="{x:Bind ViewModel.Software.SelectedItem.IsApplication, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay, FallbackValue=Collapsed}">
-                    <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.PkgId, Mode=TwoWay, FallbackValue=''}" />
-                </local:LabeledField>
-                <local:LabeledField Label="Program Name"
-                    Visibility="{x:Bind ViewModel.Software.SelectedItem.IsApplication, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay, FallbackValue=Collapsed}">
-                    <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.ProgramName, Mode=TwoWay, FallbackValue=''}" />
-                </local:LabeledField>
-            </StackPanel>
-        </ScrollViewer>
+                <!-- Note / XML comment for this item -->
+                <Border Grid.Row="0" Padding="16,8,16,0"
+                        Visibility="{x:Bind ViewModel.Software.HasSelection, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0"
+                                   Text="Note"
+                                   VerticalAlignment="Center"
+                                   Margin="0,0,8,0"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBox Grid.Column="1"
+                                 PlaceholderText="XML comment shown in software list…"
+                                 Text="{x:Bind ViewModel.Software.SelectedItem.Comment, Mode=TwoWay, FallbackValue=''}"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 MaxHeight="160"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto" />
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="1">
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8"
+                            Visibility="{x:Bind ViewModel.Software.HasSelection, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay}">
+                    <FontIcon Glyph="&#xE74C;" FontSize="48" Opacity="0.25" HorizontalAlignment="Center" />
+                    <TextBlock Text="Select a software item to edit" Opacity="0.4" HorizontalAlignment="Center" />
+                </StackPanel>
+                <ScrollViewer Padding="16"
+                              Visibility="{x:Bind ViewModel.Software.HasSelection, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay}">
+                    <StackPanel Spacing="12" MaxWidth="500">
+
+                        <local:LabeledField Label="Id">
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.Id, Mode=TwoWay, FallbackValue=''}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Label">
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.Label, Mode=TwoWay, FallbackValue=''}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Info">
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.Info, Mode=TwoWay, FallbackValue=''}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Include IDs">
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.IncludeIds, Mode=TwoWay, FallbackValue=''}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Exclude IDs">
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.ExcludeIds, Mode=TwoWay, FallbackValue=''}" />
+                        </local:LabeledField>
+
+                        <!-- Application-specific fields -->
+                        <local:LabeledField Label="App Name (CM Application Name)"
+                            Visibility="{x:Bind ViewModel.Software.SelectedItem.IsApplication, Converter={StaticResource BoolToVisibilityConverter}, Mode=OneWay, FallbackValue=Collapsed}">
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.AppName, Mode=TwoWay, FallbackValue=''}" />
+                        </local:LabeledField>
+
+                        <!-- Package-specific fields -->
+                        <local:LabeledField Label="Package ID"
+                            Visibility="{x:Bind ViewModel.Software.SelectedItem.IsApplication, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay, FallbackValue=Collapsed}">
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.PkgId, Mode=TwoWay, FallbackValue=''}" />
+                        </local:LabeledField>
+                        <local:LabeledField Label="Program Name"
+                            Visibility="{x:Bind ViewModel.Software.SelectedItem.IsApplication, Converter={StaticResource InverseBoolToVisibilityConverter}, Mode=OneWay, FallbackValue=Collapsed}">
+                            <TextBox Text="{x:Bind ViewModel.Software.SelectedItem.ProgramName, Mode=TwoWay, FallbackValue=''}" />
+                        </local:LabeledField>
+                    </StackPanel>
+                </ScrollViewer>
+                </Grid>
+            </Grid>
+        </Grid>
+
+        <!-- ── Drag splitter ─────────────────────────────────────────────────── -->
+        <Border x:Name="DragSplitter"
+                Grid.Column="3"
+                Background="{ThemeResource DividerStrokeColorDefaultBrush}"
+                PointerEntered="DragSplitter_PointerEntered"
+                PointerExited="DragSplitter_PointerExited"
+                PointerPressed="DragSplitter_PointerPressed"
+                PointerMoved="DragSplitter_PointerMoved"
+                PointerReleased="DragSplitter_PointerReleased" />
+
+        <!-- ── XML panel ─────────────────────────────────────────────────────── -->
+        <Grid Grid.Column="4" x:Name="XmlPanelOuter">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="34" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- XML header -->
+            <Border Grid.Row="0"
+                    Background="{ThemeResource LayerFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="CollapseXmlBtn"
+                            Grid.Column="0"
+                            Width="28" Height="28" Padding="0"
+                            Margin="3,0,0,0"
+                            Click="CollapseXmlBtn_Click"
+                            ToolTipService.ToolTip="Collapse XML panel">
+                        <FontIcon Glyph="&#xE76C;" FontSize="11" />
+                    </Button>
+                    <Button x:Name="ExpandGuidedBtn"
+                            Grid.Column="1"
+                            Width="28" Height="28" Padding="0"
+                            Visibility="Collapsed"
+                            Click="ExpandGuidedBtn_Click"
+                            ToolTipService.ToolTip="Show guided editor">
+                        <FontIcon Glyph="&#xE76B;" FontSize="11" />
+                    </Button>
+                    <TextBlock Grid.Column="2"
+                               Text="XML Editor"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Grid>
+            </Border>
+
+            <!-- XML editor panel -->
+            <local:XmlEditorPanel x:Name="XmlPanel"
+                                  Grid.Row="1"
+                                  PanelViewModel="{x:Bind ViewModel.Software, Mode=OneWay}"
+                                  GotFocus="XmlPanel_GotFocus" />
+        </Grid>
     </Grid>
 </Page>

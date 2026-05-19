@@ -335,7 +335,7 @@
                     </Grid.RowDefinitions>
 
                     <!-- Cascading rename offer (P7) -->
-                    <!--<InfoBar Grid.Row="0"
+                    <InfoBar Grid.Row="0"
                              IsOpen="{x:Bind ViewModel.ActionList.HasPendingRename, Mode=OneWay}"
                              Severity="Informational"
                              Title=""
@@ -346,7 +346,7 @@
                             <Button Content="Update All"
                                     Command="{x:Bind ViewModel.ActionList.AcceptRenameCommand}" />
                         </InfoBar.ActionButton>
-                    </InfoBar>-->
+                    </InfoBar>
 
                     <!-- Note / XML comment for this action -->
                     <Border Grid.Row="1" Padding="16,8,16,0"
@@ -365,7 +365,10 @@
                             <TextBox Grid.Column="1"
                                      PlaceholderText="XML comment shown in action tree…"
                                      Text="{x:Bind ViewModel.ActionList.SelectedAction.Comment, Mode=TwoWay, FallbackValue=''}"
-                                     AcceptsReturn="False" />
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     MaxHeight="160"
+                                     ScrollViewer.VerticalScrollBarVisibility="Auto" />
                         </Grid>
                     </Border>
 

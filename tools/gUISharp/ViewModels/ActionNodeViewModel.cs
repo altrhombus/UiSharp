@@ -64,8 +64,12 @@ public sealed partial class ActionNodeViewModel : ObservableObject
         get => Model.Comment;
         set
         {
-            if (Model.Comment == value) return;
-            Model.Comment = value;
+            // Normalize \r\n → \n (TextBox may write back Windows line endings).
+            // Treat all-whitespace as null so a lone space never replaces a real comment.
+            var normalized = string.IsNullOrWhiteSpace(value) ? null
+                           : value.Replace("\r\n", "\n").Replace("\r", "\n");
+            if (Model.Comment == normalized) return;
+            Model.Comment = normalized;
             OnPropertyChanged(nameof(Comment));
             OnPropertyChanged(nameof(HasComment));
             OnPropertyChanged(nameof(CommentDisplay));
@@ -91,6 +95,15 @@ public sealed partial class ActionNodeViewModel : ObservableObject
         OnPropertyChanged(nameof(Comment));
         OnPropertyChanged(nameof(HasComment));
         OnPropertyChanged(nameof(CommentDisplay));
+    }
+
+    public void NotifyDisplayChanged()
+    {
+        OnPropertyChanged(nameof(DisplayLabel));
+        OnPropertyChanged(nameof(SummaryLabel));
+        OnPropertyChanged(nameof(HasSummary));
+        OnPropertyChanged(nameof(WarningMessage));
+        OnPropertyChanged(nameof(HasWarning));
     }
 
     // Segoe MDL2 / Fluent glyph per action category, for the tree icon column.
