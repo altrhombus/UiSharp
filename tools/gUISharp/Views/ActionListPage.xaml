@@ -302,7 +302,7 @@
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0"
-                                   Text="Guided"
+                                   Text="{x:Bind ViewModel.ActionList.GuidedPanelTitle, Mode=OneWay}"
                                    VerticalAlignment="Center"
                                    Margin="10,0,0,0"
                                    Style="{ThemeResource CaptionTextBlockStyle}"

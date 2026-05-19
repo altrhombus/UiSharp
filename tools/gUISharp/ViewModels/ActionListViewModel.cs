@@ -25,6 +25,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelection))]
+    [NotifyPropertyChangedFor(nameof(GuidedPanelTitle))]
     public partial ActionNodeViewModel? SelectedAction { get; set; }
 
     [ObservableProperty]
@@ -37,6 +38,8 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
     public partial string FilterText { get; set; } = string.Empty;
 
     public bool HasSelection => SelectedAction is not null;
+
+    public string GuidedPanelTitle => SelectedAction is null ? "Guided" : $"Guided — {SelectedAction.HumanTypeName}";
 
     public bool IsFiltering => FilterText.Length > 0;
 

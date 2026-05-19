@@ -16,6 +16,36 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public bool IsGroup => Model.IsGroup;
 
+    public string HumanTypeName => IsGroup ? "Action Group" : TypeName switch
+    {
+        C.ActionTypes.TSVar         => "Variables",
+        C.ActionTypes.TSVarList     => "Variable List",
+        C.ActionTypes.DefaultValues => "Default Values",
+        C.ActionTypes.Switch        => "Switch",
+        C.ActionTypes.UserInput     => "Input Dialog",
+        C.ActionTypes.Preflight     => "Preflight Checks",
+        C.ActionTypes.UserInfo      => "Info Dialog",
+        C.ActionTypes.UserInfoFull  => "Info (Full-Screen)",
+        C.ActionTypes.ErrorInfo     => "Error Info",
+        C.ActionTypes.UserAuth      => "User Authentication",
+        C.ActionTypes.AppTree       => "Application Tree",
+        C.ActionTypes.ExternalCall  => "External Call",
+        C.ActionTypes.RandomString  => "Random String",
+        C.ActionTypes.FileRead      => "File Read",
+        C.ActionTypes.SaveItems     => "Save Items",
+        C.ActionTypes.Vars          => "Load / Save Variables",
+        C.ActionTypes.SoftwareDisc  => "Software Discovery",
+        C.ActionTypes.Tpm           => "TPM Operations",
+        C.ActionTypes.RegRead       => "Registry Read",
+        C.ActionTypes.RegWrite      => "Registry Write",
+        C.ActionTypes.WmiRead       => "WMI Read",
+        C.ActionTypes.WmiWrite      => "WMI Write",
+        C.ActionTypes.Rest          => "HTTP / REST Request",
+        C.ActionTypes.ToJson        => "Serialize to JSON",
+        C.ActionTypes.FromJson      => "Parse JSON",
+        _ => TypeName
+    };
+
     public string DisplayLabel => BuildDisplayLabel();
 
     public string SummaryLabel
