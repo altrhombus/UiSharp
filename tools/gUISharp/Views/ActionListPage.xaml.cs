@@ -42,6 +42,51 @@ public sealed partial class ActionListPage : Page
     private async void RemoveAction_Click(object sender, RoutedEventArgs e)
         => await TryRemoveSelectedActionAsync();
 
+    // ── Copy / export / paste XML ─────────────────────────────────────────────
+
+    private void CopyAsXml_Click(object sender, RoutedEventArgs e)
+    {
+        var xml = ViewModel.ActionList.GetSelectedActionXml();
+        if (xml is null) return;
+        var dp = new Windows.ApplicationModel.DataTransfer.DataPackage();
+        dp.SetText(xml);
+        Windows.ApplicationModel.DataTransfer.Clipboard.SetContent(dp);
+    }
+
+    private async void ExportGroupToFile_Click(object sender, RoutedEventArgs e)
+    {
+        var xml = ViewModel.ActionList.GetSelectedActionXml();
+        if (xml is null) return;
+
+        var picker = new Windows.Storage.Pickers.FileSavePicker();
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(App.MainWindow));
+        picker.SuggestedFileName = ViewModel.ActionList.SelectedAction?.DisplayLabel ?? "ActionGroup";
+        picker.FileTypeChoices.Add("XML Files", [".xml"]);
+        var file = await picker.PickSaveFileAsync();
+        if (file is null) return;
+        await Windows.Storage.FileIO.WriteTextAsync(file, xml);
+    }
+
+    private async void PasteFromClipboard_Click(object sender, RoutedEventArgs e)
+    {
+        AddFlyout.Hide();
+        var view = Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
+        if (!view.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text)) return;
+        var text = await view.GetTextAsync();
+        if (!ViewModel.ActionList.TryPasteActionXml(text))
+        {
+            var dlg = new ContentDialog
+            {
+                Title             = "Invalid XML",
+                Content           = "Clipboard does not contain a valid <Action> or <ActionGroup> element.",
+                CloseButtonText   = "OK",
+                DefaultButton     = ContentDialogButton.Close,
+                XamlRoot          = XamlRoot,
+            };
+            await dlg.ShowAsync();
+        }
+    }
+
     private async void ActionTreeView_KeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key == Windows.System.VirtualKey.Delete)
@@ -200,6 +245,7 @@ public sealed partial class ActionListPage : Page
         else
         {
             AddCatalogPanel.Children.Add(MakeCatalogButton("Add Group", "Group"));
+            AddCatalogPanel.Children.Add(MakePasteButton());
             AddSeparator(topMargin: 4, bottomMargin: 4);
 
             string? lastCategory = null;
@@ -234,6 +280,21 @@ public sealed partial class ActionListPage : Page
             Padding             = new Thickness(8, 6, 8, 6),
         };
         btn.Click += CatalogButton_Click;
+        return btn;
+    }
+
+    private Button MakePasteButton()
+    {
+        var btn = new Button
+        {
+            Content             = "Paste from Clipboard",
+            Tag                 = "__paste__",
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            Background          = new SolidColorBrush(Colors.Transparent),
+            BorderThickness     = new Thickness(0),
+            Padding             = new Thickness(8, 6, 8, 6),
+        };
+        btn.Click += PasteFromClipboard_Click;
         return btn;
     }
 

@@ -143,6 +143,15 @@
                                                     Command="{Binding ElementName=PageRoot, Path=ViewModel.ActionList.DuplicateActionCommand}">
                                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
                                     </MenuFlyoutItem>
+                                    <MenuFlyoutItem Text="Copy as XML"
+                                                    Click="CopyAsXml_Click">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71B;" /></MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutItem Text="Export Group to File…"
+                                                    Click="ExportGroupToFile_Click"
+                                                    Visibility="{x:Bind IsGroup, Converter={StaticResource BoolToVisibilityConverter}}">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xEDE1;" /></MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
                                     <MenuFlyoutSeparator />
                                     <MenuFlyoutItem Text="Move Up"
                                                     Command="{Binding ElementName=PageRoot, Path=ViewModel.ActionList.MoveUpCommand}">

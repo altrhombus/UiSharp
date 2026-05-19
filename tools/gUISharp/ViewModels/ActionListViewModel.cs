@@ -460,6 +460,30 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         owning.Insert(idx + 1, vm);
     }
 
+    public string? GetSelectedActionXml()
+        => SelectedAction?.Model.Node.ToString();
+
+    public bool TryPasteActionXml(string xml)
+    {
+        XElement el;
+        try { el = XElement.Parse(xml); }
+        catch { return false; }
+
+        var localName = el.Name.LocalName;
+        if (!localName.Equals(C.Elements.Action,      StringComparison.OrdinalIgnoreCase) &&
+            !localName.Equals(C.Elements.ActionGroup, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        var model = BuildModelFromElement(el);
+        var vm    = new ActionNodeViewModel(model, _factory);
+        vm.Dirtied += (_, _) => RaiseDirty();
+        vm.ApplyFilter(FilterText);
+        InsertAfterSelection(vm);
+        SelectedAction = vm;
+        RaiseDirty();
+        return true;
+    }
+
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void RemoveAction()
     {
