@@ -177,6 +177,7 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
@@ -193,9 +194,16 @@
                                               FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                               FontSize="14"
                                               VerticalAlignment="Center"
-                                              Margin="0,0,8,0"
+                                              Margin="0,0,6,0"
                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                    <Border Grid.Column="2"
+                                            Width="8" Height="8"
+                                            CornerRadius="2"
+                                            Margin="0,0,6,0"
+                                            VerticalAlignment="Center"
+                                            Visibility="{x:Bind HasGroupColor, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
+                                            Background="{x:Bind GroupColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}" />
+                                    <StackPanel Grid.Column="3" VerticalAlignment="Center">
                                         <TextBlock Text="{x:Bind DisplayLabel, Mode=OneWay}"
                                                    FontWeight="{x:Bind LabelFontWeight}"
                                                    TextTrimming="CharacterEllipsis" />
@@ -206,7 +214,7 @@
                                                    TextTrimming="CharacterEllipsis"
                                                    Visibility="{x:Bind HasComment, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="3"
+                                    <StackPanel Grid.Column="4"
                                                 Margin="6,0,0,0"
                                                 VerticalAlignment="Center"
                                                 Spacing="2">
@@ -227,7 +235,7 @@
                                                        Foreground="{ThemeResource SystemFillColorCautionBrush}" />
                                         </Border>
                                     </StackPanel>
-                                    <FontIcon Grid.Column="4"
+                                    <FontIcon Grid.Column="5"
                                               Glyph="&#xE71C;"
                                               FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                               FontSize="11"
@@ -236,7 +244,7 @@
                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                                               Visibility="{x:Bind HasCondition, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                                               ToolTipService.ToolTip="This action runs conditionally" />
-                                    <FontIcon Grid.Column="5"
+                                    <FontIcon Grid.Column="6"
                                               Glyph="&#xE7BA;"
                                               FontFamily="{ThemeResource SymbolThemeFontFamily}"
                                               FontSize="12"

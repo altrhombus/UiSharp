@@ -155,6 +155,7 @@ public static class XmlConstants
         public const string CheckedValue        = "CheckedValue";
         public const string UncheckedValue      = "UncheckedValue";
         public const string SchemaVersion       = "SchemaVersion";
+        public const string GroupColor          = "groupColor";
     }
 
     public static class ActionTypes

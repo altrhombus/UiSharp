@@ -89,6 +89,9 @@ public sealed partial class ActionNodeViewModel : ObservableObject
 
     public bool HasCondition => !IsGroup && !string.IsNullOrWhiteSpace(Attr(C.Attributes.Condition));
 
+    public string GroupColor    => EditorViewModel is ActionEditors.ActionGroupViewModel gvm ? gvm.GroupColor : string.Empty;
+    public bool   HasGroupColor => !string.IsNullOrEmpty(GroupColor);
+
     public string WarningMessage => TypeName switch
     {
         C.ActionTypes.TSVar        => GetTSVarWarning(),
@@ -180,6 +183,8 @@ public sealed partial class ActionNodeViewModel : ObservableObject
         OnPropertyChanged(nameof(WarningMessage));
         OnPropertyChanged(nameof(HasWarning));
         OnPropertyChanged(nameof(HasCondition));
+        OnPropertyChanged(nameof(GroupColor));
+        OnPropertyChanged(nameof(HasGroupColor));
     }
 
     // Segoe MDL2 / Fluent glyph per action category, for the tree icon column.
@@ -276,6 +281,8 @@ public sealed partial class ActionNodeViewModel : ObservableObject
             OnPropertyChanged(nameof(WarningMessage));
             OnPropertyChanged(nameof(HasWarning));
             OnPropertyChanged(nameof(HasCondition));
+            OnPropertyChanged(nameof(GroupColor));
+            OnPropertyChanged(nameof(HasGroupColor));
         };
         Dirtied += (_, _) => IsDirty = true;
         Children.CollectionChanged += (_, _) =>

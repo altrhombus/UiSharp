@@ -1,8 +1,49 @@
-﻿<UserControl
+<UserControl
     x:Class="GUISharp.Views.ActionEditors.ActionGroupEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:GUISharp.Views"
+    Loaded="ActionGroupEditor_Loaded">
+    <UserControl.Resources>
+        <Style x:Key="ColorSwatchStyle" TargetType="RadioButton">
+            <Setter Property="Width"     Value="24" />
+            <Setter Property="Height"    Value="24" />
+            <Setter Property="Padding"   Value="0"  />
+            <Setter Property="Margin"    Value="0"  />
+            <Setter Property="MinWidth"  Value="0"  />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid Width="24" Height="24">
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup x:Name="CheckStates">
+                                    <VisualState x:Name="Checked">
+                                        <VisualState.Setters>
+                                            <Setter Target="Ring.Opacity" Value="1" />
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState x:Name="Unchecked" />
+                                    <VisualState x:Name="Indeterminate" />
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+                            <Border x:Name="Swatch"
+                                    Width="18" Height="18"
+                                    CornerRadius="9"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                    BorderThickness="1" />
+                            <Border x:Name="Ring"
+                                    Width="24" Height="24"
+                                    CornerRadius="12"
+                                    BorderBrush="{ThemeResource TextFillColorPrimaryBrush}"
+                                    BorderThickness="2"
+                                    Opacity="0" />
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <StackPanel Spacing="12">
         <TextBlock Text="Action Group" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Groups related actions under a shared name. Use a Condition to skip the entire group when criteria are not met. Child actions appear nested in the tree on the left."
@@ -14,6 +55,18 @@
         </local:LabeledField>
         <local:LabeledField Label="Condition">
             <local:ConditionInputBox Text="{Binding Condition, Mode=TwoWay}" PlaceholderText="Optional" />
+        </local:LabeledField>
+        <local:LabeledField Label="Color">
+            <StackPanel x:Name="SwatchPanel" Orientation="Horizontal" Spacing="4">
+                <RadioButton x:Name="SwatchNone"   GroupName="GroupColor" Style="{StaticResource ColorSwatchStyle}" Background="{ThemeResource SubtleFillColorSecondaryBrush}" Checked="Swatch_Checked" Tag=""        ToolTipService.ToolTip="None" />
+                <RadioButton x:Name="SwatchRed"    GroupName="GroupColor" Style="{StaticResource ColorSwatchStyle}" Background="#C42B1C" Checked="Swatch_Checked" Tag="#C42B1C"  ToolTipService.ToolTip="Red" />
+                <RadioButton x:Name="SwatchAmber"  GroupName="GroupColor" Style="{StaticResource ColorSwatchStyle}" Background="#F7630C" Checked="Swatch_Checked" Tag="#F7630C"  ToolTipService.ToolTip="Amber" />
+                <RadioButton x:Name="SwatchGreen"  GroupName="GroupColor" Style="{StaticResource ColorSwatchStyle}" Background="#0F7B0F" Checked="Swatch_Checked" Tag="#0F7B0F"  ToolTipService.ToolTip="Green" />
+                <RadioButton x:Name="SwatchBlue"   GroupName="GroupColor" Style="{StaticResource ColorSwatchStyle}" Background="#0063B1" Checked="Swatch_Checked" Tag="#0063B1"  ToolTipService.ToolTip="Blue" />
+                <RadioButton x:Name="SwatchPurple" GroupName="GroupColor" Style="{StaticResource ColorSwatchStyle}" Background="#881798" Checked="Swatch_Checked" Tag="#881798"  ToolTipService.ToolTip="Purple" />
+                <RadioButton x:Name="SwatchTeal"   GroupName="GroupColor" Style="{StaticResource ColorSwatchStyle}" Background="#038387" Checked="Swatch_Checked" Tag="#038387"  ToolTipService.ToolTip="Teal" />
+                <RadioButton x:Name="SwatchGrey"   GroupName="GroupColor" Style="{StaticResource ColorSwatchStyle}" Background="#767676" Checked="Swatch_Checked" Tag="#767676"  ToolTipService.ToolTip="Grey" />
+            </StackPanel>
         </local:LabeledField>
     </StackPanel>
 </UserControl>
