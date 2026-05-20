@@ -107,9 +107,9 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
             OnPropertyChanged(nameof(IsConnected));
             RebuildDisplayItems();
         }
-        catch (ManagementException ex) when (ex.ErrorCode == ManagementStatus.AccessDenied)
+        catch (Exception ex) when (IsAccessDenied(ex))
         {
-            ErrorMessage = "Access denied. Enter alternate credentials below to connect with a different account.";
+            ErrorMessage    = "Access denied. Enter alternate credentials below to connect with a different account.";
             ShowCredentials = true;
         }
         catch (Exception ex)
@@ -167,4 +167,9 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
 
     public IEnumerable<CmSelectableItem> GetSelectedItems() =>
         _allApps.Where(a => a.IsSelected).Concat(_allPkgs.Where(p => p.IsSelected));
+
+    private static bool IsAccessDenied(Exception ex) =>
+        (ex is ManagementException me && me.ErrorCode == ManagementStatus.AccessDenied) ||
+        ex is UnauthorizedAccessException ||
+        (uint)ex.HResult == 0x80070005;
 }
