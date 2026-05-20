@@ -54,13 +54,19 @@ public sealed class ConfigMgrService : IConfigMgrService
             scope.Connect();
             return scope;
         }
+        // Kerberos:{domain}\{server} matches what the ConfigMgr admin console uses and
+        // is required for Protected Users group members (who have NTLM disabled).
+        // UPN-format credentials (username@domain.com) carry no explicit domain, so
+        // we let DCOM negotiate the auth package for those.
         var options = new ConnectionOptions
         {
-            Username  = credential.UserName,
-            Password  = credential.Password,
-            Authority = string.IsNullOrEmpty(credential.Domain)
+            Username       = credential.UserName,
+            Password       = credential.Password,
+            Authority      = string.IsNullOrEmpty(credential.Domain)
                 ? null
-                : $"NTLMDOMAIN:{credential.Domain}",
+                : $@"Kerberos:{credential.Domain}\{server}",
+            Impersonation  = ImpersonationLevel.Impersonate,
+            Authentication = AuthenticationLevel.PacketPrivacy,
         };
         var scopeWithCreds = new ManagementScope(path, options);
         scopeWithCreds.Connect();

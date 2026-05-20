@@ -48,14 +48,15 @@
         <!-- Alternate credentials — shown after access denied -->
         <StackPanel Visibility="{x:Bind Vm.ShowCredentials, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                     Spacing="6">
-            <TextBlock Text="Enter alternate credentials and click Connect again:"
-                       Style="{ThemeResource CaptionTextBlockStyle}"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             <TextBox PlaceholderText="DOMAIN\username  or  username@domain.com"
                      Text="{x:Bind Vm.AltUsername, Mode=TwoWay}" />
             <PasswordBox x:Name="CredentialPasswordBox"
                          PlaceholderText="Password"
                          PasswordChanged="CredentialPasswordBox_PasswordChanged" />
+            <Button Content="Connect with these credentials"
+                    IsEnabled="{x:Bind Vm.CanConnect, Mode=OneWay}"
+                    HorizontalAlignment="Right"
+                    Click="ConnectButton_Click" />
         </StackPanel>
 
         <!-- Results (only visible after a successful connection) -->
