@@ -4,6 +4,7 @@ using System.Management;
 using System.Net;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GUISharp.Services;
+using Microsoft.Management.Infrastructure;
 
 namespace GUISharp.ViewModels;
 
@@ -117,9 +118,16 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ErrorMessage = (uint)ex.HResult == 0x800706BA
-                ? $"Cannot reach the SMS Provider — verify the server name and network access. ({ex.GetType().Name})"
-                : $"Connection failed ({ex.GetType().Name}, 0x{(uint)ex.HResult:X8}): {ex.Message}";
+            var hr = (uint)ex.HResult;
+            ErrorMessage = hr switch
+            {
+                0x800706BA =>
+                    "Cannot reach the SMS Provider — verify the server name and network access.",
+                _ when (hr & 0xFFFF0000) == 0x80330000 =>
+                    "WinRM is not enabled on the SMS Provider. Run 'winrm quickconfig' on the server, then retry.",
+                _ =>
+                    $"Connection failed ({ex.GetType().Name}, 0x{hr:X8}): {ex.Message}"
+            };
         }
         finally
         {
@@ -173,6 +181,7 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
 
     private static bool IsAccessDenied(Exception ex) =>
         (ex is ManagementException me && me.ErrorCode == ManagementStatus.AccessDenied) ||
+        (ex is CimException ce && ce.NativeErrorCode == NativeErrorCode.AccessDenied) ||
         ex is UnauthorizedAccessException ||
         (uint)ex.HResult == 0x80070005;
 }
