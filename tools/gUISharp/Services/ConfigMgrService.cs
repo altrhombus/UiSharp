@@ -54,19 +54,21 @@ public sealed class ConfigMgrService : IConfigMgrService
             scope.Connect();
             return scope;
         }
-        // Kerberos:{domain}\{server} matches what the ConfigMgr admin console uses and
-        // is required for Protected Users group members (who have NTLM disabled).
-        // UPN-format credentials (username@domain.com) carry no explicit domain, so
-        // we let DCOM negotiate the auth package for those.
+        // Kerberos auth is required when the alternate-credential account is a member of
+        // the Protected Users security group (NTLM is disabled for those accounts on the
+        // remote server). PacketPrivacy is intentionally omitted — forcing it causes
+        // 0x800706BA (RPC_S_SERVER_UNAVAILABLE) when the DCOM server hasn't opted into
+        // that encryption level; the default connect-level auth that WMI uses is sufficient.
         var options = new ConnectionOptions
         {
-            Username       = credential.UserName,
-            Password       = credential.Password,
-            Authority      = string.IsNullOrEmpty(credential.Domain)
-                ? null
+            Username      = credential.UserName,
+            Password      = credential.Password,
+            // DOMAIN\user → "Kerberos:DOMAIN\SERVER" (standard KDC realm\machine form)
+            // UPN user@domain.com → "Kerberos:SERVER" (server SPN lookup; no domain prefix)
+            Authority     = string.IsNullOrEmpty(credential.Domain)
+                ? $"Kerberos:{server}"
                 : $@"Kerberos:{credential.Domain}\{server}",
-            Impersonation  = ImpersonationLevel.Impersonate,
-            Authentication = AuthenticationLevel.PacketPrivacy,
+            Impersonation = ImpersonationLevel.Impersonate,
         };
         var scopeWithCreds = new ManagementScope(path, options);
         scopeWithCreds.Connect();
