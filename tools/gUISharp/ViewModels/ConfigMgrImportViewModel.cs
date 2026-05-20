@@ -115,8 +115,8 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
         catch (Exception ex)
         {
             ErrorMessage = (uint)ex.HResult == 0x800706BA
-                ? "Cannot reach the SMS Provider — verify the server name and network access."
-                : $"Connection failed: {ex.Message}";
+                ? $"Cannot reach the SMS Provider — verify the server name and network access. ({ex.GetType().Name})"
+                : $"Connection failed ({ex.GetType().Name}, 0x{(uint)ex.HResult:X8}): {ex.Message}";
         }
         finally
         {

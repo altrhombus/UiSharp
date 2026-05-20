@@ -21,13 +21,15 @@
             </Grid.ColumnDefinitions>
             <TextBox Grid.Column="0"
                      PlaceholderText="SMS Provider / server name"
-                     Text="{x:Bind Vm.ServerName, Mode=TwoWay}"
+                     Text="{x:Bind Vm.ServerName, Mode=OneWay}"
+                     TextChanged="ServerNameBox_TextChanged"
                      ToolTipService.ToolTip="NetBIOS or FQDN of your SMS Provider. Found in ConfigMgr Console: Administration &gt; Site Configuration &gt; Servers and Site System Roles." />
             <TextBox Grid.Column="1"
                      PlaceholderText="Site code"
                      MaxLength="3"
                      CharacterCasing="Upper"
-                     Text="{x:Bind Vm.SiteCode, Mode=TwoWay}"
+                     Text="{x:Bind Vm.SiteCode, Mode=OneWay}"
+                     TextChanged="SiteCodeBox_TextChanged"
                      ToolTipService.ToolTip="3-character ConfigMgr site code. Found in Administration &gt; Site Configuration &gt; Sites." />
             <Button Grid.Column="2"
                     Content="Connect"
