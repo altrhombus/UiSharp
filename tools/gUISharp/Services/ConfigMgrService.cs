@@ -1,5 +1,6 @@
 using System.Management;
 using System.Net;
+using System.Net.Sockets;
 
 namespace GUISharp.Services;
 
@@ -54,10 +55,21 @@ public sealed class ConfigMgrService : IConfigMgrService
             scope.Connect();
             return scope;
         }
+        // WMI Negotiate auth tries NTLM first, which is blocked for Protected Users
+        // accounts. Forcing Kerberos requires the Authority to match the SPN registered
+        // in AD — typically HOST/{fqdn} — so resolve the server name to its FQDN first.
+        // Fall back to the original name if DNS resolution fails (non-domain hosts, etc.).
+        string fqdn;
+        try   { fqdn = Dns.GetHostEntry(server).HostName; }
+        catch { fqdn = server; }
+
         var options = new ConnectionOptions
         {
             Username      = credential.UserName,
             Password      = credential.Password,
+            Authority     = string.IsNullOrEmpty(credential.Domain)
+                ? $"Kerberos:{fqdn}"
+                : $@"Kerberos:{credential.Domain}\{fqdn}",
             Impersonation = ImpersonationLevel.Impersonate,
         };
         var scopeWithCreds = new ManagementScope(path, options);
