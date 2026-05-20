@@ -79,10 +79,13 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
             NetworkCredential? credential = null;
             if (ShowCredentials && !string.IsNullOrWhiteSpace(AltUsername))
             {
-                var idx = AltUsername.IndexOf('\\');
-                credential = idx >= 0
-                    ? new NetworkCredential(AltUsername[(idx + 1)..], AltPassword, AltUsername[..idx])
-                    : new NetworkCredential(AltUsername, AltPassword);
+                var backslash = AltUsername.IndexOf('\\');
+                var atSign    = AltUsername.IndexOf('@');
+                credential = backslash >= 0
+                    ? new NetworkCredential(AltUsername[(backslash + 1)..], AltPassword, AltUsername[..backslash])
+                    : atSign >= 0
+                        ? new NetworkCredential(AltUsername, AltPassword, AltUsername[(atSign + 1)..])
+                        : new NetworkCredential(AltUsername, AltPassword);
             }
 
             var apps = await _service.GetApplicationsAsync(server, site, credential);
