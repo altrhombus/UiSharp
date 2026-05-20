@@ -2,9 +2,9 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Management;
 using System.Net;
+using System.Net.Http;
 using CommunityToolkit.Mvvm.ComponentModel;
 using GUISharp.Services;
-using Microsoft.Management.Infrastructure;
 
 namespace GUISharp.ViewModels;
 
@@ -118,15 +118,16 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            var hr = (uint)ex.HResult;
-            ErrorMessage = hr switch
+            ErrorMessage = ex switch
             {
-                0x800706BA =>
+                HttpRequestException { StatusCode: System.Net.HttpStatusCode.NotFound } =>
+                    "The Administration Service was not found on the SMS Provider. Verify the server name and that AdminService is enabled (ConfigMgr 2002+).",
+                HttpRequestException hre when hre.StatusCode is null =>
                     "Cannot reach the SMS Provider — verify the server name and network access.",
-                _ when (hr & 0xFFFF0000) == 0x80330000 =>
-                    "WinRM is not enabled on the SMS Provider. Run 'winrm quickconfig' on the server, then retry.",
+                _ when (uint)ex.HResult == 0x800706BA =>
+                    "Cannot reach the SMS Provider — verify the server name and network access.",
                 _ =>
-                    $"Connection failed ({ex.GetType().Name}, 0x{hr:X8}): {ex.Message}"
+                    $"Connection failed ({ex.GetType().Name}, 0x{(uint)ex.HResult:X8}): {ex.Message}"
             };
         }
         finally
@@ -181,7 +182,9 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
 
     private static bool IsAccessDenied(Exception ex) =>
         (ex is ManagementException me && me.ErrorCode == ManagementStatus.AccessDenied) ||
-        (ex is CimException ce && ce.NativeErrorCode == NativeErrorCode.AccessDenied) ||
+        (ex is HttpRequestException hre && (
+            hre.StatusCode == System.Net.HttpStatusCode.Unauthorized ||
+            hre.StatusCode == System.Net.HttpStatusCode.Forbidden)) ||
         ex is UnauthorizedAccessException ||
         (uint)ex.HResult == 0x80070005;
 }
