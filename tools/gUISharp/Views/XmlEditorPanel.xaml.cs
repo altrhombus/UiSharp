@@ -13,7 +13,6 @@ public sealed partial class XmlEditorPanel : UserControl
     private bool _monacoReady;
     private bool _initialized;
     private string _pendingContent = string.Empty;
-    private bool _suppressNextChange;
     private bool _isHandlingXmlEdit;
     private (int Start, int End) _lastSentDecoration = (-2, -2);
     private readonly JsonSerializerOptions _jsonOpts = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
@@ -150,7 +149,6 @@ public sealed partial class XmlEditorPanel : UserControl
 
     private void HandleXmlEdit(string xml)
     {
-        if (_suppressNextChange) { _suppressNextChange = false; return; }
         _isHandlingXmlEdit = true;
         PanelViewModel?.OnXmlEdited(xml);
         _isHandlingXmlEdit = false;
@@ -176,7 +174,6 @@ public sealed partial class XmlEditorPanel : UserControl
     private async Task PushContentAsync(string xml)
     {
         if (MonacoWebView.CoreWebView2 is null) return;
-        _suppressNextChange = true;
         _lastSentDecoration = (-2, -2); // content changed — always scroll to the new position
         await MonacoWebView.CoreWebView2.ExecuteScriptAsync($"setContent({JsonSerializer.Serialize(xml)})");
         await PushDecorationOnlyAsync();
