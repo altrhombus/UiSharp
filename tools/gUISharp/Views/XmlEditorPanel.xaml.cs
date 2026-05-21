@@ -77,6 +77,11 @@ public sealed partial class XmlEditorPanel : UserControl
                 _ = MonacoWebView.CoreWebView2.ExecuteScriptAsync(
                     "window.refreshLayout && window.refreshLayout()");
         };
+        ActualThemeChanged += (_, _) =>
+        {
+            if (_monacoReady && MonacoWebView.CoreWebView2 is not null)
+                _ = PushThemeAsync();
+        };
     }
 
     private async void MonacoWebView_Loaded(object sender, RoutedEventArgs e)
@@ -94,7 +99,8 @@ public sealed partial class XmlEditorPanel : UserControl
                 "uipp.editor", assetsDir, CoreWebView2HostResourceAccessKind.Allow);
 
             MonacoWebView.CoreWebView2.WebMessageReceived += OnWebMessageReceived;
-            MonacoWebView.CoreWebView2.Navigate("https://uipp.editor/editor.html");
+            var initialTheme = ActualTheme == ElementTheme.Light ? "vs" : "vs-dark";
+            MonacoWebView.CoreWebView2.Navigate($"https://uipp.editor/editor.html?theme={initialTheme}");
         }
         catch (Exception ex)
         {
@@ -118,12 +124,14 @@ public sealed partial class XmlEditorPanel : UserControl
         {
             case "ready":
                 _monacoReady = true;
-                if (!string.IsNullOrEmpty(_pendingContent))
+                var pending = _pendingContent;
+                _pendingContent = string.Empty;
+                DispatcherQueue.TryEnqueue(async () =>
                 {
-                    var pending = _pendingContent;
-                    _pendingContent = string.Empty;
-                    DispatcherQueue.TryEnqueue(async () => await PushContentAsync(pending));
-                }
+                    await PushThemeAsync();
+                    if (!string.IsNullOrEmpty(pending))
+                        await PushContentAsync(pending);
+                });
                 break;
 
             case "contentChanged":
@@ -153,6 +161,13 @@ public sealed partial class XmlEditorPanel : UserControl
             _ = PushContentAsync(xml);
         else
             _pendingContent = xml;
+    }
+
+    private async Task PushThemeAsync()
+    {
+        if (MonacoWebView.CoreWebView2 is null) return;
+        var theme = ActualTheme == ElementTheme.Light ? "vs" : "vs-dark";
+        await MonacoWebView.CoreWebView2.ExecuteScriptAsync($"setTheme('{theme}')");
     }
 
     private async Task PushContentAsync(string xml)

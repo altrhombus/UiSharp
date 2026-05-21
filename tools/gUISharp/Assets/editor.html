@@ -195,12 +195,13 @@ require(["vs/editor/editor.main"], function () {
   document.getElementById("loading").classList.add("hidden");
 
   // ─── Editor instance ────────────────────────────────────────────────────────
+  var initialTheme = new URLSearchParams(location.search).get("theme") || "vs-dark";
   const editor = monaco.editor.create(
     document.getElementById("editor-container"),
     {
       value: "",
       language: "xml",
-      theme: "vs-dark",
+      theme: initialTheme,
       automaticLayout: true,
       minimap: { enabled: false },
       fontSize: 13,
