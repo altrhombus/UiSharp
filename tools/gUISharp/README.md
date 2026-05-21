@@ -2,8 +2,6 @@
 
 A WinUI 3 desktop app for creating and editing [UiSharp](../../README.md) / UI++ XML configuration files. A guided form covers every action type and stays in bidirectional sync with a Monaco-powered XML editor — no hand-editing required, but the raw XML is always one click away.
 
-<img width="1482" height="850" alt="image" src="https://github.com/user-attachments/assets/dc0ac82c-d51e-4f9e-af2b-5b73204b5d42" />
-
 ## Building
 
 **Requirements:**
@@ -32,7 +30,7 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 
 ### Monaco XML editor
 
-<!-- SCREENSHOT: full editor window with an action selected — shows two-panel layout, nav tree with badges, and the Monaco editor side-by-side -->
+<img width="1200" height="597" alt="image" src="https://github.com/user-attachments/assets/f573df7d-5ef7-43bb-bf24-a7956760a5c3" />
 
 - Powered by Monaco Editor 0.52.2 (the VS Code engine) hosted in WebView2 — full syntax highlighting, error squiggles, and IntelliSense-style autocomplete for UI++ elements
 - Bidirectional sync: edits in either panel update the other in real time
@@ -43,17 +41,14 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 - Input action fields (Text, Choice, Checkbox, Info) each expand to a type-specific mini-editor rather than raw XML
 - Preflight check rows split into two sections: Display Text (title, pass/warn/fail descriptions) and Logic (check, warn, and visibility conditions) with an outcome legend
 
-<!-- SCREENSHOT: info markup editor open — shows formatting toolbar, raw edit box, and live preview with %Variable% highlighting -->
+<img width="834" height="506" alt="image" src="https://github.com/user-attachments/assets/57103208-4d39-4f33-a375-5ce15fbb4dba" />
+
 
 - Info markup editor on message fields: formatting toolbar (Bold, Italic, Color, Line Break), raw edit box, and a live preview that renders `<b>`, `<i>`, `<color>`, `<br>` tags and highlights `%Variable%` references
 
-<!-- SCREENSHOT: regex helper flyout — shows live test field, preset list, and quick-reference grid -->
+<img width="418" height="356" alt="image" src="https://github.com/user-attachments/assets/512cd0e4-c06a-42ea-b2c2-a788236e65ce" />
 
 - Regex helper on any regex field: `.*` button opens a flyout with live pattern testing against a sample value, 13 IT-deployment presets (computer names, site codes, GUIDs, locale codes, etc.), and a quick-reference grid
-
-### Color pickers
-
-- Every color field uses a ColorPickerField: hex text box, flyout WinUI color picker, and a live swatch preview — available in Global Settings and the New Config Wizard
 
 ### Variable intelligence
 
@@ -69,7 +64,7 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 
 ### New config wizard
 
-<!-- SCREENSHOT: wizard step 3 (appearance) — shows scenario selection context, ColorPickerField, and sidebar/icons toggles -->
+<img width="520" height="489" alt="image" src="https://github.com/user-attachments/assets/4d84dfeb-0c4e-4c38-b84a-70f30e5945a3" />
 
 - Three-step flow: choose scenario (Standard OSD, Software Only, User Info, Blank) → configure title, subtitle, and variable bases → set appearance (accent color, sidebar, icons)
 - Each scenario seeds a sensible default action set
@@ -85,7 +80,7 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 
 - Visual AppTree editor for Applications and Packages with groups and conditional references
 - One-click GUID generator for Software IDs
-- Import wizard: browse live Applications and Packages from a ConfigMgr WMI connection and bulk-import to the catalog
+- Import wizard: browse live Applications and Packages from the ConfigMgr Admin Service and bulk-import to the catalog
 
 ### Source control
 
@@ -99,8 +94,6 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 - Title bar marks unsaved files with `•`; closing with unsaved changes prompts Save / Don't Save / Cancel
 
 ### Preferences
-
-<!-- SCREENSHOT: preferences page — shows update check result, default layout radio buttons, and ConfigMgr fields -->
 
 - Configurable recent-files limit (1–20)
 - Pre-save ConfigMgr server and site code; auto-populated when you connect via the Software page
