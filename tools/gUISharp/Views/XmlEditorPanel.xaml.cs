@@ -14,6 +14,7 @@ public sealed partial class XmlEditorPanel : UserControl
     private bool _initialized;
     private string _pendingContent = string.Empty;
     private bool _suppressNextChange;
+    private bool _isHandlingXmlEdit;
     private (int Start, int End) _lastSentDecoration = (-2, -2);
     private readonly JsonSerializerOptions _jsonOpts = new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
@@ -52,7 +53,7 @@ public sealed partial class XmlEditorPanel : UserControl
     {
         if (sender is not IXmlEditorSource vm) return;
 
-        if (e.PropertyName == nameof(IXmlEditorSource.CurrentXmlText))
+        if (e.PropertyName == nameof(IXmlEditorSource.CurrentXmlText) && !_isHandlingXmlEdit)
             DispatcherQueue.TryEnqueue(() => QueueContent(vm.CurrentXmlText));
         else if (e.PropertyName == nameof(IXmlEditorSource.XmlValidationError))
             DispatcherQueue.TryEnqueue(() => ShowError(vm.XmlValidationError));
@@ -150,7 +151,9 @@ public sealed partial class XmlEditorPanel : UserControl
     private void HandleXmlEdit(string xml)
     {
         if (_suppressNextChange) { _suppressNextChange = false; return; }
+        _isHandlingXmlEdit = true;
         PanelViewModel?.OnXmlEdited(xml);
+        _isHandlingXmlEdit = false;
     }
 
     // ── Content management ────────────────────────────────────────────────────
