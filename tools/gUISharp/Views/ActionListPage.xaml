@@ -189,7 +189,7 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <InfoBadge Grid.Column="0"
-                                               Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                                               Style="{StaticResource ModifiedDotInfoBadgeStyle}"
                                                VerticalAlignment="Center"
                                                Margin="0,0,6,0"
                                                Visibility="{x:Bind IsDirty, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"

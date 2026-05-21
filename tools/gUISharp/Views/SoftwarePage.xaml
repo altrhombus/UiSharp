@@ -56,7 +56,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <InfoBadge Grid.Column="0"
-                                       Style="{StaticResource InformationalDotInfoBadgeStyle}"
+                                       Style="{StaticResource ModifiedDotInfoBadgeStyle}"
                                        VerticalAlignment="Center"
                                        Visibility="{x:Bind IsDirty, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                                        ToolTipService.ToolTip="Unsaved changes" />
