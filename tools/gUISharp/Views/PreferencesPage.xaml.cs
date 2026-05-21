@@ -1,5 +1,4 @@
 using System.Reflection;
-using GUISharp.Services;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -14,16 +13,7 @@ public sealed partial class PreferencesPage : Page
 
     private void PreferencesPage_Loaded(object sender, RoutedEventArgs e)
     {
-        var s = App.UserSettings.Settings;
-
-        (s.Theme switch
-        {
-            AppTheme.Light => ThemeLight,
-            AppTheme.Dark  => ThemeDark,
-            _              => ThemeSystem,
-        }).IsChecked = true;
-
-        RecentFilesLimitBox.Value = s.RecentFilesLimit;
+        RecentFilesLimitBox.Value = App.UserSettings.Settings.RecentFilesLimit;
 
         var infoVer = typeof(App).Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
@@ -34,18 +24,6 @@ public sealed partial class PreferencesPage : Page
         VersionText.Text = commit is { Length: > 0 }
             ? $"Version {version}  ·  {commit}"
             : $"Version {version}";
-    }
-
-    private void Theme_Checked(object sender, RoutedEventArgs e)
-    {
-        if (!IsLoaded) return;
-        var rb    = sender as RadioButton;
-        var theme = rb == ThemeLight ? AppTheme.Light
-                  : rb == ThemeDark  ? AppTheme.Dark
-                                     : AppTheme.System;
-        App.UserSettings.Settings.Theme = theme;
-        App.UserSettings.Save();
-        App.ApplyTheme();
     }
 
     private void RecentFilesLimit_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)

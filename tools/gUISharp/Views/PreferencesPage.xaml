@@ -10,19 +10,6 @@
             <TextBlock Text="Preferences"
                        Style="{ThemeResource TitleTextBlockStyle}" />
 
-            <!-- Appearance -->
-            <StackPanel Spacing="12">
-                <TextBlock Text="Appearance"
-                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                <TextBlock Text="Theme"
-                           Style="{ThemeResource BodyTextBlockStyle}" />
-                <StackPanel Orientation="Horizontal" Spacing="12">
-                    <RadioButton x:Name="ThemeSystem" GroupName="Theme" Content="System default" Checked="Theme_Checked" />
-                    <RadioButton x:Name="ThemeLight"  GroupName="Theme" Content="Light"          Checked="Theme_Checked" />
-                    <RadioButton x:Name="ThemeDark"   GroupName="Theme" Content="Dark"           Checked="Theme_Checked" />
-                </StackPanel>
-            </StackPanel>
-
             <!-- Recent Files -->
             <StackPanel Spacing="12">
                 <TextBlock Text="Recent Files"

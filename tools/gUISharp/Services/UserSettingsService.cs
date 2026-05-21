@@ -3,12 +3,9 @@ using System.Text.Json.Serialization;
 
 namespace GUISharp.Services;
 
-public enum AppTheme { System, Light, Dark }
-
 public sealed class UserSettings
 {
     public int           RecentFilesLimit   { get; set; } = 10;
-    public AppTheme      Theme              { get; set; } = AppTheme.System;
     public List<string>  RecentFiles        { get; set; } = new();
     public string        ConfigMgrServer    { get; set; } = string.Empty;
     public string        ConfigMgrSiteCode  { get; set; } = string.Empty;

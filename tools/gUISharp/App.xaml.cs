@@ -58,7 +58,6 @@ public partial class App : Application
 
             _window = new MainWindow();
             MainWindow = _window;
-            ApplyTheme();
             _window.Activate();
         }
         catch (Exception ex)
@@ -68,17 +67,6 @@ public partial class App : Application
                 ex.ToString());
             throw;
         }
-    }
-
-    public static void ApplyTheme()
-    {
-        if (MainWindow?.Content is not Microsoft.UI.Xaml.FrameworkElement root) return;
-        root.RequestedTheme = UserSettings.Settings.Theme switch
-        {
-            AppTheme.Light  => Microsoft.UI.Xaml.ElementTheme.Light,
-            AppTheme.Dark   => Microsoft.UI.Xaml.ElementTheme.Dark,
-            _               => Microsoft.UI.Xaml.ElementTheme.Default,
-        };
     }
 
     private Window? _window;

@@ -5,7 +5,7 @@
     xmlns:local="using:GUISharp.Views"
     Title="gUI#">
 
-    <Grid>
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
