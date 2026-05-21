@@ -149,6 +149,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(WindowTitle))]
+    [NotifyCanExecuteChangedFor(nameof(DiscardChangesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CommitCommand))]
     public partial string? CurrentFile { get; set; }
 
     [ObservableProperty]
@@ -179,8 +181,6 @@ public sealed partial class MainWindowViewModel : ObservableObject
         GlobalSettingsModified ? Visibility.Visible : Visibility.Collapsed;
     public Visibility SoftwareModifiedVisibility =>
         SoftwareModified ? Visibility.Visible : Visibility.Collapsed;
-    public Visibility GitRepoVisibility =>
-        IsGitRepo ? Visibility.Visible : Visibility.Collapsed;
 
     public void ClearModified()
     {
@@ -204,55 +204,28 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
     // ── Git integration ───────────────────────────────────────────────────────
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(GitStatusText))]
-    [NotifyPropertyChangedFor(nameof(GitRepoVisibility))]
-    [NotifyCanExecuteChangedFor(nameof(DiscardChangesCommand))]
-    [NotifyCanExecuteChangedFor(nameof(CommitCommand))]
-    public partial bool IsGitRepo { get; set; }
-
-    [ObservableProperty]
-    public partial string GitBranch { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(GitStatusText))]
-    [NotifyCanExecuteChangedFor(nameof(DiscardChangesCommand))]
-    [NotifyCanExecuteChangedFor(nameof(CommitCommand))]
-    public partial bool GitHasChanges { get; set; }
-
-    private string? _gitRepoRoot;
-
-    public string GitStatusText => GitHasChanges ? "Modified" : "Clean";
+    public GitPageViewModel Git { get; } = new();
 
     private async Task RefreshGitStateAsync()
     {
         if (_gitService is null || CurrentFile is null)
         {
-            IsGitRepo     = false;
-            GitBranch     = string.Empty;
-            GitHasChanges = false;
-            _gitRepoRoot  = null;
+            Git.Update(null, null, []);
             return;
         }
 
-        var info = await _gitService.GetRepoInfoAsync(CurrentFile);
-        if (info is null)
-        {
-            IsGitRepo     = false;
-            GitBranch     = string.Empty;
-            GitHasChanges = false;
-            _gitRepoRoot  = null;
-            return;
-        }
-
-        _gitRepoRoot  = info.RepoRoot;
-        IsGitRepo     = true;
-        GitBranch     = info.Branch;
-        GitHasChanges = info.HasChanges;
+        var info    = await _gitService.GetRepoInfoAsync(CurrentFile);
+        var history = info is not null
+            ? await _gitService.GetFileLogAsync(CurrentFile)
+            : (IReadOnlyList<GitCommit>)[];
+        Git.Update(info, CurrentFile, history);
     }
 
-    private bool CanDiscardChanges() => IsGitRepo && GitHasChanges && CurrentFile is not null;
-    private bool CanCommit()         => IsGitRepo && GitHasChanges && CurrentFile is not null;
+    [RelayCommand]
+    private async Task RefreshGit() => await RefreshGitStateAsync();
+
+    private bool CanDiscardChanges() => Git.IsGitRepo && Git.HasChanges && CurrentFile is not null;
+    private bool CanCommit()         => Git.IsGitRepo && Git.HasChanges && CurrentFile is not null;
 
     [RelayCommand(CanExecute = nameof(CanDiscardChanges))]
     private async Task DiscardChanges()
@@ -288,7 +261,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [RelayCommand(CanExecute = nameof(CanCommit))]
     private async Task Commit()
     {
-        if (_gitService is null || CurrentFile is null || _gitRepoRoot is null) return;
+        if (_gitService is null || CurrentFile is null || Git.RepoRoot is null) return;
         if (App.MainWindow?.Content is not FrameworkElement root) return;
 
         if (IsModified)
@@ -302,7 +275,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         try
         {
             await _gitService.StageFileAsync(CurrentFile);
-            await _gitService.CommitAsync(_gitRepoRoot, commitDialog.CommitMessage);
+            await _gitService.CommitAsync(Git.RepoRoot, commitDialog.CommitMessage);
             await RefreshGitStateAsync();
         }
         catch (Exception ex)
@@ -340,6 +313,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _snapshotTimer.Interval    = TimeSpan.FromMilliseconds(500);
         _snapshotTimer.IsRepeating = false;
         _snapshotTimer.Tick       += (_, _) => CommitSnapshot();
+
+        Git.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName is nameof(GitPageViewModel.IsGitRepo) or nameof(GitPageViewModel.HasChanges))
+            {
+                DiscardChangesCommand.NotifyCanExecuteChanged();
+                CommitCommand.NotifyCanExecuteChanged();
+            }
+        };
 
         LoadRecentFiles();
         RecentFiles.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasRecentFiles));

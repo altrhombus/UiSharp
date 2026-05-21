@@ -1,0 +1,161 @@
+<Page
+    x:Class="GUISharp.Views.GitPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GUISharp.Views"
+    xmlns:svc="using:GUISharp.Services"
+    NavigationCacheMode="Required">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Spacing="0" Padding="16,12,16,24">
+
+            <!-- ── Branch / file header ────────────────────────────────────────── -->
+            <Grid Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Spacing="2">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <TextBlock Text="⎇"
+                                   VerticalAlignment="Center"
+                                   Style="{ThemeResource BodyTextBlockStyle}" />
+                        <TextBlock Text="{x:Bind ViewModel.Git.Branch, Mode=OneWay}"
+                                   Style="{ThemeResource SubtitleTextBlockStyle}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="{x:Bind ViewModel.Git.RelativePath, Mode=OneWay}"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+                <Button Grid.Column="1"
+                        Command="{x:Bind ViewModel.RefreshGitCommand}"
+                        ToolTipService.ToolTip="Refresh git status"
+                        VerticalAlignment="Top"
+                        Width="32" Height="32" Padding="0">
+                    <FontIcon Glyph="&#xE72C;" FontSize="13" />
+                </Button>
+            </Grid>
+
+            <!-- ── Changes section ────────────────────────────────────────────── -->
+            <TextBlock Text="Changes"
+                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                       Margin="0,0,0,8" />
+
+            <!-- No changes state -->
+            <Border Padding="12,10"
+                    CornerRadius="4"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    Visibility="{x:Bind ViewModel.Git.NoChangesVisibility, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon Glyph="&#xE73E;" FontSize="14"
+                              Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+                    <TextBlock Text="No uncommitted changes"
+                               VerticalAlignment="Center"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </Border>
+
+            <!-- Has changes state -->
+            <Border Padding="12,10"
+                    CornerRadius="4"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    Visibility="{x:Bind ViewModel.Git.HasChangesVisibility, Mode=OneWay}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <InfoBadge Grid.Column="0"
+                               Style="{StaticResource ModifiedDotInfoBadgeStyle}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0" />
+                    <TextBlock Grid.Column="1"
+                               Text="{x:Bind ViewModel.Git.RelativePath, Mode=OneWay}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4">
+                        <Button Command="{x:Bind ViewModel.DiscardChangesCommand}"
+                                ToolTipService.ToolTip="Discard changes"
+                                Width="28" Height="28" Padding="0">
+                            <FontIcon Glyph="&#xE7A7;" FontSize="12" />
+                        </Button>
+                        <Button Command="{x:Bind ViewModel.CommitCommand}"
+                                ToolTipService.ToolTip="Stage &amp; Commit"
+                                Width="28" Height="28" Padding="0">
+                            <FontIcon Glyph="&#xE73E;" FontSize="12" />
+                        </Button>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Action buttons -->
+            <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,10,0,0"
+                        Visibility="{x:Bind ViewModel.Git.HasChangesVisibility, Mode=OneWay}">
+                <Button Content="Discard Changes"
+                        Command="{x:Bind ViewModel.DiscardChangesCommand}" />
+                <Button Content="Stage &amp; Commit…"
+                        Command="{x:Bind ViewModel.CommitCommand}" />
+            </StackPanel>
+
+            <!-- ── History section ─────────────────────────────────────────────── -->
+            <TextBlock Text="History"
+                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                       Margin="0,24,0,8" />
+
+            <!-- Empty history -->
+            <Border Padding="12,10"
+                    CornerRadius="4"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1"
+                    Visibility="{x:Bind ViewModel.Git.IsHistoryEmptyVisibility, Mode=OneWay}">
+                <TextBlock Text="No commit history found for this file"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Border>
+
+            <ItemsControl ItemsSource="{x:Bind ViewModel.Git.History}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="svc:GitCommit">
+                        <Border Padding="10,8"
+                                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                                BorderThickness="0,0,0,1">
+                            <Grid ColumnSpacing="8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="52" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{x:Bind Hash}"
+                                           FontFamily="Consolas, Courier New"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                                           VerticalAlignment="Center" />
+                                <StackPanel Grid.Column="1" Spacing="1">
+                                    <TextBlock Text="{x:Bind Subject}"
+                                               TextTrimming="CharacterEllipsis"
+                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                    <TextBlock Text="{x:Bind Author}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="2"
+                                           Text="{x:Bind RelativeDate}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+        </StackPanel>
+    </ScrollViewer>
+</Page>

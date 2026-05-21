@@ -52,6 +52,30 @@ public sealed class GitService : IGitService
         return new GitRepoInfo(repoRoot, branch, hasChanges);
     }
 
+    public async Task<IReadOnlyList<GitCommit>> GetFileLogAsync(string filePath, int maxCount = 15)
+    {
+        var dir = Path.GetDirectoryName(filePath);
+        if (string.IsNullOrEmpty(dir)) return [];
+
+        // Record separator unlikely to appear in any field.
+        const string rs = "|||RS|||";
+        var fmt = $"%h%n%s%n%an%n%ar%n{rs}";
+
+        var (output, exit) = await RunGitAsync(dir,
+            "log", $"-n{maxCount}", $"--pretty=format:{fmt}", "--", filePath);
+        if (exit != 0 || string.IsNullOrWhiteSpace(output)) return [];
+
+        var results = new List<GitCommit>();
+        foreach (var entry in output.Split(rs, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var lines = entry.Trim().Split('\n');
+            if (lines.Length >= 4)
+                results.Add(new GitCommit(lines[0].Trim(), lines[1].Trim(),
+                                          lines[2].Trim(), lines[3].Trim()));
+        }
+        return results;
+    }
+
     public async Task DiscardFileAsync(string filePath)
     {
         var dir = Path.GetDirectoryName(filePath) ?? filePath;

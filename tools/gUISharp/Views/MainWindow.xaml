@@ -9,7 +9,6 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <!-- Toolbar -->
@@ -97,46 +96,20 @@
                         <FontIcon Glyph="&#xE943;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem Tag="Git" Content="Git"
+                                    Visibility="{x:Bind ViewModel.Git.NavVisibility, Mode=OneWay}">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xF0E2;" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.InfoBadge>
+                        <InfoBadge Style="{StaticResource ModifiedDotInfoBadgeStyle}"
+                                   Visibility="{x:Bind ViewModel.Git.HasChangesVisibility, Mode=OneWay}" />
+                    </NavigationViewItem.InfoBadge>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <Frame x:Name="ContentFrame" />
         </NavigationView>
 
-        <!-- Git status bar -->
-        <Grid Grid.Row="2"
-              Visibility="{x:Bind ViewModel.GitRepoVisibility, Mode=OneWay}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="1" />
-                <RowDefinition Height="33" />
-            </Grid.RowDefinitions>
-            <Border Grid.Row="0" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
-            <Grid Grid.Row="1" Background="{ThemeResource LayerFillColorDefaultBrush}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8"
-                            VerticalAlignment="Center" Margin="12,0">
-                    <TextBlock Text="⎇" VerticalAlignment="Center"
-                               Style="{ThemeResource CaptionTextBlockStyle}" />
-                    <TextBlock Text="{x:Bind ViewModel.GitBranch, Mode=OneWay}"
-                               VerticalAlignment="Center"
-                               Style="{ThemeResource CaptionTextBlockStyle}" />
-                    <TextBlock Text="{x:Bind ViewModel.GitStatusText, Mode=OneWay}"
-                               VerticalAlignment="Center"
-                               Style="{ThemeResource CaptionTextBlockStyle}"
-                               Opacity="0.6" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
-                            VerticalAlignment="Center" Margin="0,0,8,0">
-                    <Button Content="Discard"
-                            Command="{x:Bind ViewModel.DiscardChangesCommand}"
-                            Height="26" Padding="10,0" />
-                    <Button Content="Stage &amp; Commit"
-                            Command="{x:Bind ViewModel.CommitCommand}"
-                            Height="26" Padding="10,0" />
-                </StackPanel>
-            </Grid>
-        </Grid>
     </Grid>
 </Window>
