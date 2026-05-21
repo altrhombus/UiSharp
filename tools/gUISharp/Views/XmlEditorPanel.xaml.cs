@@ -11,6 +11,7 @@ namespace GUISharp.Views;
 public sealed partial class XmlEditorPanel : UserControl
 {
     private bool _monacoReady;
+    private bool _initialized;
     private string _pendingContent = string.Empty;
     private bool _suppressNextChange;
     private (int Start, int End) _lastSentDecoration = (-2, -2);
@@ -68,10 +69,22 @@ public sealed partial class XmlEditorPanel : UserControl
     public XmlEditorPanel()
     {
         this.InitializeComponent();
+        // When the page re-attaches to the visual tree (NavigationCacheMode reuse), Monaco is
+        // already running but needs a layout() call to repaint after being hidden.
+        Loaded += (_, _) =>
+        {
+            if (_monacoReady && MonacoWebView.CoreWebView2 is not null)
+                _ = MonacoWebView.CoreWebView2.ExecuteScriptAsync(
+                    "window.refreshLayout && window.refreshLayout()");
+        };
     }
 
     private async void MonacoWebView_Loaded(object sender, RoutedEventArgs e)
     {
+        // Guard: Loaded fires again each time the page re-attaches to the visual tree.
+        // Re-running Navigate() would reload Monaco and lose content.
+        if (_initialized) return;
+        _initialized = true;
         try
         {
             await MonacoWebView.EnsureCoreWebView2Async();

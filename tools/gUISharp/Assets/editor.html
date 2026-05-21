@@ -224,6 +224,16 @@ require(["vs/editor/editor.main"], function () {
     }
   );
 
+  // ─── Re-layout after visibility restore ───────────────────────────────────
+  // Covers two cases:
+  //   1. Page re-attaches after NavigationCacheMode reuse — C# calls this via ExecuteScriptAsync.
+  //   2. WinUI 3 ContentDialog hides/shows the WebView2 HWND — fires via visibilitychange/focus.
+  window.refreshLayout = function () { editor.layout(); };
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) requestAnimationFrame(window.refreshLayout);
+  });
+  window.addEventListener("focus", window.refreshLayout);
+
   // ─── Content change → host ─────────────────────────────────────────────────
   var suppressNext = false;
   editor.onDidChangeModelContent(function () {
