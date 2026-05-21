@@ -2,6 +2,8 @@
 
 A WinUI 3 desktop app for creating and editing [UiSharp](../../README.md) / UI++ XML configuration files. A guided form covers every action type and stays in bidirectional sync with a Monaco-powered XML editor — no hand-editing required, but the raw XML is always one click away.
 
+**amd64/x64 and arm64 downloads available at https://github.com/altrhombus/UiSharp/releases**
+
 ## Building
 
 **Requirements:**
@@ -48,7 +50,7 @@ The output lands in `tools/gUISharp/bin/x64/Debug/net10.0-windows10.0.22621.0/`.
 
 <img width="418" height="356" alt="image" src="https://github.com/user-attachments/assets/512cd0e4-c06a-42ea-b2c2-a788236e65ce" />
 
-- Regex helper on any regex field: `.*` button opens a flyout with live pattern testing against a sample value, 13 IT-deployment presets (computer names, site codes, GUIDs, locale codes, etc.), and a quick-reference grid
+- Regex helper on any regex field: `Regex` button opens a flyout with live pattern testing against a sample value, 13 presets (computer names, site codes, GUIDs, locale codes, etc.), and a quick-reference grid
 
 ### Variable intelligence
 
