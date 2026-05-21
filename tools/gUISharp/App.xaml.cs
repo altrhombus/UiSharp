@@ -53,8 +53,9 @@ public partial class App : Application
             var configService = new ConfigService();
             FileDialogService = new FileDialogService();
             var factory = new EditorViewModelFactory();
+            var gitService = new GitService();
 
-            MainVm = new MainWindowViewModel(configService, FileDialogService, factory);
+            MainVm = new MainWindowViewModel(configService, FileDialogService, factory, gitService: gitService);
 
             _window = new MainWindow();
             MainWindow = _window;

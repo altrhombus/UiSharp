@@ -1,0 +1,24 @@
+<ContentDialog
+    x:Class="GUISharp.Views.CommitDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Stage &amp; Commit"
+    PrimaryButtonText="Commit"
+    CloseButtonText="Cancel"
+    DefaultButton="Primary">
+
+    <StackPanel Width="400" Spacing="12">
+        <TextBlock x:Name="FileNameText"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                   TextWrapping="Wrap" />
+        <TextBox x:Name="MessageBox"
+                 PlaceholderText="Commit message…"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 MinHeight="80"
+                 MaxHeight="200"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                 TextChanged="MessageBox_TextChanged" />
+    </StackPanel>
+</ContentDialog>

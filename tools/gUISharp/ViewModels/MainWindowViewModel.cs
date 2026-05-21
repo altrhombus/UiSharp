@@ -14,6 +14,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 {
     private readonly IConfigService _configService;
     private readonly IFileDialogService _fileDialogService;
+    private readonly IGitService? _gitService;
 
     // ── Undo / Redo ──────────────────────────────────────────────────────────
 
@@ -137,6 +138,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             CurrentFile = path;
             ClearModified();
             AddToRecentFiles(path);
+            await RefreshGitStateAsync();
         }
         catch (Exception ex)
         {
@@ -177,6 +179,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         GlobalSettingsModified ? Visibility.Visible : Visibility.Collapsed;
     public Visibility SoftwareModifiedVisibility =>
         SoftwareModified ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility GitRepoVisibility =>
+        IsGitRepo ? Visibility.Visible : Visibility.Collapsed;
 
     public void ClearModified()
     {
@@ -198,15 +202,126 @@ public sealed partial class MainWindowViewModel : ObservableObject
             ? "gUI# — Visual editor for UI++ configurations"
             : $"{Path.GetFileName(CurrentFile)}{(IsModified ? " •" : string.Empty)} — gUI#";
 
+    // ── Git integration ───────────────────────────────────────────────────────
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(GitStatusText))]
+    [NotifyPropertyChangedFor(nameof(GitRepoVisibility))]
+    [NotifyCanExecuteChangedFor(nameof(DiscardChangesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CommitCommand))]
+    public partial bool IsGitRepo { get; set; }
+
+    [ObservableProperty]
+    public partial string GitBranch { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(GitStatusText))]
+    [NotifyCanExecuteChangedFor(nameof(DiscardChangesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CommitCommand))]
+    public partial bool GitHasChanges { get; set; }
+
+    private string? _gitRepoRoot;
+
+    public string GitStatusText => GitHasChanges ? "Modified" : "Clean";
+
+    private async Task RefreshGitStateAsync()
+    {
+        if (_gitService is null || CurrentFile is null)
+        {
+            IsGitRepo     = false;
+            GitBranch     = string.Empty;
+            GitHasChanges = false;
+            _gitRepoRoot  = null;
+            return;
+        }
+
+        var info = await _gitService.GetRepoInfoAsync(CurrentFile);
+        if (info is null)
+        {
+            IsGitRepo     = false;
+            GitBranch     = string.Empty;
+            GitHasChanges = false;
+            _gitRepoRoot  = null;
+            return;
+        }
+
+        _gitRepoRoot  = info.RepoRoot;
+        IsGitRepo     = true;
+        GitBranch     = info.Branch;
+        GitHasChanges = info.HasChanges;
+    }
+
+    private bool CanDiscardChanges() => IsGitRepo && GitHasChanges && CurrentFile is not null;
+    private bool CanCommit()         => IsGitRepo && GitHasChanges && CurrentFile is not null;
+
+    [RelayCommand(CanExecute = nameof(CanDiscardChanges))]
+    private async Task DiscardChanges()
+    {
+        if (_gitService is null || CurrentFile is null) return;
+        if (App.MainWindow?.Content is not FrameworkElement root) return;
+
+        var dialog = new ContentDialog
+        {
+            Title               = "Discard Changes",
+            Content             = $"Restore {Path.GetFileName(CurrentFile)} to its last committed state? All unsaved and uncommitted changes will be lost.",
+            PrimaryButtonText   = "Discard",
+            CloseButtonText     = "Cancel",
+            DefaultButton       = ContentDialogButton.Close,
+            XamlRoot            = root.XamlRoot,
+        };
+        if (await dialog.ShowAsync() != ContentDialogResult.Primary) return;
+
+        try
+        {
+            await _gitService.DiscardFileAsync(CurrentFile);
+            var config = await _configService.LoadAsync(CurrentFile);
+            LoadConfig(config);
+            ClearModified();
+            await RefreshGitStateAsync();
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorAsync("Discard failed", ex.Message);
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanCommit))]
+    private async Task Commit()
+    {
+        if (_gitService is null || CurrentFile is null || _gitRepoRoot is null) return;
+        if (App.MainWindow?.Content is not FrameworkElement root) return;
+
+        if (IsModified)
+        {
+            if (!await TrySaveAsync()) return;
+        }
+
+        var commitDialog = new Views.CommitDialog(CurrentFile) { XamlRoot = root.XamlRoot };
+        if (await commitDialog.ShowAsync() != ContentDialogResult.Primary) return;
+
+        try
+        {
+            await _gitService.StageFileAsync(CurrentFile);
+            await _gitService.CommitAsync(_gitRepoRoot, commitDialog.CommitMessage);
+            await RefreshGitStateAsync();
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorAsync("Commit failed", ex.Message);
+        }
+    }
+
     public MainWindowViewModel(
         IConfigService configService,
         IFileDialogService fileDialogService,
         EditorViewModelFactory factory,
-        IUndoService? undoService = null)
+        IUndoService? undoService = null,
+        IGitService? gitService   = null)
     {
         _configService     = configService;
         _fileDialogService = fileDialogService;
         _undoService       = undoService ?? new UndoService();
+        _gitService        = gitService;
         ActionList         = new ActionListViewModel(factory);
         ActionList.Dirtied     += (_, _) => ActionsModified        = true;
         GlobalSettings.Dirtied += (_, _) => GlobalSettingsModified = true;
@@ -249,6 +364,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
         CurrentFile = null;
         ClearModified();
+        await RefreshGitStateAsync();
     }
 
     [RelayCommand]
@@ -265,6 +381,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             CurrentFile = path;
             ClearModified();
             AddToRecentFiles(path);
+            await RefreshGitStateAsync();
         }
         catch (Exception ex)
         {
@@ -330,6 +447,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
             var config = BuildConfig();
             await _configService.SaveAsync(config, path);
             ClearModified();
+            await RefreshGitStateAsync();
         }
         catch (Exception ex)
         {
