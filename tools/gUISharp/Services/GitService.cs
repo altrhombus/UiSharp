@@ -95,16 +95,12 @@ public sealed class GitService : IGitService
 
     public async Task DiscardFileAsync(string filePath)
     {
-        var dir = Path.GetDirectoryName(filePath) ?? filePath;
-        var (rawRoot, _, rootExit) = await RunGitAsync(dir, "rev-parse", "--show-toplevel");
-        if (rootExit != 0)
-            throw new InvalidOperationException("Could not locate git repository root.");
-        var repoRoot     = rawRoot.Replace('/', Path.DirectorySeparatorChar);
-        var relativePath = Path.GetRelativePath(repoRoot, filePath).Replace('\\', '/');
-        var (_, err, exit) = await RunGitAsync(repoRoot, "restore", "--", relativePath);
+        var dir      = Path.GetDirectoryName(filePath) ?? filePath;
+        var fileName = Path.GetFileName(filePath);
+        var (_, err, exit) = await RunGitAsync(dir, "checkout", "HEAD", "--", fileName);
         if (exit != 0)
             throw new InvalidOperationException(string.IsNullOrEmpty(err)
-                ? $"git restore exited with code {exit}"
+                ? $"git checkout exited with code {exit}"
                 : err);
     }
 
