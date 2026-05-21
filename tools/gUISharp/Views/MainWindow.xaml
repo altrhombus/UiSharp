@@ -99,7 +99,7 @@
                 <NavigationViewItem Tag="Git" Content="Git"
                                     Visibility="{x:Bind ViewModel.Git.NavVisibility, Mode=OneWay}">
                     <NavigationViewItem.Icon>
-                        <FontIcon Glyph="&#xF0E2;" />
+                        <FontIcon Glyph="&#xEBCB;" />
                     </NavigationViewItem.Icon>
                     <NavigationViewItem.InfoBadge>
                         <InfoBadge Style="{StaticResource ModifiedDotInfoBadgeStyle}"
