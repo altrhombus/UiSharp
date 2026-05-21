@@ -33,6 +33,15 @@ public sealed class BoolToTypeConverter : IValueConverter
         value is "Application";
 }
 
+public sealed class AppTypeGlyphConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        value is true ? "" : "";
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
+
 // Selects between RefTemplate and GroupTemplate for AppTree node items.
 public sealed class AppTreeNodeTemplateSelector : DataTemplateSelector
 {

@@ -18,6 +18,7 @@
             <local:BoolToVisibilityConverter        x:Key="BoolToVisibilityConverter" />
             <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
             <local:BoolToTypeConverter              x:Key="BoolToTypeConverter" />
+            <local:AppTypeGlyphConverter            x:Key="AppTypeGlyphConverter" />
             <local:HexToColorBrushConverter         x:Key="HexToColorBrushConverter" />
         </ResourceDictionary>
     </Application.Resources>

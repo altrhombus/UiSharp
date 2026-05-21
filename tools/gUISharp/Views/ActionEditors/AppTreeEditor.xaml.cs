@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using GUISharp.ViewModels;
 using GUISharp.ViewModels.ActionEditors;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -10,6 +11,28 @@ public sealed partial class AppTreeEditor : UserControl
     public AppTreeEditor()
     {
         this.InitializeComponent();
+    }
+
+    private void AddToSetButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: SoftwareItemViewModel software }) return;
+        if (DataContext is not AppTreeViewModel vm || vm.Sets.Count == 0) return;
+
+        if (vm.Sets.Count == 1)
+        {
+            vm.Sets[0].Items.Add(new AppTreeRefItem { SoftwareId = software.Id });
+            return;
+        }
+
+        var flyout = new MenuFlyout();
+        foreach (var set in vm.Sets)
+        {
+            var item = new MenuFlyoutItem { Text = string.IsNullOrWhiteSpace(set.Name) ? "(unnamed set)" : set.Name };
+            var capturedSet = set;
+            item.Click += (_, _) => capturedSet.Items.Add(new AppTreeRefItem { SoftwareId = software.Id });
+            flyout.Items.Add(item);
+        }
+        flyout.ShowAt((FrameworkElement)sender);
     }
 
     private async void RemoveNodeButton_Click(object sender, RoutedEventArgs e)
