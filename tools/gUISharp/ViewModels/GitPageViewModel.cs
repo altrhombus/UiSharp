@@ -28,20 +28,19 @@ public sealed partial class GitPageViewModel : ObservableObject
     public Visibility NavVisibility            => IsGitRepo  ? Visibility.Visible : Visibility.Collapsed;
     public Visibility HasChangesVisibility     => HasChanges ? Visibility.Visible : Visibility.Collapsed;
     public Visibility NoChangesVisibility      => HasChanges ? Visibility.Collapsed : Visibility.Visible;
-    public Visibility IsHistoryEmptyVisibility => History.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility IsHistoryEmptyVisibility => Graph.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
-    public ObservableCollection<GitCommit> History { get; }
+    public ObservableCollection<GitGraphLineViewModel> Graph { get; } = new();
 
     public GitPageViewModel()
     {
-        History = new();
-        History.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsHistoryEmptyVisibility));
+        Graph.CollectionChanged += (_, _) => OnPropertyChanged(nameof(IsHistoryEmptyVisibility));
     }
 
     // Used by MainWindowViewModel for the commit command
     internal string? RepoRoot { get; private set; }
 
-    internal void Update(GitRepoInfo? info, string? filePath, IReadOnlyList<GitCommit> history)
+    internal void Update(GitRepoInfo? info, string? filePath, IReadOnlyList<GitGraphLine> graph)
     {
         if (info is null)
         {
@@ -50,7 +49,7 @@ public sealed partial class GitPageViewModel : ObservableObject
             HasChanges   = false;
             RelativePath = string.Empty;
             RepoRoot     = null;
-            History.Clear();
+            Graph.Clear();
             return;
         }
 
@@ -62,8 +61,8 @@ public sealed partial class GitPageViewModel : ObservableObject
             ? Path.GetRelativePath(info.RepoRoot, filePath).Replace('\\', '/')
             : string.Empty;
 
-        History.Clear();
-        foreach (var c in history)
-            History.Add(c);
+        Graph.Clear();
+        foreach (var line in graph)
+            Graph.Add(new GitGraphLineViewModel(line));
     }
 }

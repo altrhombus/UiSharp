@@ -4,7 +4,7 @@ namespace GUISharp.Services;
 
 public sealed class GitService : IGitService
 {
-    private static async Task<(string output, int exitCode)> RunGitAsync(string workingDir, params string[] args)
+    private static async Task<(string output, string error, int exitCode)> RunGitAsync(string workingDir, params string[] args)
     {
         var psi = new ProcessStartInfo("git")
         {
@@ -19,13 +19,16 @@ public sealed class GitService : IGitService
 
         Process? proc;
         try   { proc = Process.Start(psi); }
-        catch { return (string.Empty, -1); }
+        catch { return (string.Empty, string.Empty, -1); }
 
-        if (proc is null) return (string.Empty, -1);
+        if (proc is null) return (string.Empty, string.Empty, -1);
 
-        var output = await proc.StandardOutput.ReadToEndAsync();
+        // Read stdout and stderr concurrently to avoid deadlock if either buffer fills.
+        var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+        var stderrTask = proc.StandardError.ReadToEndAsync();
+        await Task.WhenAll(stdoutTask, stderrTask);
         await proc.WaitForExitAsync();
-        return (output.Trim(), proc.ExitCode);
+        return (stdoutTask.Result.Trim(), stderrTask.Result.Trim(), proc.ExitCode);
     }
 
     public async Task<GitRepoInfo?> GetRepoInfoAsync(string filePath)
@@ -33,69 +36,89 @@ public sealed class GitService : IGitService
         var dir = Path.GetDirectoryName(filePath);
         if (string.IsNullOrEmpty(dir)) return null;
 
-        var (rawRoot, rootExit) = await RunGitAsync(dir, "rev-parse", "--show-toplevel");
+        var (rawRoot, _, rootExit) = await RunGitAsync(dir, "rev-parse", "--show-toplevel");
         if (rootExit != 0) return null;
 
         var repoRoot = rawRoot.Replace('/', Path.DirectorySeparatorChar);
 
-        var (branch, _) = await RunGitAsync(repoRoot, "branch", "--show-current");
+        var (branch, _, _) = await RunGitAsync(repoRoot, "branch", "--show-current");
         if (string.IsNullOrEmpty(branch))
         {
-            var (hash, _) = await RunGitAsync(repoRoot, "rev-parse", "--short", "HEAD");
+            var (hash, _, _) = await RunGitAsync(repoRoot, "rev-parse", "--short", "HEAD");
             branch = string.IsNullOrEmpty(hash) ? "detached HEAD" : $"HEAD ({hash})";
         }
 
         var relativePath = Path.GetRelativePath(repoRoot, filePath);
-        var (status, _)  = await RunGitAsync(repoRoot, "status", "--porcelain", "--", relativePath);
-        var hasChanges   = !string.IsNullOrWhiteSpace(status);
+        var (status, _, _) = await RunGitAsync(repoRoot, "status", "--porcelain", "--", relativePath);
+        var hasChanges     = !string.IsNullOrWhiteSpace(status);
 
         return new GitRepoInfo(repoRoot, branch, hasChanges);
     }
 
-    public async Task<IReadOnlyList<GitCommit>> GetFileLogAsync(string filePath, int maxCount = 15)
+    public async Task<IReadOnlyList<GitGraphLine>> GetGraphAsync(string filePath, int maxCount = 50)
     {
         var dir = Path.GetDirectoryName(filePath);
         if (string.IsNullOrEmpty(dir)) return [];
 
-        // Record separator unlikely to appear in any field.
-        const string rs = "|||RS|||";
-        var fmt = $"%h%n%s%n%an%n%ar%n{rs}";
+        // Marker must not plausibly appear in commit messages.
+        const string marker = "\x01COMMIT\x01";
+        const string sep    = "\x02";
+        var fmt = $"{marker}%h{sep}%s{sep}%an{sep}%ar";
 
-        var (output, exit) = await RunGitAsync(dir,
-            "log", $"-n{maxCount}", $"--pretty=format:{fmt}", "--", filePath);
+        var (output, _, exit) = await RunGitAsync(dir,
+            "log", "--graph", "--topo-order", $"-n{maxCount}",
+            $"--pretty=format:{fmt}", "--", filePath);
         if (exit != 0 || string.IsNullOrWhiteSpace(output)) return [];
 
-        var results = new List<GitCommit>();
-        foreach (var entry in output.Split(rs, StringSplitOptions.RemoveEmptyEntries))
+        var result = new List<GitGraphLine>();
+        foreach (var rawLine in output.Split('\n'))
         {
-            var lines = entry.Trim().Split('\n');
-            if (lines.Length >= 4)
-                results.Add(new GitCommit(lines[0].Trim(), lines[1].Trim(),
-                                          lines[2].Trim(), lines[3].Trim()));
+            var line = rawLine.TrimEnd();
+            var mi   = line.IndexOf(marker, StringComparison.Ordinal);
+            if (mi >= 0)
+            {
+                var graphPart = line[..mi].TrimEnd();
+                var data      = line[(mi + marker.Length)..].Split(sep, 4);
+                result.Add(new GitGraphLine(graphPart,
+                    data.Length > 0 ? data[0] : null,
+                    data.Length > 1 ? data[1] : null,
+                    data.Length > 2 ? data[2] : null,
+                    data.Length > 3 ? data[3] : null));
+            }
+            else if (!string.IsNullOrWhiteSpace(line))
+            {
+                result.Add(new GitGraphLine(line, null, null, null, null));
+            }
         }
-        return results;
+        return result;
     }
 
     public async Task DiscardFileAsync(string filePath)
     {
         var dir = Path.GetDirectoryName(filePath) ?? filePath;
-        var (_, exit) = await RunGitAsync(dir, "restore", "--", filePath);
+        var (_, err, exit) = await RunGitAsync(dir, "restore", "--", filePath);
         if (exit != 0)
-            throw new InvalidOperationException($"git restore exited with code {exit}");
+            throw new InvalidOperationException(string.IsNullOrEmpty(err)
+                ? $"git restore exited with code {exit}"
+                : err);
     }
 
     public async Task StageFileAsync(string filePath)
     {
         var dir = Path.GetDirectoryName(filePath) ?? filePath;
-        var (_, exit) = await RunGitAsync(dir, "add", "--", filePath);
+        var (_, err, exit) = await RunGitAsync(dir, "add", "--", filePath);
         if (exit != 0)
-            throw new InvalidOperationException($"git add exited with code {exit}");
+            throw new InvalidOperationException(string.IsNullOrEmpty(err)
+                ? $"git add exited with code {exit}"
+                : err);
     }
 
     public async Task CommitAsync(string repoRoot, string message)
     {
-        var (_, exit) = await RunGitAsync(repoRoot, "commit", "-m", message);
+        var (_, err, exit) = await RunGitAsync(repoRoot, "commit", "-m", message);
         if (exit != 0)
-            throw new InvalidOperationException($"git commit exited with code {exit}");
+            throw new InvalidOperationException(string.IsNullOrEmpty(err)
+                ? $"git commit exited with code {exit}"
+                : err);
     }
 }

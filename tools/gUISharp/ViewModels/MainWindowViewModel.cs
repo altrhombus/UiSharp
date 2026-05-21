@@ -214,11 +214,11 @@ public sealed partial class MainWindowViewModel : ObservableObject
             return;
         }
 
-        var info    = await _gitService.GetRepoInfoAsync(CurrentFile);
-        var history = info is not null
-            ? await _gitService.GetFileLogAsync(CurrentFile)
-            : (IReadOnlyList<GitCommit>)[];
-        Git.Update(info, CurrentFile, history);
+        var info  = await _gitService.GetRepoInfoAsync(CurrentFile);
+        var graph = info is not null
+            ? await _gitService.GetGraphAsync(CurrentFile)
+            : (IReadOnlyList<GitGraphLine>)[];
+        Git.Update(info, CurrentFile, graph);
     }
 
     [RelayCommand]
