@@ -180,7 +180,7 @@
                                 <Grid Opacity="{x:Bind MatchOpacity, Mode=OneWay}"
                                       Margin="0,0,10,0">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="16" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="Auto" />
                                         <ColumnDefinition Width="*" />
@@ -190,8 +190,8 @@
                                     </Grid.ColumnDefinitions>
                                     <InfoBadge Grid.Column="0"
                                                Style="{StaticResource ModifiedDotInfoBadgeStyle}"
+                                               HorizontalAlignment="Left"
                                                VerticalAlignment="Center"
-                                               Margin="0,0,6,0"
                                                Visibility="{x:Bind IsDirty, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}"
                                                ToolTipService.ToolTip="Unsaved changes" />
                                     <FontIcon Grid.Column="1"
