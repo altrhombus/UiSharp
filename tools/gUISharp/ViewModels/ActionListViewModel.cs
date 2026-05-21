@@ -15,7 +15,6 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
     private readonly EditorViewModelFactory _factory;
     private ActionNodeViewModel? _previousSelection;
     private bool _updatingFromXml;
-    private bool _xmlDirtyForGuided;
     private readonly List<(ActionNodeViewModel Vm, int Start, int End)> _lineRanges = [];
     private string? _trackedVarName;
     private string? _pendingRenameFrom;
@@ -188,20 +187,11 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         CurrentXmlText = xml;
         if (TryApplyFullXmlToTree(xml))
         {
-            _xmlDirtyForGuided = true;
             ComputeLineRangesFromXml(xml);
             SelectionDecorationChanged?.Invoke(this, EventArgs.Empty);
+            SelectedAction?.RefreshEditorViewModel();
         }
         _updatingFromXml = false;
-    }
-
-    /// <summary>Called when the guided panel gains focus. Only refreshes the editor VM when
-    /// the XML was actually edited since the last sync — no-op otherwise.</summary>
-    public void SyncXmlToGuided()
-    {
-        if (!_xmlDirtyForGuided) return;
-        _xmlDirtyForGuided = false;
-        SelectedAction?.RefreshEditorViewModel();
     }
 
     /// <summary>Called when the XML panel gains focus — flushes the guided form to the node.</summary>

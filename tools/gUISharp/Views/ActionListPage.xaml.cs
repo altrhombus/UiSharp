@@ -506,8 +506,6 @@ public sealed partial class ActionListPage : Page
 
     private void GuidedPanel_GotFocus(object sender, RoutedEventArgs e)
     {
-        // SyncXmlToGuided is self-gating: no-op unless the XML was edited since the last sync.
-        ViewModel.ActionList.SyncXmlToGuided();
     }
 
     private void XmlPanel_GotFocus(object sender, RoutedEventArgs e)
