@@ -8,6 +8,13 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="ModifiedDotInfoBadgeStyle"
+                   TargetType="InfoBadge"
+                   BasedOn="{StaticResource InformationalDotInfoBadgeStyle}">
+                <Setter Property="Width"      Value="10" />
+                <Setter Property="Height"     Value="10" />
+                <Setter Property="Background" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+            </Style>
             <local:BoolToVisibilityConverter        x:Key="BoolToVisibilityConverter" />
             <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
             <local:BoolToTypeConverter              x:Key="BoolToTypeConverter" />
