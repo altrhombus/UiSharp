@@ -6,6 +6,7 @@ namespace GUISharp.Services;
 public sealed class UserSettings
 {
     public int           RecentFilesLimit   { get; set; } = 10;
+    public bool          NavPaneOpen        { get; set; } = true;
     public List<string>  RecentFiles        { get; set; } = new();
     public string        ConfigMgrServer    { get; set; } = string.Empty;
     public string        ConfigMgrSiteCode  { get; set; } = string.Empty;

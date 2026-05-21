@@ -31,6 +31,10 @@ public sealed partial class MainWindow : Window
 
         ViewModel.NavigationRequested += OnNavigationRequested;
 
+        NavView.IsPaneOpen = App.UserSettings.Settings.NavPaneOpen;
+        NavView.PaneOpened += (_, _) => { App.UserSettings.Settings.NavPaneOpen = true;  App.UserSettings.Save(); };
+        NavView.PaneClosed += (_, _) => { App.UserSettings.Settings.NavPaneOpen = false; App.UserSettings.Save(); };
+
         // Navigate to Actions page by default.
         NavView.SelectedItem = NavView.MenuItems[0];
     }
