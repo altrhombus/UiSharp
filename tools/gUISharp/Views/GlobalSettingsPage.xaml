@@ -119,40 +119,14 @@
                                      PlaceholderText="e.g. UI++2.ico" />
                         </local:LabeledField>
 
-                        <local:LabeledField Label="Accent Color (hex)">
-                            <Grid ColumnSpacing="8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0"
-                                         Text="{x:Bind ViewModel.GlobalSettings.AccentColor, Mode=TwoWay}"
-                                         PlaceholderText="#002147" />
-                                <Border Grid.Column="1"
-                                        Width="36" Height="32" CornerRadius="4"
-                                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
-                                        BorderThickness="1"
-                                        Background="{x:Bind ViewModel.GlobalSettings.AccentColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
-                                        ToolTipService.ToolTip="Color preview" />
-                            </Grid>
+                        <local:LabeledField Label="Accent Color">
+                            <local:ColorPickerField
+                                ColorHex="{x:Bind ViewModel.GlobalSettings.AccentColor, Mode=TwoWay}" />
                         </local:LabeledField>
 
-                        <local:LabeledField Label="Sidebar Text Color (hex)">
-                            <Grid ColumnSpacing="8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBox Grid.Column="0"
-                                         Text="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=TwoWay}"
-                                         PlaceholderText="#FFFFFF" />
-                                <Border Grid.Column="1"
-                                        Width="36" Height="32" CornerRadius="4"
-                                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
-                                        BorderThickness="1"
-                                        Background="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=OneWay, Converter={StaticResource HexToColorBrushConverter}}"
-                                        ToolTipService.ToolTip="Color preview" />
-                            </Grid>
+                        <local:LabeledField Label="Sidebar Text Color">
+                            <local:ColorPickerField
+                                ColorHex="{x:Bind ViewModel.GlobalSettings.SidebarTextColor, Mode=TwoWay}" />
                         </local:LabeledField>
 
                         <!-- Live dialog preview -->

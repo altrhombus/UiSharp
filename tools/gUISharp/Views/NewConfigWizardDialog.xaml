@@ -14,6 +14,14 @@
 
     <StackPanel Width="480" Spacing="0">
 
+        <!-- Step indicator -->
+        <TextBlock x:Name="StepLabel"
+                   Text="Step 1 of 3"
+                   HorizontalAlignment="Right"
+                   Style="{ThemeResource CaptionTextBlockStyle}"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                   Margin="0,0,0,12" />
+
         <!-- ── Step 1: Choose scenario ───────────────────────────────────── -->
         <Grid x:Name="Step1Panel">
             <Grid.ColumnDefinitions>
@@ -128,6 +136,10 @@
                 <TextBox x:Name="TitleBox" PlaceholderText="e.g. Operating System Deployment" />
             </local:LabeledField>
 
+            <local:LabeledField Label="Subtitle">
+                <TextBox x:Name="SubtitleBox" PlaceholderText="Optional — shown below the title bar" />
+            </local:LabeledField>
+
             <!-- AppTree variable base fields (shown for OSD and Software Selection) -->
             <StackPanel x:Name="AppTreeSettings" Spacing="12">
                 <local:LabeledField Label="Application Variable Base">
@@ -137,6 +149,34 @@
                     <TextBox x:Name="PkgVarBaseBox" Text="XPackages" />
                 </local:LabeledField>
             </StackPanel>
+        </StackPanel>
+
+        <!-- ── Step 3: Appearance ────────────────────────────────────────── -->
+        <StackPanel x:Name="Step3Panel" Visibility="Collapsed" Spacing="12">
+            <TextBlock Style="{ThemeResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                       Text="Customize the visual style of your configuration dialogs. These settings can be changed any time in Global Settings." />
+
+            <local:LabeledField Label="Accent Color">
+                <local:ColorPickerField x:Name="AccentColorPicker" ColorHex="#002147" />
+            </local:LabeledField>
+
+            <Grid ColumnSpacing="24">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ToggleSwitch x:Name="ShowSidebarToggle"
+                              Grid.Column="0"
+                              Header="Show Sidebar"
+                              IsOn="True"
+                              OnContent="" OffContent="" />
+                <ToggleSwitch x:Name="ShowIconsToggle"
+                              Grid.Column="1"
+                              Header="Show Icons"
+                              IsOn="True"
+                              OnContent="" OffContent="" />
+            </Grid>
         </StackPanel>
 
     </StackPanel>

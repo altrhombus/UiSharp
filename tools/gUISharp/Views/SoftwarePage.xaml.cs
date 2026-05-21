@@ -24,6 +24,30 @@ public sealed partial class SoftwarePage : Page
         if (!double.IsNaN(_savedListColWidth))   ListCol.Width   = new GridLength(_savedListColWidth);
         if (!double.IsNaN(_savedGuidedColWidth)) GuidedCol.Width = new GridLength(_savedGuidedColWidth, GridUnitType.Star);
         if (!double.IsNaN(_savedXmlColWidth))    XmlCol.Width    = new GridLength(_savedXmlColWidth,    GridUnitType.Star);
+        if (double.IsNaN(_savedGuidedColWidth) && double.IsNaN(_savedXmlColWidth))
+            ApplyDefaultLayout(App.UserSettings.Settings.DefaultPanelLayout);
+    }
+
+    private void ApplyDefaultLayout(string layout)
+    {
+        if (layout == "GuidedOnly")
+        {
+            XmlCol.MinWidth   = 0;
+            XmlCol.Width      = new GridLength(0);
+            SplitterCol.Width = new GridLength(0);
+            _xmlCollapsed     = true;
+            CollapseXmlBtn.Visibility = Visibility.Collapsed;
+            ExpandXmlBtn.Visibility   = Visibility.Visible;
+        }
+        else if (layout == "XmlOnly")
+        {
+            GuidedCol.MinWidth = 0;
+            GuidedCol.Width    = new GridLength(0);
+            SplitterCol.Width  = new GridLength(0);
+            _guidedCollapsed   = true;
+            CollapseGuidedBtn.Visibility = Visibility.Collapsed;
+            ExpandGuidedBtn.Visibility   = Visibility.Visible;
+        }
     }
 
     private async void ImportFromConfigMgr_Click(object sender, RoutedEventArgs e)

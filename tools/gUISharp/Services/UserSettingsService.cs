@@ -10,6 +10,7 @@ public sealed class UserSettings
     public List<string>  RecentFiles        { get; set; } = new();
     public string        ConfigMgrServer    { get; set; } = string.Empty;
     public string        ConfigMgrSiteCode  { get; set; } = string.Empty;
+    public string        DefaultPanelLayout { get; set; } = "Both"; // "Both" | "GuidedOnly" | "XmlOnly"
 
     [JsonIgnore]
     public static UserSettings Default => new();

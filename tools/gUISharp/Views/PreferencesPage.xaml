@@ -2,6 +2,7 @@
     x:Class="GUISharp.Views.PreferencesPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:GUISharp.Views"
     Loaded="PreferencesPage_Loaded">
 
     <ScrollViewer Padding="24,20">
@@ -26,6 +27,50 @@
                 </StackPanel>
             </StackPanel>
 
+            <!-- ConfigMgr Connection -->
+            <StackPanel Spacing="12">
+                <TextBlock Text="ConfigMgr Connection"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <TextBlock Text="Pre-configure the server used by the Software page's Import from ConfigMgr feature. These are saved automatically when you connect via the import dialog."
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           TextWrapping="Wrap" />
+                <local:LabeledField Label="AdminService Host">
+                    <TextBox x:Name="ConfigMgrServerBox"
+                             PlaceholderText="e.g. cm01.contoso.com"
+                             TextChanged="ConfigMgrServer_TextChanged" />
+                </local:LabeledField>
+                <local:LabeledField Label="Site Code">
+                    <TextBox x:Name="ConfigMgrSiteCodeBox"
+                             PlaceholderText="e.g. P01"
+                             MaxLength="3"
+                             TextChanged="ConfigMgrSiteCode_TextChanged" />
+                </local:LabeledField>
+            </StackPanel>
+
+            <!-- Default Editor Layout -->
+            <StackPanel Spacing="12">
+                <TextBlock Text="Default Editor Layout"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                <TextBlock Text="Starting panel arrangement when opening a page for the first time each session. You can still collapse or expand panels at any time using the panel header buttons."
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           TextWrapping="Wrap" />
+                <RadioButton x:Name="LayoutBoth"
+                             Content="Guided + XML (default)"
+                             GroupName="Layout"
+                             IsChecked="True"
+                             Checked="Layout_Checked" />
+                <RadioButton x:Name="LayoutGuidedOnly"
+                             Content="Guided panel only"
+                             GroupName="Layout"
+                             Checked="Layout_Checked" />
+                <RadioButton x:Name="LayoutXmlOnly"
+                             Content="XML panel only"
+                             GroupName="Layout"
+                             Checked="Layout_Checked" />
+            </StackPanel>
+
             <!-- About -->
             <StackPanel Spacing="12">
                 <TextBlock Text="About"
@@ -37,6 +82,20 @@
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
+                <TextBlock Text="A graphical editor for UI++/UiSharp XML configuration files. Part of the UiSharp project — a C# port of Jason Sandys's UI++ task-sequence front-end for Microsoft Configuration Manager."
+                           Style="{ThemeResource BodyTextBlockStyle}"
+                           TextWrapping="Wrap" />
+                <StackPanel Spacing="2">
+                    <HyperlinkButton Content="GitHub — altrhombus/UiSharp"
+                                     NavigateUri="https://github.com/altrhombus/UiSharp"
+                                     Padding="0,4" />
+                    <HyperlinkButton Content="Original UI++ by Jason Sandys"
+                                     NavigateUri="https://github.com/jason4tw/UIPlusPlus"
+                                     Padding="0,4" />
+                </StackPanel>
+                <TextBlock Text="Licensed under the GNU General Public License v3.0."
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
             </StackPanel>
 
         </StackPanel>

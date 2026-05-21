@@ -1,0 +1,41 @@
+<UserControl
+    x:Class="GUISharp.Views.ColorPickerField"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Grid ColumnSpacing="8">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <TextBox Grid.Column="0"
+                 x:Name="HexTextBox"
+                 PlaceholderText="#000000"
+                 IsSpellCheckEnabled="False"
+                 TextChanged="HexTextBox_TextChanged" />
+
+        <Button Grid.Column="1"
+                Padding="0"
+                Width="32" Height="32"
+                ToolTipService.ToolTip="Open color picker">
+            <Button.Flyout>
+                <Flyout x:Name="PickerFlyout"
+                        Placement="BottomEdgeAlignedRight"
+                        Opened="PickerFlyout_Opened">
+                    <ColorPicker x:Name="TheColorPicker"
+                                 IsAlphaEnabled="False"
+                                 IsAlphaSliderVisible="False"
+                                 IsAlphaTextInputVisible="False"
+                                 ColorSpectrumShape="Box"
+                                 ColorChanged="ColorPicker_ColorChanged" />
+                </Flyout>
+            </Button.Flyout>
+            <Border x:Name="SwatchPreview"
+                    Width="18" Height="18"
+                    CornerRadius="3"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                    BorderThickness="1" />
+        </Button>
+    </Grid>
+</UserControl>
