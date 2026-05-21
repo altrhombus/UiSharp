@@ -11,6 +11,11 @@ public sealed partial class AppTreeEditor : UserControl
     public AppTreeEditor()
     {
         this.InitializeComponent();
+        DataContextChanged += (_, _) =>
+        {
+            if (DataContext is AppTreeViewModel vm)
+                vm.RefreshAvailableToAssign();
+        };
     }
 
     private void AddToSetButton_Click(object sender, RoutedEventArgs e)

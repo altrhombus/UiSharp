@@ -109,7 +109,7 @@ public sealed partial class AppTreeViewModel : ObservableObject, IActionEditor
 
     // ── Available to assign ──────────────────────────────────────────────────
 
-    private void RefreshAvailableToAssign()
+    internal void RefreshAvailableToAssign()
     {
         var referenced = GetAllReferencedIds().ToHashSet(StringComparer.OrdinalIgnoreCase);
         var catalog    = App.MainVm.Software.Items;
