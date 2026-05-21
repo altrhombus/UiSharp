@@ -39,7 +39,9 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
     [ObservableProperty] public partial string SearchText      { get; set; } = string.Empty;
     [ObservableProperty] public partial string AltUsername     { get; set; } = string.Empty;
     [ObservableProperty] public partial string AltPassword     { get; set; } = string.Empty;
-    [ObservableProperty] public partial bool   ShowCredentials { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanConnect))]
+    public partial bool ShowCredentials { get; set; }
 
     private readonly IConfigMgrService _service;
     private readonly List<CmSelectableItem> _allApps = [];
@@ -50,7 +52,7 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
     public bool IsConnected  => _allApps.Count > 0 || _allPkgs.Count > 0;
     public bool HasError     => !string.IsNullOrEmpty(ErrorMessage);
     public bool CanConnect   => !string.IsNullOrWhiteSpace(ServerName)
-                             && !string.IsNullOrWhiteSpace(SiteCode)
+                             && (ShowCredentials || !string.IsNullOrWhiteSpace(SiteCode))
                              && !IsLoading;
     public bool HasSelection => _allApps.Any(a => a.IsSelected) || _allPkgs.Any(p => p.IsSelected);
 
@@ -121,13 +123,13 @@ public sealed partial class ConfigMgrImportViewModel : ObservableObject
             ErrorMessage = ex switch
             {
                 HttpRequestException { StatusCode: System.Net.HttpStatusCode.NotFound } =>
-                    "The Administration Service was not found on the SMS Provider. Verify the server name and that AdminService is enabled (ConfigMgr 2002+).",
+                    "Administration Service not found at this server address. Verify the host name and that AdminService is enabled (ConfigMgr 2002+).",
                 HttpRequestException hre when hre.StatusCode is null =>
-                    "Cannot reach the SMS Provider — verify the server name and network access.",
+                    "Cannot reach the server — verify the host name and network access.",
                 _ when (uint)ex.HResult == 0x800706BA =>
-                    "Cannot reach the SMS Provider — verify the server name and network access.",
+                    "Cannot reach the server — verify the host name and network access.",
                 _ =>
-                    $"Connection failed ({ex.GetType().Name}, 0x{(uint)ex.HResult:X8}): {ex.Message}"
+                    $"Connection failed: {ex.Message}"
             };
         }
         finally

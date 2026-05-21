@@ -20,10 +20,10 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <TextBox Grid.Column="0"
-                     PlaceholderText="SMS Provider / server name"
+                     PlaceholderText="AdminService host (e.g. cm.contoso.com)"
                      Text="{x:Bind Vm.ServerName, Mode=OneWay}"
                      TextChanged="ServerNameBox_TextChanged"
-                     ToolTipService.ToolTip="NetBIOS or FQDN of your SMS Provider. Found in ConfigMgr Console: Administration &gt; Site Configuration &gt; Servers and Site System Roles." />
+                     ToolTipService.ToolTip="NetBIOS name or FQDN of the server hosting the ConfigMgr Administration Service. In the ConfigMgr Console: Administration &#x203A; Site Configuration &#x203A; Servers and Site System Roles — look for the SMS Provider role. The Administration Service URL is https://{hostname}/AdminService/." />
             <TextBox Grid.Column="1"
                      PlaceholderText="Site code"
                      MaxLength="3"
