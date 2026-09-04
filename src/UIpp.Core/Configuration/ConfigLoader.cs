@@ -3,18 +3,19 @@ using System.Globalization;
 using System.Xml.Linq;
 using UIpp.Core.Dialogs;
 using UIpp.Core.Software;
+using UIpp.Core.Variables;
 
 namespace UIpp.Core.Configuration;
 
 public static class ConfigLoader
 {
     // Synchronous load from a local file path.
-    public static LoadedConfig Load(string path) =>
-        ParseXml(File.ReadAllText(path), path);
+    public static LoadedConfig Load(string path, ITSEnv? env = null) =>
+        ParseXml(File.ReadAllText(path), path, env);
 
     // Parse from an in-memory XML string (e.g. wizard-generated templates).
-    public static LoadedConfig LoadFromXml(string xml) =>
-        ParseXml(xml, "template");
+    public static LoadedConfig LoadFromXml(string xml, ITSEnv? env = null) =>
+        ParseXml(xml, "template", env);
 
     // Async load — handles both local paths and http(s):// URLs.
     // On download failure, falls back to fallbackPath if provided.
@@ -23,7 +24,8 @@ public static class ConfigLoader
         string path,
         string? fallbackPath  = null,
         int    maxRetries     = 3,
-        CancellationToken ct  = default)
+        CancellationToken ct  = default,
+        ITSEnv? env           = null)
     {
         string xml;
         if (IsHttpUrl(path))
@@ -31,7 +33,7 @@ public static class ConfigLoader
         else
             xml = File.ReadAllText(path);
 
-        return ParseXml(xml, path);
+        return ParseXml(xml, path, env);
     }
 
     // -------------------------------------------------------------------------
@@ -73,7 +75,7 @@ public static class ConfigLoader
 
     // -------------------------------------------------------------------------
 
-    private static LoadedConfig ParseXml(string rawXml, string sourceName)
+    private static LoadedConfig ParseXml(string rawXml, string sourceName, ITSEnv? env = null)
     {
         var doc  = XDocument.Parse(EscapeAttributeLt(rawXml));
         var root = doc.Root
@@ -83,13 +85,13 @@ public static class ConfigLoader
             throw new InvalidOperationException(
                 $"Root element must be '{XmlConstants.Elements.Root}', found '{root.Name.LocalName}'.");
 
-        var traits          = ReadDialogTraits(root);
-        var software        = ReadSoftware(root);
+        var traits          = ReadDialogTraits(root, env);
+        var software        = ReadSoftware(root, env);
         var messages        = root.Element(XmlConstants.Elements.Messages);
-        var conditionEngine = Attr(root, XmlConstants.Attributes.ConditionEngine)
+        var conditionEngine = Attr(root, env, XmlConstants.Attributes.ConditionEngine)
                               ?? XmlConstants.Values.ConditionEngineNative;
         var schemaVersion   = int.TryParse(
-                                  Attr(root, XmlConstants.Attributes.SchemaVersion),
+                                  Attr(root, env, XmlConstants.Attributes.SchemaVersion),
                                   out var sv) ? sv : (int?)null;
 
         return new LoadedConfig(doc, traits, software, conditionEngine, schemaVersion, messages);
@@ -97,29 +99,29 @@ public static class ConfigLoader
 
     // -------------------------------------------------------------------------
 
-    private static DialogTraits ReadDialogTraits(XElement root)
+    private static DialogTraits ReadDialogTraits(XElement root, ITSEnv? env)
     {
         var flags = DialogTraitFlags.None;
-        if (ParseBool(Attr(root, XmlConstants.Attributes.DialogIcons),  defaultValue: true))  flags |= DialogTraitFlags.ShowIcons;
-        if (ParseBool(Attr(root, XmlConstants.Attributes.DialogSidebar), defaultValue: true)) flags |= DialogTraitFlags.ShowSidebar;
-        if (ParseBool(Attr(root, XmlConstants.Attributes.AlwaysOnTop),  defaultValue: true))  flags |= DialogTraitFlags.AlwaysOnTop;
-        if (ParseBool(Attr(root, XmlConstants.Attributes.Flat),         defaultValue: false)) flags |= DialogTraitFlags.Flat;
+        if (ParseBool(Attr(root, env, XmlConstants.Attributes.DialogIcons),   defaultValue: true))  flags |= DialogTraitFlags.ShowIcons;
+        if (ParseBool(Attr(root, env, XmlConstants.Attributes.DialogSidebar), defaultValue: true)) flags |= DialogTraitFlags.ShowSidebar;
+        if (ParseBool(Attr(root, env, XmlConstants.Attributes.AlwaysOnTop),   defaultValue: true))  flags |= DialogTraitFlags.AlwaysOnTop;
+        if (ParseBool(Attr(root, env, XmlConstants.Attributes.Flat),          defaultValue: false)) flags |= DialogTraitFlags.Flat;
         flags |= DialogTraitFlags.AllowVarEditor;
 
         return new DialogTraits
         {
-            Title            = Attr(root, XmlConstants.Attributes.Title)           ?? "UI++",
-            Subtitle         = Attr(root, XmlConstants.Attributes.Subtitle)        ?? string.Empty,
-            FontFace         = Attr(root, XmlConstants.Attributes.Font)            ?? XmlConstants.DefaultFontFace,
-            IconPath         = Attr(root, XmlConstants.Attributes.Icon),
-            AccentColor      = ParseHexColor(Attr(root, XmlConstants.Attributes.Color),            Color.FromArgb(0x00, 0x21, 0x47)),
-            SidebarTextColor = ParseHexColor(Attr(root, XmlConstants.Attributes.SidebarTextColor), Color.White),
-            TextColor        = ParseHexColor(Attr(root, XmlConstants.Attributes.TextColor),        Color.Black),
+            Title            = Attr(root, env, XmlConstants.Attributes.Title)           ?? "UI++",
+            Subtitle         = Attr(root, env, XmlConstants.Attributes.Subtitle)        ?? string.Empty,
+            FontFace         = Attr(root, env, XmlConstants.Attributes.Font)            ?? XmlConstants.DefaultFontFace,
+            IconPath         = Attr(root, env, XmlConstants.Attributes.Icon),
+            AccentColor      = ParseHexColor(Attr(root, env, XmlConstants.Attributes.Color),            Color.FromArgb(0x00, 0x21, 0x47)),
+            SidebarTextColor = ParseHexColor(Attr(root, env, XmlConstants.Attributes.SidebarTextColor), Color.White),
+            TextColor        = ParseHexColor(Attr(root, env, XmlConstants.Attributes.TextColor),        Color.Black),
             Flags            = flags,
         };
     }
 
-    private static IReadOnlyDictionary<string, ISoftware> ReadSoftware(XElement root)
+    private static IReadOnlyDictionary<string, ISoftware> ReadSoftware(XElement root, ITSEnv? env)
     {
         var softwareNode = root.Element(XmlConstants.Elements.Software);
         if (softwareNode is null)
@@ -131,25 +133,25 @@ public static class ConfigLoader
         foreach (var node in softwareNode.Elements())
         {
             var localName = node.Name.LocalName;
-            var id        = Attr(node, XmlConstants.Attributes.Id);
+            var id        = Attr(node, env, XmlConstants.Attributes.Id);
             if (string.IsNullOrWhiteSpace(id)) continue;
 
-            var label      = Attr(node, XmlConstants.Attributes.Label)       ?? id;
-            var info       = Attr(node, XmlConstants.Attributes.SoftwareInfo) ?? string.Empty;
-            var includeIds = Attr(node, XmlConstants.Attributes.IncludeId)   ?? string.Empty;
-            var excludeIds = Attr(node, XmlConstants.Attributes.ExcludeId)   ?? string.Empty;
+            var label      = Attr(node, env, XmlConstants.Attributes.Label)        ?? id;
+            var info       = Attr(node, env, XmlConstants.Attributes.SoftwareInfo) ?? string.Empty;
+            var includeIds = Attr(node, env, XmlConstants.Attributes.IncludeId)    ?? string.Empty;
+            var excludeIds = Attr(node, env, XmlConstants.Attributes.ExcludeId)    ?? string.Empty;
 
             ISoftware? sw = null;
 
             if (localName.Equals(XmlConstants.Elements.Application, StringComparison.OrdinalIgnoreCase))
             {
-                var appName = Attr(node, XmlConstants.Attributes.AppName) ?? string.Empty;
+                var appName = Attr(node, env, XmlConstants.Attributes.AppName) ?? string.Empty;
                 sw = new Application(id, label, info, appName, includeIds, excludeIds, order);
             }
             else if (localName.Equals(XmlConstants.Elements.Package, StringComparison.OrdinalIgnoreCase))
             {
-                var pkgId    = Attr(node, XmlConstants.Attributes.PkgId)       ?? string.Empty;
-                var progName = Attr(node, XmlConstants.Attributes.ProgramName) ?? string.Empty;
+                var pkgId    = Attr(node, env, XmlConstants.Attributes.PkgId)       ?? string.Empty;
+                var progName = Attr(node, env, XmlConstants.Attributes.ProgramName) ?? string.Empty;
                 sw = new Package(id, label, info, pkgId, progName, includeIds, excludeIds, order);
             }
 
@@ -165,8 +167,16 @@ public static class ConfigLoader
     // -------------------------------------------------------------------------
     // Helpers
 
-    private static string? Attr(XElement el, string name) =>
-        (string?)el.Attribute(name);
+    // Mirrors C++ GetXMLAttribute (UI++/Actions/IAction.cpp:21), which the
+    // original also uses for the root element's attributes (UI++.cpp:237), so
+    // variables in them are substituted. Returns null when the attribute is
+    // absent so callers can apply their own defaults.
+    private static string? Attr(XElement el, ITSEnv? env, string name)
+    {
+        var raw = (string?)el.Attribute(name);
+        if (raw is null || raw.Length == 0) return raw;
+        return env is null ? raw : env.Substitute(raw);
+    }
 
     private static Color ParseHexColor(string? hex, Color fallback)
     {

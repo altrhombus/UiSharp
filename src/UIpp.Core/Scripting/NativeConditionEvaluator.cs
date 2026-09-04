@@ -2,27 +2,99 @@ using System.Globalization;
 
 namespace UIpp.Core.Scripting;
 
-// Recursive-descent parser for UI++ condition expressions (post-variable-substitution).
+// Recursive-descent parser for UI++ expressions (post-variable-substitution).
 //
-// Grammar:
-//   expr     → or_expr
-//   or_expr  → and_expr  ( 'OR'  and_expr )*
-//   and_expr → not_expr  ( 'AND' not_expr )*
-//   not_expr → 'NOT' not_expr | compare
-//   compare  → atom ( op atom )?
-//   op       → '=' | '<>' | '<' | '>' | '<=' | '>='
-//   atom     → number | string_lit | call | '(' expr ')'
-//   call     → IDENT '(' arg_list ')'
+// Used two ways, exactly as the original uses its one CScriptHost:
+//   * TryEvaluate    — a condition, for its truth value.
+//   * TryEvaluateValue — an expression, for its resulting value (TSVar, Switch).
+//
+// Precedence follows VBScript, loosest to tightest:
+//   expr      → or_expr
+//   or_expr   → and_expr ( 'OR' and_expr )*
+//   and_expr  → not_expr ( 'AND' not_expr )*
+//   not_expr  → 'NOT' not_expr | compare
+//   compare   → concat ( ( '=' | '<>' | '<' | '>' | '<=' | '>=' ) concat )?
+//   concat    → additive ( '&' additive )*
+//   additive  → modulo ( ( '+' | '-' ) modulo )*
+//   modulo    → intdiv ( 'MOD' intdiv )*
+//   intdiv    → muldiv ( '\' muldiv )*
+//   muldiv    → unary ( ( '*' | '/' ) unary )*
+//   unary     → ( '-' | '+' ) unary | power
+//   power     → atom ( '^' unary )?
+//   atom      → number | string_lit | call | '(' expr ')' | IDENT
+//   call      → IDENT '(' arg_list ')'
 //   string_lit → '"' ... '"' | "'" ... "'"
 public sealed class NativeConditionEvaluator : IConditionEvaluator
 {
-    public bool Evaluate(string expression, IReadOnlyDictionary<string, string> variables)
+    public bool Evaluate(string expression, IReadOnlyDictionary<string, string> variables) =>
+        TryEvaluate(expression, variables).Value;
+
+    /// <summary>
+    /// Evaluates an expression for its value. Declines (returns false) whenever
+    /// the engine could not fully evaluate it or the result is empty, so the
+    /// caller keeps the literal text — the same rule the original applies to
+    /// CScriptHost::Eval's HRESULT and VARIANT.
+    /// </summary>
+    public bool TryEvaluateValue(string expression, out string value)
     {
-        if (string.IsNullOrWhiteSpace(expression)) return true;
-        var parser = new Parser(expression);
+        value = string.Empty;
+        if (string.IsNullOrWhiteSpace(expression)) return false;
+
+        var diagnostics = new List<ConditionDiagnostic>();
+        var parser = new Parser(expression, diagnostics);
         var result = parser.ParseExpr();
-        return result.IsTrue;
+
+        // Any diagnostic, or input the grammar could not consume, means VBScript
+        // would most likely have raised an error here. Decline rather than hand
+        // back a half-evaluated value.
+        if (!parser.AtEnd || diagnostics.Count > 0) return false;
+
+        var text = result.AsString();
+        if (text.Length == 0) return false;   // C++ requires a non-empty result
+
+        value = text;
+        return true;
     }
+
+    public ConditionResult TryEvaluate(string expression, IReadOnlyDictionary<string, string> variables)
+    {
+        if (string.IsNullOrWhiteSpace(expression)) return ConditionResult.Ok(true);
+
+        var diagnostics = new List<ConditionDiagnostic>();
+        var parser = new Parser(expression, diagnostics);
+        var result = parser.ParseExpr();
+
+        // Anything left over means the grammar bailed out part-way and the rest of
+        // the expression was ignored. When the token we stopped on is punctuation
+        // the grammar has no rule for, that operator is the real story — say so
+        // rather than blaming trailing junk.
+        if (!parser.AtEnd)
+        {
+            diagnostics.Add(parser.StoppedOnUnsupportedToken
+                ? new ConditionDiagnostic(
+                    ConditionDiagnosticKind.UnsupportedConstruct,
+                    DescribeUnsupportedToken(parser.StoppedTokenText, expression))
+                : new ConditionDiagnostic(
+                    ConditionDiagnosticKind.TrailingInput,
+                    $"stopped at '{parser.RemainingText}' in \"{expression}\""));
+        }
+
+        // Fail closed. Anything the engine could not evaluate faithfully would
+        // have raised a VBScript error in the original, and C++ EvalCondition
+        // treats a failed Eval as false (ActionHelper.cpp:89). Returning the
+        // truthy parse leftovers instead once let preflight checks referencing
+        // unset variables pass silently.
+        return new ConditionResult(
+            diagnostics.Count == 0 && result.IsTrue,
+            diagnostics);
+    }
+
+    private static string DescribeUnsupportedToken(string token, string expression) => token switch
+    {
+        "." => $"member access ('.') is not supported by the native engine, in \"{expression}\"",
+        "&" => $"string concatenation ('&') is not supported by the native engine, in \"{expression}\"",
+        _   => $"unsupported operator or character '{token}' in \"{expression}\"",
+    };
 
     // -------------------------------------------------------------------------
     // Value types produced by the parser
@@ -32,7 +104,7 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
 
     private readonly struct Value
     {
-        public readonly ValueKind Kind;
+        public readonly ValueKind Kind;   // read by ParseAdditive to pick + semantics
         public readonly string    Str;
         public readonly double    Num;
         public readonly bool      Bool;
@@ -73,6 +145,11 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
         Eof, Ident, Number, StringLit,
         LParen, RParen, Comma,
         Eq, Ne, Lt, Gt, Le, Ge,
+        Plus, Minus, Star, Slash, Backslash, Caret, Amp,
+        // Punctuation the grammar has no rule for, such as '.' member access.
+        // Kept as its own kind so the parser can report it instead of silently
+        // treating it as a bare identifier.
+        Unknown,
     }
 
     private sealed class Lexer(string src)
@@ -82,6 +159,12 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
         public TokenKind Kind  { get; private set; }
         public string    Text  { get; private set; } = string.Empty;
         public double    Num   { get; private set; }
+
+        // Current token plus everything after it — used to describe where the
+        // parser gave up.
+        public string Remaining => Kind == TokenKind.Eof
+            ? string.Empty
+            : (Text + src[Math.Min(_pos, src.Length)..]).Trim();
 
         public void Advance()
         {
@@ -102,10 +185,9 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                 return;
             }
 
-            if (char.IsDigit(c) || (c == '-' && _pos + 1 < src.Length && char.IsDigit(src[_pos + 1])))
+            if (char.IsDigit(c))
             {
                 var start = _pos;
-                if (c == '-') _pos++;
                 while (_pos < src.Length && (char.IsDigit(src[_pos]) || src[_pos] == '.')) _pos++;
                 Text = src[start.._pos];
                 Num  = double.Parse(Text, CultureInfo.InvariantCulture);
@@ -124,6 +206,13 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
 
             switch (c)
             {
+                case '+':  _pos++; Kind = TokenKind.Plus;      Text = "+";  return;
+                case '-':  _pos++; Kind = TokenKind.Minus;     Text = "-";  return;
+                case '*':  _pos++; Kind = TokenKind.Star;      Text = "*";  return;
+                case '/':  _pos++; Kind = TokenKind.Slash;     Text = "/";  return;
+                case '\\': _pos++; Kind = TokenKind.Backslash; Text = "\\"; return;
+                case '^':  _pos++; Kind = TokenKind.Caret;     Text = "^";  return;
+                case '&':  _pos++; Kind = TokenKind.Amp;       Text = "&";  return;
                 case '(': _pos++; Kind = TokenKind.LParen; Text = "("; return;
                 case ')': _pos++; Kind = TokenKind.RParen; Text = ")"; return;
                 case ',': _pos++; Kind = TokenKind.Comma;  Text = ","; return;
@@ -141,7 +230,7 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                     return;
                 default:
                     _pos++;
-                    Kind = TokenKind.Ident;
+                    Kind = TokenKind.Unknown;
                     Text = c.ToString();
                     return;
             }
@@ -155,12 +244,27 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
     private sealed class Parser
     {
         private readonly Lexer _lex;
+        private readonly List<ConditionDiagnostic> _diagnostics;
+        private readonly string _src;
 
-        public Parser(string src)
+        public Parser(string src, List<ConditionDiagnostic> diagnostics)
         {
             _lex = new Lexer(src);
+            _src = src;
+            _diagnostics = diagnostics;
             _lex.Advance();
         }
+
+        public bool   AtEnd         => _lex.Kind == TokenKind.Eof;
+        public string RemainingText => _lex.Remaining;
+
+        // True when parsing halted on punctuation the grammar has no rule for,
+        // rather than on otherwise-valid but unexpected input.
+        public bool   StoppedOnUnsupportedToken => _lex.Kind == TokenKind.Unknown;
+        public string StoppedTokenText          => _lex.Text;
+
+        private void Report(ConditionDiagnosticKind kind, string detail) =>
+            _diagnostics.Add(new ConditionDiagnostic(kind, detail));
 
         public Value ParseExpr() => ParseOr();
 
@@ -203,14 +307,14 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
 
         private Value ParseCompare()
         {
-            var left = ParseMod();
+            var left = ParseConcat();
             var op   = _lex.Kind;
             if (op is not (TokenKind.Eq or TokenKind.Ne or TokenKind.Lt
                           or TokenKind.Gt or TokenKind.Le or TokenKind.Ge))
                 return left;
 
             _lex.Advance();
-            var right = ParseMod();
+            var right = ParseConcat();
 
             // Prefer numeric comparison when both sides parse as numbers
             if (left.TryGetDouble(out var ln) && right.TryGetDouble(out var rn))
@@ -227,8 +331,11 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                 });
             }
 
+            // VBScript compares strings with Option Compare Binary unless a
+            // script says otherwise, and the UI++ host never does — so this is
+            // case-SENSITIVE. Confirmed by differential test against vbscript.dll.
             var cmp = string.Compare(left.AsString(), right.AsString(),
-                StringComparison.OrdinalIgnoreCase);
+                StringComparison.Ordinal);
             return Value.FromBool(op switch
             {
                 TokenKind.Eq => cmp == 0,
@@ -241,21 +348,163 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
             });
         }
 
-        // VBScript Mod operator: left Mod right → left % right (integer modulo)
-        private Value ParseMod()
+        // '&' always concatenates, coercing both sides to text (VBScript: 1 & 2 = "12").
+        private Value ParseConcat()
         {
-            var left = ParseAtom();
+            var left = ParseAdditive();
+            while (_lex.Kind == TokenKind.Amp)
+            {
+                _lex.Advance();
+                var right = ParseAdditive();
+                left = Value.FromString(left.AsString() + right.AsString());
+            }
+            return left;
+        }
+
+        // '+' adds numbers but concatenates when both sides are strings, which is
+        // what VBScript does: "1" + "2" is "12" while 1 + 2 is 3.
+        private Value ParseAdditive()
+        {
+            var left = ParseModulo();
+            while (_lex.Kind is TokenKind.Plus or TokenKind.Minus)
+            {
+                var op = _lex.Kind;
+                _lex.Advance();
+                var right = ParseModulo();
+
+                if (op == TokenKind.Plus &&
+                    left.Kind == ValueKind.String && right.Kind == ValueKind.String)
+                {
+                    left = Value.FromString(left.AsString() + right.AsString());
+                    continue;
+                }
+
+                if (!TryNumbers(left, right, op == TokenKind.Plus ? "+" : "-", out var ln, out var rn))
+                    return Value.FromString(string.Empty);
+
+                left = Value.FromNumber(op == TokenKind.Plus ? ln + rn : ln - rn);
+            }
+            return left;
+        }
+
+        // VBScript Mod operator: integer modulo.
+        private Value ParseModulo()
+        {
+            var left = ParseIntDiv();
             while (_lex.Kind == TokenKind.Ident &&
                    string.Equals(_lex.Text, "Mod", StringComparison.OrdinalIgnoreCase))
             {
                 _lex.Advance();
-                var right = ParseAtom();
-                if (left.TryGetDouble(out var ln) && right.TryGetDouble(out var rn) && rn != 0)
-                    left = Value.FromNumber(Math.Truncate(ln) % Math.Truncate(rn));
-                else
-                    left = Value.FromNumber(0);
+                var right = ParseIntDiv();
+
+                if (!TryNumbers(left, right, "Mod", out var ln, out var rn))
+                    return Value.FromString(string.Empty);
+
+                if (Math.Truncate(rn) == 0)
+                {
+                    Report(ConditionDiagnosticKind.EvaluationError, "division by zero in 'Mod'");
+                    return Value.FromString(string.Empty);
+                }
+
+                left = Value.FromNumber(Math.Truncate(ln) % Math.Truncate(rn));
             }
             return left;
+        }
+
+        // Backslash is VBScript's integer division.
+        private Value ParseIntDiv()
+        {
+            var left = ParseMulDiv();
+            while (_lex.Kind == TokenKind.Backslash)
+            {
+                _lex.Advance();
+                var right = ParseMulDiv();
+
+                if (!TryNumbers(left, right, "\\", out var ln, out var rn))
+                    return Value.FromString(string.Empty);
+
+                if (Math.Truncate(rn) == 0)
+                {
+                    Report(ConditionDiagnosticKind.EvaluationError, "division by zero in '\\'");
+                    return Value.FromString(string.Empty);
+                }
+
+                left = Value.FromNumber(Math.Truncate(Math.Truncate(ln) / Math.Truncate(rn)));
+            }
+            return left;
+        }
+
+        private Value ParseMulDiv()
+        {
+            var left = ParseUnary();
+            while (_lex.Kind is TokenKind.Star or TokenKind.Slash)
+            {
+                var op = _lex.Kind;
+                _lex.Advance();
+                var right = ParseUnary();
+
+                if (!TryNumbers(left, right, op == TokenKind.Star ? "*" : "/", out var ln, out var rn))
+                    return Value.FromString(string.Empty);
+
+                if (op == TokenKind.Slash && rn == 0)
+                {
+                    Report(ConditionDiagnosticKind.EvaluationError, "division by zero in '/'");
+                    return Value.FromString(string.Empty);
+                }
+
+                left = Value.FromNumber(op == TokenKind.Star ? ln * rn : ln / rn);
+            }
+            return left;
+        }
+
+        private Value ParseUnary()
+        {
+            if (_lex.Kind is TokenKind.Minus or TokenKind.Plus)
+            {
+                var negate = _lex.Kind == TokenKind.Minus;
+                _lex.Advance();
+                var operand = ParseUnary();
+
+                if (!operand.TryGetDouble(out var n))
+                {
+                    Report(ConditionDiagnosticKind.EvaluationError,
+                        $"unary '{(negate ? "-" : "+")}' applied to a non-numeric value");
+                    return Value.FromString(string.Empty);
+                }
+
+                return Value.FromNumber(negate ? -n : n);
+            }
+            return ParsePower();
+        }
+
+        // '^' is right-associative in VBScript, so the exponent recurses through
+        // ParseUnary to allow 2 ^ -1.
+        private Value ParsePower()
+        {
+            var left = ParseAtom();
+            if (_lex.Kind != TokenKind.Caret) return left;
+
+            _lex.Advance();
+            var right = ParseUnary();
+
+            if (!TryNumbers(left, right, "^", out var ln, out var rn))
+                return Value.FromString(string.Empty);
+
+            return Value.FromNumber(Math.Pow(ln, rn));
+        }
+
+        // Arithmetic on something that is not a number is a runtime error in
+        // VBScript, so report one instead of silently treating it as zero.
+        private bool TryNumbers(Value left, Value right, string op, out double ln, out double rn)
+        {
+            if (left.TryGetDouble(out ln) && right.TryGetDouble(out rn)) return true;
+
+            var culprit = left.TryGetDouble(out _) ? right : left;
+            Report(ConditionDiagnosticKind.EvaluationError,
+                $"operator '{op}' needs numbers, but got \"{culprit.AsString()}\"");
+            ln = 0;
+            rn = 0;
+            return false;
         }
 
         private Value ParseAtom()
@@ -287,8 +536,32 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                     _lex.Advance();
                     if (_lex.Kind == TokenKind.LParen)
                         return ParseCall(name);
-                    // Bare identifier — treat as string (already substituted by caller)
+
+                    // VBScript keyword literals. Without these, "False" parsed as
+                    // the non-empty string "False" and was therefore truthy, so
+                    // "True AND False" came out true.
+                    if (string.Equals(name, "True", StringComparison.OrdinalIgnoreCase))
+                        return Value.FromBool(true);
+                    if (string.Equals(name, "False", StringComparison.OrdinalIgnoreCase))
+                        return Value.FromBool(false);
+                    if (string.Equals(name, "Empty", StringComparison.OrdinalIgnoreCase))
+                        return Value.FromString(string.Empty);
+
+                    // Any other bare identifier is an undefined variable to
+                    // VBScript. Keep returning its text: callers that want a
+                    // value fall back to the literal anyway, and conditions are
+                    // failed by the diagnostic the caller records.
                     return Value.FromString(name);
+                }
+                case TokenKind.Unknown:
+                {
+                    // Value behaviour is unchanged from before this kind existed —
+                    // the character becomes a string — but it is now reported.
+                    var text = _lex.Text;
+                    Report(ConditionDiagnosticKind.UnsupportedConstruct,
+                        DescribeUnsupportedToken(text, _src));
+                    _lex.Advance();
+                    return Value.FromString(text);
                 }
                 default:
                     return Value.FromString(string.Empty);
@@ -313,8 +586,24 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
         // VBScript built-ins replicated in C#
         // ----------------------------------------------------------------
 
-        private static Value DispatchBuiltin(string name, List<Value> args)
+        private Value DispatchBuiltin(string name, List<Value> args)
         {
+            switch (name.ToUpperInvariant())
+            {
+                case "CREATEOBJECT":
+                case "GETOBJECT":
+                case "EVAL":
+                case "EXECUTE":
+                    Report(ConditionDiagnosticKind.RequiresComHost,
+                        $"{name}() requires the vbscript condition engine");
+                    return Value.FromString(string.Empty);
+
+                case "SPLIT":
+                    Report(ConditionDiagnosticKind.UnsupportedConstruct,
+                        "Split() returns an array, which the native engine cannot represent");
+                    return Value.FromString(string.Empty);
+            }
+
             return name.ToUpperInvariant() switch
             {
                 "INSTR"      => Builtin_InStr(args),
@@ -338,7 +627,24 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                 "CINT"       => args.Count > 0 && args[0].TryGetDouble(out var ci) ? Value.FromNumber(Math.Round(ci)) : Value.FromNumber(0),
                 "CDBL"       => args.Count > 0 && args[0].TryGetDouble(out var cd) ? Value.FromNumber(cd) : Value.FromNumber(0),
                 "REPLACE"    => Builtin_Replace(args),
-                "SPLIT"      => Value.FromString(""),   // array unsupported; Split() alone rarely appears in conditions
+
+                // Numeric functions. VBScript's Round and CInt both use
+                // banker's rounding, which is also .NET's MidpointRounding
+                // default, so Math.Round matches without extra work.
+                // UI++5.xml uses Round() in a preflight check.
+                "ROUND"      => Builtin_Round(args),
+                "FIX"        => args.Count > 0 && args[0].TryGetDouble(out var fx) ? Value.FromNumber(Math.Truncate(fx)) : Value.FromNumber(0),
+                "SGN"        => args.Count > 0 && args[0].TryGetDouble(out var sg) ? Value.FromNumber(Math.Sign(sg))     : Value.FromNumber(0),
+                "SQR"        => args.Count > 0 && args[0].TryGetDouble(out var sq) && sq >= 0 ? Value.FromNumber(Math.Sqrt(sq)) : Value.FromNumber(0),
+                "CLNG"       => args.Count > 0 && args[0].TryGetDouble(out var cl) ? Value.FromNumber(Math.Round(cl)) : Value.FromNumber(0),
+                "CSTR"       => args.Count > 0 ? Value.FromString(args[0].AsString()) : Value.FromString(""),
+                "HEX"        => args.Count > 0 && args[0].TryGetDouble(out var hx) ? Value.FromString(((long)Math.Truncate(hx)).ToString("X", CultureInfo.InvariantCulture)) : Value.FromString(""),
+
+                // String functions.
+                "ASC"        => args.Count > 0 && args[0].AsString().Length > 0 ? Value.FromNumber(args[0].AsString()[0]) : Value.FromNumber(0),
+                "CHR"        => args.Count > 0 && args[0].TryGetDouble(out var ch) ? Value.FromString(((char)(int)ch).ToString()) : Value.FromString(""),
+                "STRREVERSE" => Builtin_StrReverse(args),
+                "SPACE"      => args.Count > 0 && args[0].TryGetDouble(out var sp) && sp >= 0 ? Value.FromString(new string(' ', (int)sp)) : Value.FromString(""),
                 "NOW"        => Value.FromString(DateTime.Now.ToString("M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture)),
                 "DATE"       => Value.FromString(DateTime.Today.ToString("M/d/yyyy", CultureInfo.InvariantCulture)),
                 "TIME"       => Value.FromString(DateTime.Now.ToString("h:mm:ss tt", CultureInfo.InvariantCulture)),
@@ -346,9 +652,48 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                 "MONTH"      => args.Count > 0 ? Value.FromNumber(ParseVbDate(args[0].AsString()).Month)  : Value.FromNumber(DateTime.Now.Month),
                 "DAY"        => args.Count > 0 ? Value.FromNumber(ParseVbDate(args[0].AsString()).Day)    : Value.FromNumber(DateTime.Now.Day),
                 "WEEKDAY"    => args.Count > 0 ? Value.FromNumber((int)ParseVbDate(args[0].AsString()).DayOfWeek + 1) : Value.FromNumber((int)DateTime.Now.DayOfWeek + 1),
-                _            => Value.FromString(""),
+                _            => UnknownFunction(name),
             };
         }
+
+        // Round(number [, decimalPlaces])
+        private static Value Builtin_Round(List<Value> args)
+        {
+            if (args.Count == 0 || !args[0].TryGetDouble(out var n)) return Value.FromNumber(0);
+
+            var digits = 0;
+            if (args.Count > 1 && args[1].TryGetDouble(out var d))
+                digits = Math.Clamp((int)d, 0, 15);
+
+            return Value.FromNumber(Math.Round(n, digits));
+        }
+
+        private static Value Builtin_StrReverse(List<Value> args)
+        {
+            if (args.Count == 0) return Value.FromString("");
+            var chars = args[0].AsString().ToCharArray();
+            Array.Reverse(chars);
+            return Value.FromString(new string(chars));
+        }
+
+        // Preserves the historical value (empty string) while making the fact that
+        // the function was never evaluated visible to the caller.
+        private Value UnknownFunction(string name)
+        {
+            Report(ConditionDiagnosticKind.UnknownFunction,
+                $"'{name}()' is not implemented by the native engine");
+            return Value.FromString(string.Empty);
+        }
+
+        // VBScript's string functions take an optional trailing compare mode:
+        // 0 = vbBinaryCompare (the default), 1 = vbTextCompare. Everything here
+        // is binary unless a config explicitly asks for text comparison.
+        private static StringComparison CompareModeOf(List<Value> args, int compareArgIndex) =>
+            args.Count > compareArgIndex &&
+            args[compareArgIndex].TryGetDouble(out var mode) &&
+            (int)mode == 1
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
 
         // InStr([start,] string1, string2 [, compare])
         // Returns 1-based position, or 0 if not found.
@@ -374,7 +719,7 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
             if (needle.Length == 0) return Value.FromNumber(startIdx + 1);
             if (startIdx >= haystack.Length) return Value.FromNumber(0);
 
-            var idx = haystack.IndexOf(needle, startIdx, StringComparison.OrdinalIgnoreCase);
+            var idx = haystack.IndexOf(needle, startIdx, CompareModeOf(args, compareArgIndex: 3));
             return Value.FromNumber(idx < 0 ? 0 : idx + 1);
         }
 
@@ -384,7 +729,7 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
             var haystack = args[0].AsString();
             var needle   = args[1].AsString();
             if (needle.Length == 0) return Value.FromNumber(haystack.Length);
-            var idx = haystack.LastIndexOf(needle, StringComparison.OrdinalIgnoreCase);
+            var idx = haystack.LastIndexOf(needle, CompareModeOf(args, compareArgIndex: 2));
             return Value.FromNumber(idx < 0 ? 0 : idx + 1);
         }
 
@@ -447,7 +792,7 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
             var find = args[1].AsString();
             var repl = args[2].AsString();
             if (find.Length == 0) return Value.FromString(s);
-            return Value.FromString(s.Replace(find, repl, StringComparison.OrdinalIgnoreCase));
+            return Value.FromString(s.Replace(find, repl, CompareModeOf(args, compareArgIndex: 5)));
         }
 
         private static DateTime ParseVbDate(string s) =>

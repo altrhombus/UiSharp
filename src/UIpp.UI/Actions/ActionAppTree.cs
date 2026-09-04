@@ -19,7 +19,7 @@ public sealed class ActionAppTree(ActionData data) : ActionBase(data)
         var appBase  = Attr(XmlConstants.Attributes.AppVarBase,     XmlConstants.Defaults.AppVarBase);
         var pkgBase  = Attr(XmlConstants.Attributes.PackageVarBase, XmlConstants.Defaults.PackageVarBase);
         var showBack = BoolAttr(XmlConstants.Attributes.ShowBack);
-        var title    = SubstAttr(XmlConstants.Attributes.Title) is { Length: > 0 } t ? t : null;
+        var title    = Attr(XmlConstants.Attributes.Title) is { Length: > 0 } t ? t : null;
 
         // Load existing variable-value selections from numbered vars (e.g. XApplications01...).
         var preSelected = LoadExistingSelections(appBase, pkgBase);

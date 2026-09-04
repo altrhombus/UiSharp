@@ -13,7 +13,7 @@ public sealed class ActionErrorInfo(ActionData data) : ActionBase(data)
 
     public override ActionResult Go()
     {
-        var title       = SubstAttr(XmlConstants.Attributes.Title) is { Length: > 0 } t ? t : null;
+        var title       = Attr(XmlConstants.Attributes.Title) is { Length: > 0 } t ? t : null;
         var infoText    = Data.TsEnv.Substitute(Data.ActionNode.Value.Trim());
         var showBack    = BoolAttr(XmlConstants.Attributes.ShowBack);
         var showCancel  = BoolAttr(XmlConstants.Attributes.ShowCancel);

@@ -27,10 +27,12 @@ public sealed class ActionSoftwareDiscovery(ActionData data) : ActionBase(data)
         // Process each <Match> child element.
         foreach (var matchEl in Data.ActionNode.Elements("Match"))
         {
-            var namePattern    = (string?)matchEl.Attribute(XmlConstants.Attributes.DisplayName) ?? string.Empty;
-            var variable       = (string?)matchEl.Attribute(XmlConstants.Attributes.Variable)    ?? string.Empty;
-            var versionStr     = (string?)matchEl.Attribute(XmlConstants.Attributes.Version)     ?? string.Empty;
-            var versionOp      = (string?)matchEl.Attribute(XmlConstants.Attributes.VersionOperator) ?? "eq";
+            // C++ reads these through GetXMLAttribute (Actions.cpp:451-454), so
+            // they are variable-substituted.
+            var namePattern    = Attr(matchEl, XmlConstants.Attributes.DisplayName);
+            var variable       = Attr(matchEl, XmlConstants.Attributes.Variable);
+            var versionStr     = Attr(matchEl, XmlConstants.Attributes.Version);
+            var versionOp      = Attr(matchEl, XmlConstants.Attributes.VersionOperator, "eq");
             var regexOpts      = RegexOptions.IgnoreCase | RegexOptions.Compiled;
 
             if (string.IsNullOrWhiteSpace(namePattern) || string.IsNullOrWhiteSpace(variable))

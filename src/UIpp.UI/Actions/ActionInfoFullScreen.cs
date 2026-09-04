@@ -11,8 +11,8 @@ public sealed class ActionInfoFullScreen(ActionData data) : ActionBase(data)
 
     public override ActionResult Go()
     {
-        var title      = SubstAttr(XmlConstants.Attributes.Title)    is { Length: > 0 } t ? t : null;
-        var subtitle   = SubstAttr(XmlConstants.Attributes.Subtitle) is { Length: > 0 } s ? s : null;
+        var title      = Attr(XmlConstants.Attributes.Title)    is { Length: > 0 } t ? t : null;
+        var subtitle   = Attr(XmlConstants.Attributes.Subtitle) is { Length: > 0 } s ? s : null;
         var infoText = Data.TsEnv.Substitute(Data.ActionNode.Value.Trim());
         var showBack   = BoolAttr(XmlConstants.Attributes.ShowBack);
         var showCancel = BoolAttr(XmlConstants.Attributes.ShowCancel);

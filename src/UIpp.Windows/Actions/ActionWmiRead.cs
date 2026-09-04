@@ -10,13 +10,13 @@ public sealed class ActionWmiRead(ActionData data) : ActionBase(data)
 {
     public override ActionResult Go()
     {
-        var ns           = SubstAttr(XmlConstants.Attributes.Namespace) ?? XmlConstants.Defaults.Namespace;
-        var cls          = SubstAttr(XmlConstants.Attributes.Class);
-        var property     = SubstAttr(XmlConstants.Attributes.Property);
-        var keyQualifier = SubstAttr(XmlConstants.Attributes.KeyQualifier);
+        var ns           = Attr(XmlConstants.Attributes.Namespace, XmlConstants.Defaults.Namespace);
+        var cls          = Attr(XmlConstants.Attributes.Class);
+        var property     = Attr(XmlConstants.Attributes.Property);
+        var keyQualifier = Attr(XmlConstants.Attributes.KeyQualifier);
         var variable     = Attr(XmlConstants.Attributes.Variable) ?? XmlConstants.Defaults.Variable;
         var defaultValue = Attr(XmlConstants.Attributes.Default);
-        var query        = SubstAttr(XmlConstants.Attributes.Query);
+        var query        = Attr(XmlConstants.Attributes.Query);
 
         // C++: property is required; need class (for property lookup) or a WQL query string.
         if (string.IsNullOrWhiteSpace(property))

@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using UIpp.Core.Configuration;
+using UIpp.Core.Logging;
 using UIpp.Core.Scripting;
 using UIpp.Core.Variables;
 
@@ -12,7 +13,7 @@ public static class PreflightEvaluator
 
     // Parses <Check> children of the action node, skipping those whose Condition is false.
     public static IReadOnlyList<PreflightCheckSpec> ParseChecks(
-        XElement actionNode, ITSEnv env, IConditionEvaluator conditions)
+        XElement actionNode, ITSEnv env, IConditionEvaluator conditions, ICMLog? log = null)
     {
         var result = new List<PreflightCheckSpec>();
 
@@ -20,7 +21,7 @@ public static class PreflightEvaluator
         {
             var condition = (string?)el.Attribute(XmlConstants.Attributes.Condition) ?? string.Empty;
             if (!string.IsNullOrWhiteSpace(condition) &&
-                !conditions.Evaluate(env.Substitute(condition), EmptyVars))
+                !conditions.EvaluateLogged(env.Substitute(condition), log, "preflight <Check> Condition"))
                 continue;
 
             result.Add(new PreflightCheckSpec
@@ -41,7 +42,8 @@ public static class PreflightEvaluator
     public static IReadOnlyList<PreflightResult> Evaluate(
         IEnumerable<PreflightCheckSpec> checks,
         IConditionEvaluator conditions,
-        ITSEnv env)
+        ITSEnv env,
+        ICMLog? log = null)
     {
         var results = new List<PreflightResult>();
 
@@ -49,7 +51,8 @@ public static class PreflightEvaluator
         {
             var checkExpr   = env.Substitute(check.CheckCondition);
             bool checkPassed = string.IsNullOrWhiteSpace(checkExpr) ||
-                               conditions.Evaluate(checkExpr, EmptyVars);
+                               conditions.EvaluateLogged(checkExpr, log,
+                                   $"preflight check '{check.Text}' CheckCondition");
 
             PreflightStatus status;
             if (!checkPassed)
@@ -60,7 +63,8 @@ public static class PreflightEvaluator
             {
                 var warnExpr    = env.Substitute(check.WarnCondition);
                 bool warnPassed = string.IsNullOrWhiteSpace(warnExpr) ||
-                                  conditions.Evaluate(warnExpr, EmptyVars);
+                                  conditions.EvaluateLogged(warnExpr, log,
+                                      $"preflight check '{check.Text}' WarnCondition");
                 status = warnPassed ? PreflightStatus.Pass : PreflightStatus.Warn;
             }
 

@@ -13,14 +13,14 @@ public sealed class ActionInput(ActionData data) : ActionBase(data)
 
     public override ActionResult Go()
     {
-        var title      = SubstAttr(XmlConstants.Attributes.Title)    is { Length: > 0 } t ? t : null;
-        var subtitle   = SubstAttr(XmlConstants.Attributes.Subtitle) is { Length: > 0 } s ? s : null;
+        var title      = Attr(XmlConstants.Attributes.Title)    is { Length: > 0 } t ? t : null;
+        var subtitle   = Attr(XmlConstants.Attributes.Subtitle) is { Length: > 0 } s ? s : null;
         var showBack   = BoolAttr(XmlConstants.Attributes.ShowBack);
         var showCancel = BoolAttr(XmlConstants.Attributes.ShowCancel);
         var timeoutSec = int.TryParse(Attr(XmlConstants.Attributes.Timeout), out var t2) ? t2 : 0;
         var timeoutAct = Attr(XmlConstants.Attributes.TimeoutAction);
 
-        var fields = InputFieldParser.Parse(Data.ActionNode, Data.TsEnv, Data.Conditions);
+        var fields = InputFieldParser.Parse(Data.ActionNode, Data.TsEnv, Data.Conditions, Data.Log);
 
         using var dlg = new DlgInput(Data.GlobalDialogTraits, Data.TsEnv, title, subtitle, fields,
                                       showBack, showCancel);

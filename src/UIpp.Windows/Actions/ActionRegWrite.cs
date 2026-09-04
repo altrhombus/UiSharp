@@ -11,8 +11,8 @@ public sealed class ActionRegWrite(ActionData data) : ActionBase(data)
     public override ActionResult Go()
     {
         var hive      = Attr(XmlConstants.Attributes.Hive);
-        var key       = SubstAttr(XmlConstants.Attributes.Key);
-        var valueName = SubstAttr(XmlConstants.Attributes.Value);
+        var key       = Attr(XmlConstants.Attributes.Key);
+        var valueName = Attr(XmlConstants.Attributes.Value);
         // Value data is the inner text of the <Action> element (matches C++ child_value()).
         var valueData = Data.TsEnv.Substitute(Data.ActionNode.Value.Trim());
         var valueType = Attr(XmlConstants.Attributes.RegValueType) ?? "REG_SZ";

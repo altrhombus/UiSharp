@@ -11,8 +11,8 @@ public sealed class ActionRegRead(ActionData data) : ActionBase(data)
     public override ActionResult Go()
     {
         var hive         = Attr(XmlConstants.Attributes.Hive);
-        var key          = SubstAttr(XmlConstants.Attributes.Key);
-        var valueName    = SubstAttr(XmlConstants.Attributes.Value);
+        var key          = Attr(XmlConstants.Attributes.Key);
+        var valueName    = Attr(XmlConstants.Attributes.Value);
         var variable     = Attr(XmlConstants.Attributes.Variable);
         var defaultValue = Attr(XmlConstants.Attributes.Default);
         var reg64        = BoolAttr(XmlConstants.Attributes.Reg64, def: true); // original defaults to 64-bit

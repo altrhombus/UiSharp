@@ -126,7 +126,9 @@ public sealed class ActionProcessor(
     {
         if (string.IsNullOrWhiteSpace(condition)) return true;
         var substituted = data.TsEnv.Substitute(condition);
-        return evaluator.Evaluate(substituted, EmptyVars);
+        var context = data.ActionNode.Attribute(XmlConstants.Attributes.Type)?.Value
+                      ?? data.ActionNode.Name.LocalName;
+        return evaluator.EvaluateLogged(substituted, data.Log, $"<{context}>");
     }
 
     // An action is refreshable if it is inside an ActionGroup and is not that group's first child.

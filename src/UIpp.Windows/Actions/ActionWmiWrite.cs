@@ -11,8 +11,8 @@ public sealed class ActionWmiWrite(ActionData data) : ActionBase(data)
 {
     public override ActionResult Go()
     {
-        var ns  = SubstAttr(XmlConstants.Attributes.Namespace) ?? @"root\cimv2";
-        var cls = SubstAttr(XmlConstants.Attributes.Class);
+        var ns  = Attr(XmlConstants.Attributes.Namespace, @"root\cimv2");
+        var cls = Attr(XmlConstants.Attributes.Class);
 
         if (string.IsNullOrWhiteSpace(cls))
             return ActionResult.Next;
@@ -21,11 +21,12 @@ public sealed class ActionWmiWrite(ActionData data) : ActionBase(data)
         var props = Data.ActionNode
             .Elements(XmlConstants.Elements.Property)
             .Select(p => (
-                Name:  (string?)p.Attribute(XmlConstants.Attributes.Name)  ?? string.Empty,
-                Value: Data.TsEnv.Substitute((string?)p.Attribute(XmlConstants.Attributes.Value) ?? string.Empty),
-                Type:  (string?)p.Attribute(XmlConstants.Attributes.PropertyType) ?? XmlConstants.Defaults.CimType,
-                IsKey: ((string?)p.Attribute(XmlConstants.Attributes.PropertyKey))
-                           ?.Equals("true", StringComparison.OrdinalIgnoreCase) == true
+                // C++ reads all four through GetXMLAttribute (Actions.cpp:121-124),
+                // so every one is variable-substituted.
+                Name:  Attr(p, XmlConstants.Attributes.Name),
+                Value: Attr(p, XmlConstants.Attributes.Value),
+                Type:  Attr(p, XmlConstants.Attributes.PropertyType, XmlConstants.Defaults.CimType),
+                IsKey: BoolAttr(p, XmlConstants.Attributes.PropertyKey)
             ))
             // C++: includes element if name OR value OR type is non-empty; type always defaults to
             // CIM_STRING so in practice every <Property> element is included.

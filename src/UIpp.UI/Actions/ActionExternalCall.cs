@@ -16,7 +16,7 @@ public sealed class ActionExternalCall(ActionData data) : ActionBase(data)
     {
         var commandLine = Data.TsEnv.Substitute(Data.ActionNode.Value.Trim());
         var exitVar     = Attr(XmlConstants.Attributes.ExitCodeVariable);
-        var title       = SubstAttr(XmlConstants.Attributes.Title);
+        var title       = Attr(XmlConstants.Attributes.Title);
 
         if (!int.TryParse(Attr(XmlConstants.Attributes.MaxRunTime,
                 XmlConstants.Defaults.MaxRunTime.ToString()), out var maxRunTime))

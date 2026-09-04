@@ -14,6 +14,19 @@ public sealed class LocalTSEnv : ITSEnv
     private static readonly Regex SubstPattern =
         new(@"%([^%]+)%", RegexOptions.Compiled);
 
+    private readonly Func<string, string?> _environmentLookup;
+
+    public LocalTSEnv() : this(Environment.GetEnvironmentVariable) { }
+
+    /// <summary>
+    /// Overrides the process-environment fallback used by <see cref="Substitute"/>.
+    /// Exists so callers that need reproducible substitution — golden-file tests in
+    /// particular — are not at the mercy of whatever the host machine happens to
+    /// have set.
+    /// </summary>
+    public LocalTSEnv(Func<string, string?> environmentLookup) =>
+        _environmentLookup = environmentLookup;
+
     public bool InTS => false;
     public string? LogPath => null;
 
@@ -44,7 +57,7 @@ public sealed class LocalTSEnv : ITSEnv
             {
                 var key = m.Groups[1].Value;
                 if (_vars.TryGetValue(key, out var val)) return val;
-                var env = Environment.GetEnvironmentVariable(key);
+                var env = _environmentLookup(key);
                 return env ?? m.Value;
             });
             if (next == current) break;

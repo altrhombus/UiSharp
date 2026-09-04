@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using UIpp.Core.Configuration;
+using UIpp.Core.Logging;
 using UIpp.Core.Scripting;
 using UIpp.Core.Variables;
 
@@ -14,7 +15,7 @@ public static class InputFieldParser
     // Elements whose Condition evaluates false are excluded.
     // InputChoice elements with no choices (after condition filtering) are excluded.
     public static IReadOnlyList<InputFieldSpec> Parse(
-        XElement actionNode, ITSEnv env, IConditionEvaluator conditions)
+        XElement actionNode, ITSEnv env, IConditionEvaluator conditions, ICMLog? log = null)
     {
         var result = new List<InputFieldSpec>();
 
@@ -24,20 +25,19 @@ public static class InputFieldParser
 
             if (!IsKnownInputElement(name)) continue;
 
-            var condition = (string?)el.Attribute(XmlConstants.Attributes.Condition) ?? string.Empty;
+            var condition = RawAttr(el, XmlConstants.Attributes.Condition);
             if (!string.IsNullOrWhiteSpace(condition) &&
-                !conditions.Evaluate(env.Substitute(condition), EmptyVars))
+                !conditions.EvaluateLogged(env.Substitute(condition), log, $"input field <{name}> Condition"))
                 continue;
 
-            var question = env.Substitute(
-                (string?)el.Attribute(XmlConstants.Attributes.Question) ?? XmlConstants.Defaults.Question);
+            var question = Attr(el, env, XmlConstants.Attributes.Question, XmlConstants.Defaults.Question);
 
             InputFieldSpec? spec = null;
 
             if (IsText(name))
                 spec = ParseText(el, env, question);
             else if (IsChoice(name))
-                spec = ParseChoice(el, env, conditions, question);
+                spec = ParseChoice(el, env, conditions, question, log);
             else if (IsCheckbox(name))
                 spec = ParseCheckbox(el, env, question);
             else if (name.Equals(XmlConstants.InputTypes.Info, StringComparison.OrdinalIgnoreCase))
@@ -72,12 +72,24 @@ public static class InputFieldParser
     // -------------------------------------------------------------------------
     // Attribute helpers
 
-    private static string Attr(XElement el, string name, string def = "") =>
-        (string?)el.Attribute(name) ?? def;
-
-    private static bool BoolAttr(XElement el, string name, bool def = false)
+    // Mirrors C++ GetXMLAttribute (UI++/Actions/IAction.cpp:21): the value is
+    // variable-substituted, the default is not, and emptiness is judged on the
+    // raw value so a present-but-empty attribute falls back to the default.
+    private static string Attr(XElement el, ITSEnv env, string name, string def = "")
     {
-        var v = Attr(el, name, def ? "True" : "False");
+        var raw = RawAttr(el, name);
+        return raw.Length > 0 ? env.Substitute(raw) : def;
+    }
+
+    // For values substituted later by their consumer - condition expressions.
+    private static string RawAttr(XElement el, string name) =>
+        (string?)el.Attribute(name) ?? string.Empty;
+
+    // C++ uses FTW::IsTrue(GetXMLAttribute(...)), so the value is substituted
+    // before the truthiness test and a variable-valued Required behaves as written.
+    private static bool BoolAttr(XElement el, ITSEnv env, string name, bool def = false)
+    {
+        var v = Attr(el, env, name, def ? "True" : "False");
         return v.Equals("True", StringComparison.OrdinalIgnoreCase)
             || v.Equals("yes",  StringComparison.OrdinalIgnoreCase)
             || v.Equals("1",    StringComparison.Ordinal);
@@ -87,7 +99,7 @@ public static class InputFieldParser
     {
         var fromEnv = env.Get(variable);
         return string.IsNullOrEmpty(fromEnv)
-            ? env.Substitute(Attr(el, XmlConstants.Attributes.Default))
+            ? Attr(el, env, XmlConstants.Attributes.Default)
             : fromEnv;
     }
 
@@ -96,73 +108,77 @@ public static class InputFieldParser
 
     private static InputTextSpec ParseText(XElement el, ITSEnv env, string question)
     {
-        var variable = env.Substitute(Attr(el, XmlConstants.Attributes.Variable, XmlConstants.Defaults.Variable));
+        var variable = Attr(el, env, XmlConstants.Attributes.Variable, XmlConstants.Defaults.Variable);
         return new InputTextSpec
         {
             Question         = question,
             Variable         = variable,
             DefaultValue     = ResolveDefault(el, variable, env),
-            Hint             = env.Substitute(Attr(el, XmlConstants.Attributes.Hint)),
-            Prompt           = env.Substitute(Attr(el, XmlConstants.Attributes.Prompt)),
-            Regex            = Attr(el, XmlConstants.Attributes.RegEx),
-            Required         = BoolAttr(el, XmlConstants.Attributes.Required, true),
-            Password         = BoolAttr(el, XmlConstants.Attributes.Password),
-            HorizontalScroll = BoolAttr(el, XmlConstants.Attributes.HScroll),
-            ForceCase        = Attr(el, XmlConstants.Attributes.ForceCase),
-            ReadOnly         = BoolAttr(el, XmlConstants.Attributes.ReadOnly),
-            AdValidate       = Attr(el, XmlConstants.Attributes.AdValidate),
+            Hint             = Attr(el, env, XmlConstants.Attributes.Hint),
+            Prompt           = Attr(el, env, XmlConstants.Attributes.Prompt),
+            Regex            = Attr(el, env, XmlConstants.Attributes.RegEx),
+            Required         = BoolAttr(el, env, XmlConstants.Attributes.Required, true),
+            Password         = BoolAttr(el, env, XmlConstants.Attributes.Password),
+            HorizontalScroll = BoolAttr(el, env, XmlConstants.Attributes.HScroll),
+            ForceCase        = Attr(el, env, XmlConstants.Attributes.ForceCase),
+            ReadOnly         = BoolAttr(el, env, XmlConstants.Attributes.ReadOnly),
+            AdValidate       = Attr(el, env, XmlConstants.Attributes.AdValidate),
         };
     }
 
     private static InputChoiceSpec? ParseChoice(
-        XElement el, ITSEnv env, IConditionEvaluator conditions, string question)
+        XElement el, ITSEnv env, IConditionEvaluator conditions, string question, ICMLog? log)
     {
-        var choices = BuildChoices(el, env, conditions);
+        var choices = BuildChoices(el, env, conditions, log);
         if (choices.Count == 0) return null;
 
-        var variable = env.Substitute(Attr(el, XmlConstants.Attributes.Variable, XmlConstants.Defaults.Variable));
+        var variable = Attr(el, env, XmlConstants.Attributes.Variable, XmlConstants.Defaults.Variable);
         return new InputChoiceSpec
         {
             Question     = question,
             Variable     = variable,
             DefaultValue = ResolveDefault(el, variable, env),
             Choices      = choices,
-            AltVariable  = env.Substitute(Attr(el, XmlConstants.Attributes.AlternateVariable)),
-            Required     = BoolAttr(el, XmlConstants.Attributes.Required),
-            AutoComplete = BoolAttr(el, XmlConstants.Attributes.AutoComplete),
-            Sort         = BoolAttr(el, XmlConstants.Attributes.Sort, true),
-            DropDownSize = int.TryParse(Attr(el, XmlConstants.Attributes.DropDownSize, "5"), out var sz) ? sz : 5,
+            AltVariable  = Attr(el, env, XmlConstants.Attributes.AlternateVariable),
+            Required     = BoolAttr(el, env, XmlConstants.Attributes.Required),
+            AutoComplete = BoolAttr(el, env, XmlConstants.Attributes.AutoComplete),
+            Sort         = BoolAttr(el, env, XmlConstants.Attributes.Sort, true),
+            DropDownSize = int.TryParse(Attr(el, env, XmlConstants.Attributes.DropDownSize, "5"), out var sz) ? sz : 5,
         };
     }
 
     private static List<ChoiceOption> BuildChoices(
-        XElement parent, ITSEnv env, IConditionEvaluator conditions)
+        XElement parent, ITSEnv env, IConditionEvaluator conditions, ICMLog? log)
     {
         var choices = new List<ChoiceOption>();
 
         // Individual <Choice> elements
         foreach (var choiceEl in parent.Elements(XmlConstants.Elements.Choice))
         {
-            var cond = (string?)choiceEl.Attribute(XmlConstants.Attributes.Condition) ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(cond) && !conditions.Evaluate(env.Substitute(cond), EmptyVars))
+            var cond = RawAttr(choiceEl, XmlConstants.Attributes.Condition);
+            if (!string.IsNullOrWhiteSpace(cond) &&
+                !conditions.EvaluateLogged(env.Substitute(cond), log, "<Choice> Condition"))
                 continue;
 
-            var option = Attr(choiceEl, XmlConstants.Attributes.Option);
-            var value  = Attr(choiceEl, XmlConstants.Attributes.Value, option);
-            var alt    = Attr(choiceEl, XmlConstants.Attributes.AlternateValue);
+            // option is already substituted, so passing it as the default for
+            // Value stays correct even though defaults are not substituted.
+            var option = Attr(choiceEl, env, XmlConstants.Attributes.Option);
+            var value  = Attr(choiceEl, env, XmlConstants.Attributes.Value, option);
+            var alt    = Attr(choiceEl, env, XmlConstants.Attributes.AlternateValue);
             choices.Add(new ChoiceOption(option, value, alt));
         }
 
         // <ChoiceList> elements (comma/semicolon delimited strings)
         foreach (var listEl in parent.Elements(XmlConstants.Elements.ChoiceList))
         {
-            var cond = (string?)listEl.Attribute(XmlConstants.Attributes.Condition) ?? string.Empty;
-            if (!string.IsNullOrWhiteSpace(cond) && !conditions.Evaluate(env.Substitute(cond), EmptyVars))
+            var cond = RawAttr(listEl, XmlConstants.Attributes.Condition);
+            if (!string.IsNullOrWhiteSpace(cond) &&
+                !conditions.EvaluateLogged(env.Substitute(cond), log, "<ChoiceList> Condition"))
                 continue;
 
-            var optionList = env.Substitute(Attr(listEl, XmlConstants.Attributes.OptionList));
-            var valueList  = env.Substitute(Attr(listEl, XmlConstants.Attributes.ValueList, optionList));
-            var altList    = env.Substitute(Attr(listEl, XmlConstants.Attributes.AlternateValueList));
+            var optionList = Attr(listEl, env, XmlConstants.Attributes.OptionList);
+            var valueList  = Attr(listEl, env, XmlConstants.Attributes.ValueList, optionList);
+            var altList    = Attr(listEl, env, XmlConstants.Attributes.AlternateValueList);
 
             var options = SplitList(optionList);
             var values  = SplitList(valueList);
@@ -183,14 +199,14 @@ public static class InputFieldParser
 
     private static InputCheckboxSpec ParseCheckbox(XElement el, ITSEnv env, string question)
     {
-        var variable = env.Substitute(Attr(el, XmlConstants.Attributes.Variable, XmlConstants.Defaults.Variable));
+        var variable = Attr(el, env, XmlConstants.Attributes.Variable, XmlConstants.Defaults.Variable);
         return new InputCheckboxSpec
         {
             Question       = question,
             Variable       = variable,
             DefaultValue   = ResolveDefault(el, variable, env),
-            CheckedValue   = Attr(el, XmlConstants.Attributes.CheckedValue,   "True"),
-            UncheckedValue = Attr(el, XmlConstants.Attributes.UncheckedValue, "False"),
+            CheckedValue   = Attr(el, env, XmlConstants.Attributes.CheckedValue,   "True"),
+            UncheckedValue = Attr(el, env, XmlConstants.Attributes.UncheckedValue, "False"),
         };
     }
 
@@ -204,8 +220,8 @@ public static class InputFieldParser
         return new InputInfoSpec
         {
             Question      = text,
-            TextColor     = Attr(el, XmlConstants.Attributes.Color),
-            NumberOfLines = int.TryParse(Attr(el, XmlConstants.Attributes.NumberOfLines, "1"), out var n) ? n : 1,
+            TextColor     = Attr(el, env, XmlConstants.Attributes.Color),
+            NumberOfLines = int.TryParse(Attr(el, env, XmlConstants.Attributes.NumberOfLines, "1"), out var n) ? n : 1,
         };
     }
 

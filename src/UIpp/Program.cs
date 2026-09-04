@@ -4,6 +4,7 @@ using UIpp.Core.Configuration;
 using UIpp.Core.Dialogs;
 using UIpp.Core.Logging;
 using UIpp.Core.Scripting;
+using UIpp.Core.Variables;
 using UIpp.Windows.Ldap;
 using UIpp.Windows.Scripting;
 using UIpp.Windows.Variables;
@@ -35,7 +36,7 @@ internal static class Program
         LoadedConfig config;
         try
         {
-            config = LoadConfig(opts, log);
+            config = LoadConfig(opts, log, env);
         }
         catch (Exception ex)
         {
@@ -96,7 +97,7 @@ internal static class Program
         };
     }
 
-    private static LoadedConfig LoadConfig(CliOptions opts, ICMLog log)
+    private static LoadedConfig LoadConfig(CliOptions opts, ICMLog log, ITSEnv env)
     {
         if (IsHttpUrl(opts.ConfigPath))
         {
@@ -106,10 +107,11 @@ internal static class Program
                 opts.ConfigPath,
                 opts.ConfigFallback,
                 opts.ConfigRetry,
-                CancellationToken.None)).GetAwaiter().GetResult();
+                CancellationToken.None,
+                env)).GetAwaiter().GetResult();
         }
 
-        return ConfigLoader.Load(opts.ConfigPath);
+        return ConfigLoader.Load(opts.ConfigPath, env);
     }
 
     private static bool IsHttpUrl(string path) =>

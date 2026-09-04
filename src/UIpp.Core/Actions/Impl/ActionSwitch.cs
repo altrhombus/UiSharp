@@ -8,7 +8,13 @@ public sealed class ActionSwitch(ActionData data) : ActionBase(data)
 {
     public override ActionResult Go()
     {
-        var onValue = Data.TsEnv.Substitute(Attr(XmlConstants.Attributes.OnValue));
+        // Attr already substitutes. Unlike TSVar, C++ defaults DontEval to TRUE
+        // for the switch value (Actions.cpp:729), so OnValue is only evaluated
+        // when the config explicitly opts in with DontEval="False".
+        var onValue = EvalValue(
+            Attr(XmlConstants.Attributes.OnValue),
+            XmlConstants.Attributes.DontEval,
+            dontEvalDefault: true);
 
         foreach (var caseEl in Data.ActionNode.Elements(XmlConstants.Elements.Case))
         {
@@ -37,6 +43,12 @@ public sealed class ActionSwitch(ActionData data) : ActionBase(data)
             if (!EvalCondition(varEl)) continue;
             var name  = Attr(varEl, XmlConstants.Attributes.Name, XmlConstants.Defaults.Variable);
             var value = Data.TsEnv.Substitute(varEl.Value);
+
+            // Per-<Variable> DontEval, defaulting to FALSE as in C++
+            // (Actions.cpp:845) — the opposite of the switch value's default.
+            if (!BoolAttr(varEl, XmlConstants.Attributes.DontEval))
+                value = EvalValue(value);
+
             Data.TsEnv.Set(name, value);
         }
     }

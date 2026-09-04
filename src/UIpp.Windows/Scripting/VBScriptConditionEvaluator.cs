@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using UIpp.Core.Scripting;
@@ -12,9 +13,40 @@ public sealed class VBScriptConditionEvaluator : IConditionEvaluator
     private const uint ScriptStateStarted     = 1;
     private const uint ScriptTextIsExpression = 0x20;
 
+    /// <summary>True when the VBScript engine is present on this machine.</summary>
+    public static bool IsAvailable => Type.GetTypeFromProgID("VBScript") is not null;
+
     public bool Evaluate(string expression, IReadOnlyDictionary<string, string> variables)
     {
         if (string.IsNullOrWhiteSpace(expression)) return true;
+        return TryRun(expression, out var result) && AsBool(result);
+    }
+
+    /// <summary>
+    /// Evaluates an expression for its value. Declines when the engine errors or
+    /// returns nothing, matching the HRESULT and VARIANT checks the original
+    /// applies to CScriptHost::Eval (Actions.cpp:393).
+    /// </summary>
+    public bool TryEvaluateValue(string expression, out string value)
+    {
+        value = string.Empty;
+        if (string.IsNullOrWhiteSpace(expression)) return false;
+
+        if (!TryRun(expression, out var result) || result is null) return false;
+
+        var text = AsScriptString(result);
+        if (text.Length == 0) return false;   // C++ requires a non-empty result
+
+        value = text;
+        return true;
+    }
+
+    // Runs the expression through a fresh engine instance. Returns false if the
+    // engine is missing or the expression raised an error, which is the
+    // equivalent of a failed HRESULT in the original.
+    private static bool TryRun(string expression, out object? result)
+    {
+        result = null;
 
         var engineType = Type.GetTypeFromProgID("VBScript");
         if (engineType is null) return false;
@@ -32,12 +64,13 @@ public sealed class VBScriptConditionEvaluator : IConditionEvaluator
             parse.ParseScriptText(
                 expression, null, null, null,
                 IntPtr.Zero, 0, ScriptTextIsExpression,
-                out var result, out _);
+                out result, out _);
 
-            return AsBool(result);
+            return true;
         }
         catch
         {
+            result = null;
             return false;
         }
         finally
@@ -49,6 +82,23 @@ public sealed class VBScriptConditionEvaluator : IConditionEvaluator
             }
         }
     }
+
+    // The C++ original converts the VARIANT with (_bstr_t), which is a locale
+    // conversion. Invariant culture is used here so results do not vary by
+    // machine; UI++ expressions are ASCII arithmetic and text.
+    private static string AsScriptString(object v) => v switch
+    {
+        string s  => s,
+        bool b    => b ? "True" : "False",
+        short sh  => sh.ToString(CultureInfo.InvariantCulture),
+        int i     => i.ToString(CultureInfo.InvariantCulture),
+        long l    => l.ToString(CultureInfo.InvariantCulture),
+        float f   => f.ToString("R", CultureInfo.InvariantCulture),
+        double d  => d.ToString("R", CultureInfo.InvariantCulture),
+        decimal m => m.ToString(CultureInfo.InvariantCulture),
+        DateTime t => t.ToString(CultureInfo.InvariantCulture),
+        _         => Convert.ToString(v, CultureInfo.InvariantCulture) ?? string.Empty,
+    };
 
     private static bool AsBool(object? v) => v switch
     {

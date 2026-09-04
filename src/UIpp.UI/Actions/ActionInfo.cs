@@ -11,11 +11,11 @@ public sealed class ActionInfo(ActionData data) : ActionBase(data)
 
     public override ActionResult Go()
     {
-        var title      = SubstAttr(XmlConstants.Attributes.Title)    is { Length: > 0 } t ? t : null;
-        var subtitle   = SubstAttr(XmlConstants.Attributes.Subtitle) is { Length: > 0 } s ? s : null;
+        var title      = Attr(XmlConstants.Attributes.Title)    is { Length: > 0 } t ? t : null;
+        var subtitle   = Attr(XmlConstants.Attributes.Subtitle) is { Length: > 0 } s ? s : null;
         // Info text is the inner text of the Action element (matches C++ child_value()).
         var infoText = Data.TsEnv.Substitute(Data.ActionNode.Value.Trim());
-        var imagePath  = SubstAttr(XmlConstants.Attributes.Image)    is { Length: > 0 } i ? i : null;
+        var imagePath  = Attr(XmlConstants.Attributes.Image)    is { Length: > 0 } i ? i : null;
         var showBack   = BoolAttr(XmlConstants.Attributes.ShowBack);
         var showCancel = BoolAttr(XmlConstants.Attributes.ShowCancel);
         var timeoutSec = int.TryParse(Attr(XmlConstants.Attributes.Timeout), out var t2) ? t2 : 0;

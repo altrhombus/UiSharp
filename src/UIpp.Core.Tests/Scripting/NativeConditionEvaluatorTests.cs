@@ -25,9 +25,14 @@ public class NativeConditionEvaluatorTests
     public void StringComparisons(string expr, bool expected) =>
         Assert.Equal(expected, Eval(expr));
 
+    // VBScript compares strings with Option Compare Binary, so '=' is
+    // case-SENSITIVE. Verified against vbscript.dll by the differential tests.
     [Fact]
-    public void StringCompare_CaseInsensitive() =>
-        Assert.True(Eval("'laptop' = 'LAPTOP'"));
+    public void StringCompare_IsCaseSensitive()
+    {
+        Assert.False(Eval("'laptop' = 'LAPTOP'"));
+        Assert.True(Eval("'LAPTOP' = 'LAPTOP'"));
+    }
 
     // ----------------------------------------------------------
     // Numeric comparisons
@@ -96,9 +101,15 @@ public class NativeConditionEvaluatorTests
         // 'bb' is at position 3; searching from position 4 skips it → returns 0
         Assert.True(Eval("InStr(4, 'aabbcc', 'bb') = 0"));
 
+    // InStr also defaults to vbBinaryCompare; case-insensitive matching needs
+    // the explicit compare argument, which requires a start position.
     [Fact]
-    public void InStr_CaseInsensitive() =>
-        Assert.True(Eval("InStr('Hello', 'HELLO') > 0"));
+    public void InStr_IsCaseSensitiveByDefault() =>
+        Assert.False(Eval("InStr('Hello', 'HELLO') > 0"));
+
+    [Fact]
+    public void InStr_TextCompareArgument_IgnoresCase() =>
+        Assert.True(Eval("InStr(1, 'Hello', 'HELLO', 1) > 0"));
 
     // ----------------------------------------------------------
     // UCase / LCase
@@ -196,9 +207,12 @@ public class NativeConditionEvaluatorTests
     public void Mod_Basic(string expr, bool expected) =>
         Assert.Equal(expected, Eval(expr));
 
+    // VBScript raises "Division by zero" here, and C++ EvalCondition treats a
+    // failed Eval as false (ActionHelper.cpp:89), so the condition is false
+    // rather than quietly behaving as though the result were 0.
     [Fact]
-    public void Mod_DivideByZero_ReturnsZero() =>
-        Assert.True(Eval("5 Mod 0 = 0"));
+    public void Mod_DivideByZero_IsFalse() =>
+        Assert.False(Eval("5 Mod 0 = 0"));
 
     [Fact]
     public void Mod_InCompoundExpression() =>

@@ -12,16 +12,16 @@ public sealed class ActionPreflight(ActionData data) : ActionBase(data)
 
     public override ActionResult Go()
     {
-        var title            = SubstAttr(XmlConstants.Attributes.Title)    is { Length: > 0 } t ? t : null;
-        var subtitle         = SubstAttr(XmlConstants.Attributes.Subtitle) is { Length: > 0 } s ? s : null;
+        var title            = Attr(XmlConstants.Attributes.Title)    is { Length: > 0 } t ? t : null;
+        var subtitle         = Attr(XmlConstants.Attributes.Subtitle) is { Length: > 0 } s ? s : null;
         var showBack       = BoolAttr(XmlConstants.Attributes.ShowBack);
         var showCancel     = BoolAttr(XmlConstants.Attributes.ShowCancel);
         var showOnFailOnly = BoolAttr(XmlConstants.Attributes.ShowOnFailureOnly);
         var timeoutSec     = int.TryParse(Attr(XmlConstants.Attributes.Timeout), out var t2) ? t2 : 0;
         var timeoutAct     = Attr(XmlConstants.Attributes.TimeoutAction);
 
-        var checks  = PreflightEvaluator.ParseChecks(Data.ActionNode, Data.TsEnv, Data.Conditions);
-        var results = PreflightEvaluator.Evaluate(checks, Data.Conditions, Data.TsEnv);
+        var checks  = PreflightEvaluator.ParseChecks(Data.ActionNode, Data.TsEnv, Data.Conditions, Data.Log);
+        var results = PreflightEvaluator.Evaluate(checks, Data.Conditions, Data.TsEnv, Data.Log);
         var anyFail = PreflightEvaluator.AnyFailed(results);
 
         // If ShowOnFailureOnly and no failures, skip dialog and continue.
