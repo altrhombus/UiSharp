@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
 
-namespace GUISharp.Views;
+namespace UiSharp.Editor.Views;
 
 public sealed partial class RegexInputBox : UserControl
 {

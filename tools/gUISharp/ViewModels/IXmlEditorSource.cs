@@ -1,6 +1,6 @@
 using System.ComponentModel;
 
-namespace GUISharp.ViewModels;
+namespace UiSharp.Editor.ViewModels;
 
 public interface IXmlEditorSource : INotifyPropertyChanged
 {

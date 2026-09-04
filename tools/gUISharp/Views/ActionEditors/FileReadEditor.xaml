@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.FileReadEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.FileReadEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="FileRead" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Reads the first line from a text file into a variable, optionally deleting that line afterward. Useful for generating unique system names from a pre-built list."

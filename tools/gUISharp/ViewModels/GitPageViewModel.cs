@@ -1,9 +1,9 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using GUISharp.Services;
+using UiSharp.Editor.Services;
 using Microsoft.UI.Xaml;
 
-namespace GUISharp.ViewModels;
+namespace UiSharp.Editor.ViewModels;
 
 public sealed partial class GitPageViewModel : ObservableObject
 {

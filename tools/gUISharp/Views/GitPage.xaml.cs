@@ -1,7 +1,7 @@
-using GUISharp.ViewModels;
+using UiSharp.Editor.ViewModels;
 using Microsoft.UI.Xaml.Controls;
 
-namespace GUISharp.Views;
+namespace UiSharp.Editor.Views;
 
 public sealed partial class GitPage : Page
 {

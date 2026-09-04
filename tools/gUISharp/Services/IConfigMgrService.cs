@@ -1,6 +1,6 @@
 using System.Net;
 
-namespace GUISharp.Services;
+namespace UiSharp.Editor.Services;
 
 public interface IConfigMgrService
 {

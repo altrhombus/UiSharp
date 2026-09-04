@@ -1,11 +1,11 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
-using GUISharp.Services;
-using GUISharp.ViewModels.ActionEditors;
-using UIpp.Core.Configuration;
-using C = UIpp.Core.Configuration.XmlConstants;
+using UiSharp.Editor.Services;
+using UiSharp.Editor.ViewModels.ActionEditors;
+using UiSharp.Core.Configuration;
+using C = UiSharp.Core.Configuration.XmlConstants;
 
-namespace GUISharp.ViewModels;
+namespace UiSharp.Editor.ViewModels;
 
 public sealed partial class ActionNodeViewModel : ObservableObject
 {

@@ -4,7 +4,7 @@ using System.Net.Http;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace GUISharp.Services;
+namespace UiSharp.Editor.Services;
 
 public sealed class ConfigMgrService : IConfigMgrService
 {

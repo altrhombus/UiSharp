@@ -1,14 +1,14 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using GUISharp.ViewModels;
+using UiSharp.Editor.ViewModels;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Windows.ApplicationModel.DataTransfer;
 
-namespace GUISharp.Views;
+namespace UiSharp.Editor.Views;
 
 public sealed partial class VariablesPage : Page, INotifyPropertyChanged
 {

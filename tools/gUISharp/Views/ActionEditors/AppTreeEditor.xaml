@@ -1,10 +1,10 @@
 <UserControl
-    x:Class="GUISharp.Views.ActionEditors.AppTreeEditor"
+    x:Class="UiSharp.Editor.Views.ActionEditors.AppTreeEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views"
-    xmlns:vm="using:GUISharp.ViewModels.ActionEditors"
-    xmlns:vmg="using:GUISharp.ViewModels">
+    xmlns:local="using:UiSharp.Editor.Views"
+    xmlns:vm="using:UiSharp.Editor.ViewModels.ActionEditors"
+    xmlns:vmg="using:UiSharp.Editor.ViewModels">
 
     <UserControl.Resources>
 

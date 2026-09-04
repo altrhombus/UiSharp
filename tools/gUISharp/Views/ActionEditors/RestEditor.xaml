@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.RestEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.RestEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="REST" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Makes an HTTP request to the specified URL and stores the response in a variable. Supports GET, POST, and other methods with an optional JSON request body."

@@ -1,8 +1,8 @@
 <UserControl
-    x:Class="GUISharp.Views.RegexInputBox"
+    x:Class="UiSharp.Editor.Views.RegexInputBox"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
 
     <Grid ColumnSpacing="4">
         <Grid.ColumnDefinitions>

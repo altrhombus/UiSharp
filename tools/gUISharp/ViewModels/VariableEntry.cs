@@ -1,4 +1,4 @@
-namespace GUISharp.ViewModels;
+namespace UiSharp.Editor.ViewModels;
 
 public sealed class VariableEntry
 {

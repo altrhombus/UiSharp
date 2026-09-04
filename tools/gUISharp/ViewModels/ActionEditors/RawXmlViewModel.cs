@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using GUISharp.Services;
-using UIpp.Core.Configuration;
+using UiSharp.Editor.Services;
+using UiSharp.Core.Configuration;
 
-namespace GUISharp.ViewModels.ActionEditors;
+namespace UiSharp.Editor.ViewModels.ActionEditors;
 
 public sealed class RawXmlViewModel : ObservableObject, IActionEditor
 {

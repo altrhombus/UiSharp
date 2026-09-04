@@ -1,6 +1,6 @@
 using Microsoft.UI.Xaml.Controls;
 
-namespace GUISharp.Views.ActionEditors;
+namespace UiSharp.Editor.Views.ActionEditors;
 
 public sealed partial class RandomStringEditor : UserControl
 {

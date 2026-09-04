@@ -2,11 +2,11 @@ using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
-using UIpp.Core.Configuration;
-using UIpp.Core.Dialogs;
-using C = UIpp.Core.Configuration.XmlConstants;
+using UiSharp.Core.Configuration;
+using UiSharp.Core.Dialogs;
+using C = UiSharp.Core.Configuration.XmlConstants;
 
-namespace GUISharp.ViewModels;
+namespace UiSharp.Editor.ViewModels;
 
 public sealed partial class GlobalSettingsViewModel : ObservableObject, IXmlEditorSource
 {

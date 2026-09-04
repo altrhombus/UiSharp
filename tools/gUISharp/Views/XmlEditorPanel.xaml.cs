@@ -1,12 +1,12 @@
 using System.ComponentModel;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using GUISharp.ViewModels;
+using UiSharp.Editor.ViewModels;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.Web.WebView2.Core;
 
-namespace GUISharp.Views;
+namespace UiSharp.Editor.Views;
 
 public sealed partial class XmlEditorPanel : UserControl
 {

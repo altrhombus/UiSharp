@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.FromJsonEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.FromJsonEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="FromJSON" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Parses inline JSON and populates variables from its key/value pairs. The JSON content is stored as the element value."

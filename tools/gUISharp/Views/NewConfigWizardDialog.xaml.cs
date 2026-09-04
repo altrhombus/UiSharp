@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace GUISharp.Views;
+namespace UiSharp.Editor.Views;
 
 public sealed partial class NewConfigWizardDialog : ContentDialog
 {

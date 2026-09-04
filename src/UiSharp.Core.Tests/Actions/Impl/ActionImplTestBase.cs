@@ -1,0 +1,39 @@
+using System.Xml.Linq;
+using UiSharp.Core.Actions;
+using UiSharp.Core.Dialogs;
+using UiSharp.Core.Logging;
+using UiSharp.Core.Scripting;
+using UiSharp.Core.Variables;
+
+namespace UiSharp.Core.Tests.Actions.Impl;
+
+// Shared infrastructure for action implementation tests.
+internal sealed class NullLog : ICMLog
+{
+    public readonly List<string> Messages = [];
+    public void Write(string message, LogSeverity severity = LogSeverity.Info, string component = LogFile.DefaultComponent)
+        => Messages.Add(message);
+}
+
+internal static class ActionTestData
+{
+    public static (LocalTSEnv env, NullLog log, ActionData data) Make(
+        XElement node, IDefaultValueProvider? provider = null)
+    {
+        var env  = new LocalTSEnv();
+        var log  = new NullLog();
+        var data = new ActionData
+        {
+            ActionNode             = node,
+            Conditions             = new NativeConditionEvaluator(),
+            TsEnv                  = env,
+            Log                    = log,
+            GlobalDialogTraits     = new DialogTraits(),
+            DefaultValueProvider   = provider,
+        };
+        return (env, log, data);
+    }
+
+    // Build a minimal <Action Type="..."> element from inline XML.
+    public static XElement ActionEl(string xml) => XElement.Parse(xml);
+}

@@ -1,4 +1,4 @@
-namespace GUISharp.Services;
+namespace UiSharp.Editor.Services;
 
 public interface IActionEditor
 {

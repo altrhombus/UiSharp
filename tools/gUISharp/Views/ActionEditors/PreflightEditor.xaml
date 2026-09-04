@@ -1,9 +1,9 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.PreflightEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.PreflightEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views"
-    xmlns:vm="using:GUISharp.ViewModels.ActionEditors">
+    xmlns:local="using:UiSharp.Editor.Views"
+    xmlns:vm="using:UiSharp.Editor.ViewModels.ActionEditors">
     <StackPanel Spacing="12">
         <TextBlock Text="Preflight" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Runs a series of VBScript conditions to validate the system before continuing. If any check fails, the user cannot proceed and UI++ returns error code 21 (ERROR_NOT_READY)."

@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using GUISharp.ViewModels.ActionEditors;
-using UIpp.Core.Configuration;
-using C = UIpp.Core.Configuration.XmlConstants;
+using UiSharp.Editor.ViewModels.ActionEditors;
+using UiSharp.Core.Configuration;
+using C = UiSharp.Core.Configuration.XmlConstants;
 
-namespace GUISharp.Services;
+namespace UiSharp.Editor.Services;
 
 public sealed class EditorViewModelFactory
 {

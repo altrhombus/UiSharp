@@ -1,0 +1,33 @@
+using System.Security.Cryptography;
+using UiSharp.Core.Configuration;
+
+namespace UiSharp.Core.Actions.Impl;
+
+[ActionType(XmlConstants.ActionTypes.RandomString)]
+public sealed class ActionRandomString(ActionData data) : ActionBase(data)
+{
+    // C++ UI++ caps Length at 36 — matches the maximum GUID character count.
+    private const int MaxLength = 36;
+
+    public override ActionResult Go()
+    {
+        var chars    = Attr(XmlConstants.Attributes.AllowedChars, XmlConstants.Defaults.AllowedChars);
+        var variable = Attr(XmlConstants.Attributes.Variable, XmlConstants.Defaults.Variable);
+
+        if (!int.TryParse(Attr(XmlConstants.Attributes.Length,
+                XmlConstants.Defaults.Length.ToString()), out var len)
+            || len < 1 || len > MaxLength)
+        {
+            len = XmlConstants.Defaults.Length;
+        }
+
+        if (chars.Length == 0) return ActionResult.Next;
+
+        var buf = new char[len];
+        for (var i = 0; i < len; i++)
+            buf[i] = chars[RandomNumberGenerator.GetInt32(chars.Length)];
+
+        Data.TsEnv.Set(variable, new string(buf));
+        return ActionResult.Next;
+    }
+}

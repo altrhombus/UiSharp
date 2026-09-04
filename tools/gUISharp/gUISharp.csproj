@@ -4,7 +4,7 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.22621.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
-    <RootNamespace>GUISharp</RootNamespace>
+    <RootNamespace>UiSharp.Editor</RootNamespace>
     <AssemblyName>gUISharp</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x86;x64;arm64</Platforms>
@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\UIpp.Core\UIpp.Core.csproj" />
+    <ProjectReference Include="..\..\src\UiSharp.Core\UiSharp.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

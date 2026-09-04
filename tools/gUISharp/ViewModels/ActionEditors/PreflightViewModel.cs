@@ -3,11 +3,11 @@ using System.Windows.Input;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GUISharp.Services;
-using UIpp.Core.Configuration;
-using C = UIpp.Core.Configuration.XmlConstants;
+using UiSharp.Editor.Services;
+using UiSharp.Core.Configuration;
+using C = UiSharp.Core.Configuration.XmlConstants;
 
-namespace GUISharp.ViewModels.ActionEditors;
+namespace UiSharp.Editor.ViewModels.ActionEditors;
 
 public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
 {
@@ -62,7 +62,7 @@ public sealed partial class PreflightViewModel : ObservableObject, IActionEditor
     [RelayCommand]
     private void RemoveCheck(PreflightCheckItem item) => Checks.Remove(item);
 
-    public void CopyUiStateFrom(GUISharp.Services.IActionEditor previous)
+    public void CopyUiStateFrom(UiSharp.Editor.Services.IActionEditor previous)
     {
         if (previous is not PreflightViewModel prev) return;
         var expanded = prev.Checks

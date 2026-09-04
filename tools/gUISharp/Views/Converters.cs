@@ -1,10 +1,10 @@
-using GUISharp.ViewModels.ActionEditors;
+using UiSharp.Editor.ViewModels.ActionEditors;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
 
-namespace GUISharp.Views;
+namespace UiSharp.Editor.Views;
 
 public sealed class BoolToVisibilityConverter : IValueConverter
 {

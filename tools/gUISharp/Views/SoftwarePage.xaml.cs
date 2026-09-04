@@ -1,10 +1,10 @@
-using GUISharp.ViewModels;
+using UiSharp.Editor.ViewModels;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 
-namespace GUISharp.Views;
+namespace UiSharp.Editor.Views;
 
 public sealed partial class SoftwarePage : Page
 {

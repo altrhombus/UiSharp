@@ -4,9 +4,9 @@ using System.Management;
 using System.Net;
 using System.Net.Http;
 using CommunityToolkit.Mvvm.ComponentModel;
-using GUISharp.Services;
+using UiSharp.Editor.Services;
 
-namespace GUISharp.ViewModels;
+namespace UiSharp.Editor.ViewModels;
 
 public sealed partial class CmSelectableItem : ObservableObject
 {

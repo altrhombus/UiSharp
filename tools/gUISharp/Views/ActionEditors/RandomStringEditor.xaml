@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.RandomStringEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.RandomStringEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="RandomString" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Generates a random string and stores it in a variable. Configure the length and the set of allowed characters."

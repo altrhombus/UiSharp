@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.ErrorInfoEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.ErrorInfoEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="ErrorInfo" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Displays a final error message to the user. Always includes a cancel button; a back button is optional. Use this to inform the user of a fatal condition before exiting."

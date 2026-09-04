@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.InfoFullScreenEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.InfoFullScreenEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="InfoFullScreen" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Preview feature. Shows a full-screen window with an optional image, a single line of text, and an infinite progress bar. Dismiss manually with Ctrl+Alt+F10."

@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.RegReadEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.RegReadEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="RegRead" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Reads a value from the Windows registry and stores it in a variable. On 64-bit systems, enable the 64-bit option to read from the native registry rather than the WOW64 view."

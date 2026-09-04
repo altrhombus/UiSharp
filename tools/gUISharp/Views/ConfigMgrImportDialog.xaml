@@ -1,8 +1,8 @@
 <ContentDialog
-    x:Class="GUISharp.Views.ConfigMgrImportDialog"
+    x:Class="UiSharp.Editor.Views.ConfigMgrImportDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:vm="using:GUISharp.ViewModels"
+    xmlns:vm="using:UiSharp.Editor.ViewModels"
     Title="Import from Configuration Manager"
     PrimaryButtonText="Import Selected"
     CloseButtonText="Cancel"

@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using GUISharp.Services;
-using UIpp.Core.Configuration;
-using C = UIpp.Core.Configuration.XmlConstants;
+using UiSharp.Editor.Services;
+using UiSharp.Core.Configuration;
+using C = UiSharp.Core.Configuration.XmlConstants;
 
-namespace GUISharp.ViewModels.ActionEditors;
+namespace UiSharp.Editor.ViewModels.ActionEditors;
 
 public sealed partial class VarsViewModel : ObservableObject, IActionEditor
 {

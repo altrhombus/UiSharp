@@ -25,11 +25,11 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: UIpp.Core tests (254)
-        run: dotnet test src/UIpp.Core.Tests -c Release
+      - name: UiSharp.Core tests
+        run: dotnet test src/UiSharp.Core.Tests -c Release
 
-      - name: UIpp.Windows tests (49)
-        run: dotnet test src/UIpp.Windows.Tests -c Release
+      - name: UiSharp.Windows tests
+        run: dotnet test src/UiSharp.Windows.Tests -c Release
 
   # ── 2. Build & release ──────────────────────────────────────────────────────
   release:
@@ -47,27 +47,27 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      # ── UIpp runtime — single self-contained EXE for WinPE ──────────────────
+      # ── UiSharp runtime — single self-contained EXE for WinPE ──────────────────
 
-      - name: Publish UIpp (win-x64)
+      - name: Publish UiSharp (win-x64)
         run: >
-          dotnet publish src/UIpp/UIpp.csproj
+          dotnet publish src/UiSharp/UiSharp.csproj
           -r win-x64 --self-contained true
           -p:PublishSingleFile=true -p:TrimMode=partial
           -c Release
 
-      - name: Publish UIpp (win-x86)
+      - name: Publish UiSharp (win-x86)
         run: >
-          dotnet publish src/UIpp/UIpp.csproj
+          dotnet publish src/UiSharp/UiSharp.csproj
           -r win-x86 --self-contained true
           -p:PublishSingleFile=true -p:TrimMode=partial
           -c Release
 
-      - name: Stage UIpp binaries
+      - name: Stage UiSharp binaries
         shell: pwsh
         run: |
-          Copy-Item src/UIpp/bin/Release/net10.0-windows/win-x64/publish/UIpp.exe UIpp-x64.exe
-          Copy-Item src/UIpp/bin/Release/net10.0-windows/win-x86/publish/UIpp.exe UIpp-x86.exe
+          Copy-Item src/UiSharp/bin/Release/net10.0-windows/win-x64/publish/UiSharp.exe UiSharp-x64.exe
+          Copy-Item src/UiSharp/bin/Release/net10.0-windows/win-x86/publish/UiSharp.exe UiSharp-x86.exe
 
       # ── gUISharp editor — ZIP of the full output folder ─────────────────────
 
@@ -102,7 +102,7 @@ jobs:
           generate_release_notes: true
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
-            UIpp-x64.exe
-            UIpp-x86.exe
+            UiSharp-x64.exe
+            UiSharp-x86.exe
             gUISharp-x64.zip
             gUISharp-arm64.zip

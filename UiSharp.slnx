@@ -1,11 +1,11 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/UIpp.Core/UIpp.Core.csproj" />
-    <Project Path="src/UIpp.Windows/UIpp.Windows.csproj" />
-    <Project Path="src/UIpp.UI/UIpp.UI.csproj" />
-    <Project Path="src/UIpp/UIpp.csproj" />
-    <Project Path="src/UIpp.Core.Tests/UIpp.Core.Tests.csproj" />
-    <Project Path="src/UIpp.Windows.Tests/UIpp.Windows.Tests.csproj" />
+    <Project Path="src/UiSharp.Core/UiSharp.Core.csproj" />
+    <Project Path="src/UiSharp.Windows/UiSharp.Windows.csproj" />
+    <Project Path="src/UiSharp.UI/UiSharp.UI.csproj" />
+    <Project Path="src/UiSharp/UiSharp.csproj" />
+    <Project Path="src/UiSharp.Core.Tests/UiSharp.Core.Tests.csproj" />
+    <Project Path="src/UiSharp.Windows.Tests/UiSharp.Windows.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/gUISharp/gUISharp.csproj">

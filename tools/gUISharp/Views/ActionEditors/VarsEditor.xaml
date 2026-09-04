@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.VarsEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.VarsEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="Vars" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Saves current variables to a data file or loads variables from a previously saved file. Useful for persisting values between UI++ executions, such as running before and inside a task sequence."

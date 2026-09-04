@@ -1,14 +1,14 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GUISharp.Services;
-using GUISharp.Views;
+using UiSharp.Editor.Services;
+using UiSharp.Editor.Views;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using UIpp.Core.Configuration;
+using UiSharp.Core.Configuration;
 
-namespace GUISharp.ViewModels;
+namespace UiSharp.Editor.ViewModels;
 
 public sealed partial class MainWindowViewModel : ObservableObject
 {

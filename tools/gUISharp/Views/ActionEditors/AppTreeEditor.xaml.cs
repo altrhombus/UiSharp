@@ -1,10 +1,10 @@
 using System.Collections.ObjectModel;
-using GUISharp.ViewModels;
-using GUISharp.ViewModels.ActionEditors;
+using UiSharp.Editor.ViewModels;
+using UiSharp.Editor.ViewModels.ActionEditors;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
-namespace GUISharp.Views.ActionEditors;
+namespace UiSharp.Editor.Views.ActionEditors;
 
 public sealed partial class AppTreeEditor : UserControl
 {

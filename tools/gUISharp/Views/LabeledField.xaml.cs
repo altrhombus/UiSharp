@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Markup;
 
-namespace GUISharp.Views;
+namespace UiSharp.Editor.Views;
 
 [ContentProperty(Name = nameof(Child))]
 public sealed partial class LabeledField : UserControl

@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace GUISharp.Services;
+namespace UiSharp.Editor.Services;
 
 public sealed class GitService : IGitService
 {

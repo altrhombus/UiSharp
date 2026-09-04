@@ -4,11 +4,11 @@ using System.Xml;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GUISharp.Services;
-using UIpp.Core.Configuration;
-using C = UIpp.Core.Configuration.XmlConstants;
+using UiSharp.Editor.Services;
+using UiSharp.Core.Configuration;
+using C = UiSharp.Core.Configuration.XmlConstants;
 
-namespace GUISharp.ViewModels;
+namespace UiSharp.Editor.ViewModels;
 
 public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSource
 {

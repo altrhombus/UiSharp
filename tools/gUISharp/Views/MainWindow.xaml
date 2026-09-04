@@ -1,8 +1,8 @@
 <Window
-    x:Class="GUISharp.Views.MainWindow"
+    x:Class="UiSharp.Editor.Views.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views"
+    xmlns:local="using:UiSharp.Editor.Views"
     Title="gUI#">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">

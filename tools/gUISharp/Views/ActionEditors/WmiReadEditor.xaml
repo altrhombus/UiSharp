@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.WmiReadEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.WmiReadEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="WMIRead" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Reads a property from a WMI class and stores it in a variable. Use Key Qualifier to filter to a specific instance (e.g., Name=&quot;wuauserv&quot;)."

@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.ExternalCallEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.ExternalCallEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="ExternalCall" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Runs a command line. Use this to call scripts or tools that perform actions UI++ cannot do directly, such as web service calls, driver installs, or reboots."

@@ -1,5 +1,5 @@
-using GUISharp.ViewModels;
-using GUISharp.ViewModels.ActionEditors;
+using UiSharp.Editor.ViewModels;
+using UiSharp.Editor.ViewModels.ActionEditors;
 using Microsoft.UI;
 using Microsoft.UI.Input;
 using Microsoft.UI.Text;
@@ -7,12 +7,12 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
-using UIpp.Core.Configuration;
+using UiSharp.Core.Configuration;
 using Windows.Foundation;
 using Windows.UI;
-using C = UIpp.Core.Configuration.XmlConstants;
+using C = UiSharp.Core.Configuration.XmlConstants;
 
-namespace GUISharp.Views;
+namespace UiSharp.Editor.Views;
 
 public sealed partial class ActionListPage : Page
 {

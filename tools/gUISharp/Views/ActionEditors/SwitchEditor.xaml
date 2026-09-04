@@ -1,9 +1,9 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.SwitchEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.SwitchEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views"
-    xmlns:vm="using:GUISharp.ViewModels.ActionEditors">
+    xmlns:local="using:UiSharp.Editor.Views"
+    xmlns:vm="using:UiSharp.Editor.ViewModels.ActionEditors">
     <StackPanel Spacing="12">
         <TextBlock Text="Switch" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Compares a value against a series of regular expression patterns in order; the first match sets the specified variables. Add a Default case to handle values that match no pattern."

@@ -1,9 +1,9 @@
-using GUISharp.Services;
-using GUISharp.ViewModels;
-using GUISharp.Views;
+using UiSharp.Editor.Services;
+using UiSharp.Editor.ViewModels;
+using UiSharp.Editor.Views;
 using Microsoft.UI.Xaml;
 
-namespace GUISharp;
+namespace UiSharp.Editor;
 
 public partial class App : Application
 {

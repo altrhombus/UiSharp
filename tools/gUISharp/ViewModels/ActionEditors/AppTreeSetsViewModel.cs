@@ -2,10 +2,10 @@ using System.Collections.ObjectModel;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GUISharp.ViewModels;
-using C = UIpp.Core.Configuration.XmlConstants;
+using UiSharp.Editor.ViewModels;
+using C = UiSharp.Core.Configuration.XmlConstants;
 
-namespace GUISharp.ViewModels.ActionEditors;
+namespace UiSharp.Editor.ViewModels.ActionEditors;
 
 public abstract partial class AppTreeNodeBase : ObservableObject
 {

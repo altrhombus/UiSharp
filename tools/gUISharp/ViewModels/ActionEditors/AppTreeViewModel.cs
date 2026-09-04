@@ -3,12 +3,12 @@ using System.Collections.Specialized;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using GUISharp.Services;
-using GUISharp.ViewModels;
-using UIpp.Core.Configuration;
-using C = UIpp.Core.Configuration.XmlConstants;
+using UiSharp.Editor.Services;
+using UiSharp.Editor.ViewModels;
+using UiSharp.Core.Configuration;
+using C = UiSharp.Core.Configuration.XmlConstants;
 
-namespace GUISharp.ViewModels.ActionEditors;
+namespace UiSharp.Editor.ViewModels.ActionEditors;
 
 public sealed partial class AppTreeViewModel : ObservableObject, IActionEditor
 {

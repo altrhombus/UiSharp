@@ -1,4 +1,4 @@
-namespace GUISharp.Services;
+namespace UiSharp.Editor.Services;
 
 public sealed record GitRepoInfo(string RepoRoot, string Branch, bool HasChanges);
 

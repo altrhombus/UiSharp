@@ -21,20 +21,20 @@ gUI# is a WinUI 3 desktop app for creating and editing UiSharp/UI++ XML configur
 
 | Project | Framework | Purpose |
 |---|---|---|
-| `UIpp.Core` | net10.0 | Pure logic — parsers, evaluators, action implementations. No Windows dependencies. |
-| `UIpp.Windows` | net10.0-windows | WMI, COM, LDAP, registry integrations |
-| `UIpp.UI` | net10.0-windows | WinForms dialogs and controls |
-| `UIpp` | net10.0-windows | Entry point, single-file publish target |
+| `UiSharp.Core` | net10.0 | Pure logic — parsers, evaluators, action implementations. No Windows dependencies. |
+| `UiSharp.Windows` | net10.0-windows | WMI, COM, LDAP, registry integrations |
+| `UiSharp.UI` | net10.0-windows | WinForms dialogs and controls |
+| `UiSharp` | net10.0-windows | Entry point, single-file publish target |
 | `tools/gUISharp` | net10.0-windows10.0.22621.0 | WinUI 3 visual XML editor — see [tools/gUISharp/README.md](tools/gUISharp/README.md) |
 
 ## Building
 
-**Requirements:** .NET 10 SDK (Windows required for `UIpp.Windows`, `UIpp.UI`, and `UIpp`)
+**Requirements:** .NET 10 SDK (Windows required for `UiSharp.Windows`, `UiSharp.UI`, and `UiSharp`)
 
 ```bash
 dotnet build
-dotnet test src/UIpp.Core.Tests        # 254 tests — pure logic, runs on any OS
-dotnet test src/UIpp.Windows.Tests     # 49 tests  — registry/WMI, Windows only
+dotnet test src/UiSharp.Core.Tests        # pure logic, runs on any OS
+dotnet test src/UiSharp.Windows.Tests     # registry/WMI + VBScript differential, Windows only
 ```
 
 ## Deploying to WinPE
@@ -42,11 +42,11 @@ dotnet test src/UIpp.Windows.Tests     # 49 tests  — registry/WMI, Windows onl
 Publish as a single self-contained executable — no .NET runtime or redistributable needed in the WinPE image:
 
 ```powershell
-dotnet publish src/UIpp/UIpp.csproj -r win-x64 --self-contained true `
+dotnet publish src/UiSharp/UiSharp.csproj -r win-x64 --self-contained true `
     -p:PublishSingleFile=true -p:TrimMode=partial -c Release
 ```
 
-Copy the output `UIpp.exe` into your WinPE image in place of the original `UI++.exe`. No other changes to the image are required.
+Copy the output `UiSharp.exe` into your WinPE image in place of the original `UI++.exe`. No other changes to the image are required.
 
 ## Command-line arguments
 
@@ -71,7 +71,7 @@ These are the only intentional behavioral changes:
 | Log file name | `UI++.log` in `_SMSTSLogPath` (or `%TEMP%`), CMTrace component `UI++` | `UiSharp.log`, CMTrace component `UiSharp` — so it is obvious which tool wrote it. Update any log-collection step that looks for `UI++.log` by name. |
 | Unhandled errors | No handler — a crash left nothing behind | Written to the log and to `UiSharp_crash.txt` beside it, exiting with code 3. No dialog, so an unattended task sequence cannot hang on one. |
 
-All other XML attributes, variable names, dialog behavior, and output formats are identical to the C++ original. Existing XML config files work without modification.
+The XML root element remains `<UIpp>`, as in the original — configuration files need no edit. All other XML attributes, variable names, dialog behavior, and output formats are identical to the C++ original. Existing XML config files work without modification.
 
 Parity is verified two ways, both in the test suite: golden-file snapshots of the original project's own sample configs, and differential tests that run the same expressions through the native engine and the real `vbscript.dll` and assert they agree.
 
@@ -106,7 +106,7 @@ Still requiring `ConditionEngine="vbscript"`: `GetObject` (WMI — prefer `<Acti
 | File / folder | Purpose |
 |---|---|
 | `UiSharp.slnx` | Modern C# solution — open this in Visual Studio or Rider |
-| `src/` | C# runtime projects (`UIpp.Core`, `UIpp.Windows`, `UIpp.UI`, `UIpp`) |
+| `src/` | C# runtime projects (`UiSharp.Core`, `UiSharp.Windows`, `UiSharp.UI`, `UiSharp`) |
 | `tools/gUISharp/` | WinUI 3 visual XML editor — see [tools/gUISharp/README.md](tools/gUISharp/README.md) |
 | `UI++.sln` | Legacy C++ solution for the original UI++ source (not the C# port) |
 | `UI++/`, `FTWCMLog/`, `FTWldap/` | Original C++ source, included for historical reference |

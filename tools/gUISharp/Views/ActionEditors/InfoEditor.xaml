@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.InfoEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.InfoEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="Info" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Displays a message to the user. Supports an optional timeout with configurable dismiss behavior: continue to the next action, cancel, or return a custom error code."

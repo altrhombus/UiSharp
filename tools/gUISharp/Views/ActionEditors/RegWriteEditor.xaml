@@ -1,8 +1,8 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.RegWriteEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.RegWriteEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views">
+    xmlns:local="using:UiSharp.Editor.Views">
     <StackPanel Spacing="12">
         <TextBlock Text="RegWrite" Style="{ThemeResource SubtitleTextBlockStyle}" />
         <TextBlock Text="Writes a value to the Windows registry, creating the key path if it does not exist. The data is the element value and supports variable substitution."

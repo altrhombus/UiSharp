@@ -1,8 +1,8 @@
 <UserControl
-    x:Class="GUISharp.Views.ActionEditors.ActionGroupEditor"
+    x:Class="UiSharp.Editor.Views.ActionEditors.ActionGroupEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views"
+    xmlns:local="using:UiSharp.Editor.Views"
     Loaded="ActionGroupEditor_Loaded">
     <UserControl.Resources>
         <Style x:Key="ColorSwatchStyle" TargetType="RadioButton">

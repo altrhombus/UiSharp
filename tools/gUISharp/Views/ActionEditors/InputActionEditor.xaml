@@ -1,10 +1,10 @@
-﻿<UserControl
-    x:Class="GUISharp.Views.ActionEditors.InputActionEditor"
+<UserControl
+    x:Class="UiSharp.Editor.Views.ActionEditors.InputActionEditor"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:GUISharp.Views"
-    xmlns:editors="using:GUISharp.Views.ActionEditors"
-    xmlns:vm="using:GUISharp.ViewModels.ActionEditors">
+    xmlns:local="using:UiSharp.Editor.Views"
+    xmlns:editors="using:UiSharp.Editor.Views.ActionEditors"
+    xmlns:vm="using:UiSharp.Editor.ViewModels.ActionEditors">
 
     <UserControl.Resources>
 

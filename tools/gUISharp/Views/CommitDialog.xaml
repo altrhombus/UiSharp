@@ -1,5 +1,5 @@
 <ContentDialog
-    x:Class="GUISharp.Views.CommitDialog"
+    x:Class="UiSharp.Editor.Views.CommitDialog"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="Stage &amp; Commit"

@@ -1,6 +1,6 @@
-using UIpp.Core.Configuration;
+using UiSharp.Core.Configuration;
 
-namespace GUISharp.Services;
+namespace UiSharp.Editor.Services;
 
 public interface IConfigService
 {

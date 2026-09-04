@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml;
 using Windows.Storage.Pickers;
 
-namespace GUISharp.Services;
+namespace UiSharp.Editor.Services;
 
 public sealed class FileDialogService : IFileDialogService
 {
