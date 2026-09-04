@@ -39,7 +39,9 @@ public sealed class ActionSaveItems(ActionData data) : ActionBase(data)
             }
             else if (token.Equals("UILOG", StringComparison.OrdinalIgnoreCase))
             {
-                TryCopy(Data.TsEnv.LogPath, destPath);
+                // Ask the log where it is, as the original does
+                // (Actions.cpp:996), rather than guessing from the environment.
+                TryCopy(Data.Log.FilePath, destPath);
             }
             else if (token.Equals("SMSTSLOG", StringComparison.OrdinalIgnoreCase))
             {

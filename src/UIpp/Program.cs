@@ -16,21 +16,37 @@ internal static class Program
     private const int ExitSuccess    = 0;
     private const int ExitCancel     = 1;
     private const int ExitBadConfig  = 2;
+    private const int ExitFatal      = 3;
+
+    // Set once the log is open so the crash handlers can use it. They are
+    // installed before the log exists, because opening it is itself something
+    // that can fail.
+    private static ICMLog _log = NullLog.Instance;
 
     [STAThread]
     private static int Main(string[] args)
     {
+        InstallCrashHandlers();
+
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
 
         var opts = ParseArgs(args);
 
-        // Env + log
+        // Env + log. LogDirectory is a DIRECTORY (_SMSTSLogPath in a task
+        // sequence); TryOpen appends the file name and falls back to the temp
+        // directory, never throwing — a deployment must not die because its log
+        // could not be opened.
         var env = new ConfigMgrTSEnv();
-        var logPath = env.LogPath ?? Path.Combine(Path.GetTempPath(), "UIpp.log");
-        using var log = new CMTraceLog(logPath);
+        _log = CMTraceLog.TryOpen(env.LogDirectory, out var logFailure);
+        var log = _log;
 
-        log.Write($"UIpp starting. Config: {opts.ConfigPath}");
+        using var disposableLog = log as IDisposable;
+
+        log.Write($"{LogFile.DefaultComponent} starting. Config: {opts.ConfigPath}");
+
+        if (logFailure is not null)
+            log.Write($"Log fallback in effect: {logFailure}", LogSeverity.Warning);
 
         // Load config
         LoadedConfig config;
@@ -87,7 +103,7 @@ internal static class Program
         var processor = new ActionProcessor(factory, evaluator);
         var result    = processor.Run(actionsEl, defaultAction);
 
-        log.Write($"UIpp finished. Result: {result}");
+        log.Write($"{LogFile.DefaultComponent} finished. Result: {result}");
 
         return result switch
         {
@@ -95,6 +111,71 @@ internal static class Program
             ActionResult.Cancel => ExitCancel,
             _                   => ExitCancel,
         };
+    }
+
+    // -------------------------------------------------------------------------
+    // Crash reporting
+    //
+    // Without this, an unhandled exception during a deployment leaves nothing
+    // behind at all: no dialog, no log line, just a non-zero exit. Anything
+    // that reaches here is written to the log and to a crash file, and the
+    // process exits with a distinct code rather than a runtime fault.
+    //
+    // No message box: a modal dialog in an unattended task sequence would hang
+    // the deployment until someone walked over to the machine.
+    // -------------------------------------------------------------------------
+
+    private static void InstallCrashHandlers()
+    {
+        AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+            ReportFatal(e.ExceptionObject as Exception, "AppDomain.UnhandledException");
+
+        Application.ThreadException += (_, e) =>
+            ReportFatal(e.Exception, "Application.ThreadException");
+
+        // Route WinForms UI-thread exceptions to ThreadException rather than
+        // letting the default dialog appear.
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+    }
+
+    private static void ReportFatal(Exception? ex, string source)
+    {
+        var detail = ex?.ToString() ?? "(no exception object)";
+        var report =
+            $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {LogFile.DefaultComponent} fatal error " +
+            $"via {source}{Environment.NewLine}{detail}{Environment.NewLine}";
+
+        try { _log.Write($"Fatal error via {source}: {detail}", LogSeverity.Error); }
+        catch { /* the log may be the thing that failed */ }
+
+        // A separate file as well, because the log may never have opened and
+        // because a crash file is easier to spot than one line among thousands.
+        foreach (var dir in CrashFileDirectories())
+        {
+            try
+            {
+                File.AppendAllText(
+                    Path.Combine(dir, $"{LogFile.DefaultComponent}_crash.txt"), report);
+                break;
+            }
+            catch { /* try the next location */ }
+        }
+
+        Environment.Exit(ExitFatal);
+    }
+
+    private static IEnumerable<string> CrashFileDirectories()
+    {
+        // Alongside the log first, so the crash file travels with it when
+        // SaveItems or the deployment collects logs.
+        if (_log.FilePath is { Length: > 0 } logFile)
+        {
+            var dir = Path.GetDirectoryName(logFile);
+            if (!string.IsNullOrEmpty(dir)) yield return dir;
+        }
+
+        yield return Path.GetTempPath();
+        yield return AppContext.BaseDirectory;
     }
 
     private static LoadedConfig LoadConfig(CliOptions opts, ICMLog log, ITSEnv env)

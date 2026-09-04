@@ -1,0 +1,31 @@
+<Project>
+
+  <!--
+    Shared settings for the C# projects. Conditioned on .csproj so the legacy
+    C++ solution (UI++.sln, which builds .vcxproj files from this same
+    directory) is left completely alone.
+
+    TargetFramework is deliberately NOT set here: it differs per project
+    (net10.0 for the cross-platform core, net10.0-windows for the rest).
+  -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <!--
+    Version and identity. The runtime executable previously carried no version
+    resource at all, which made a deployed binary impossible to identify.
+    Projects may still override any of these; a project-level property wins
+    because this file is imported before the project body.
+  -->
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
+    <Version>1.0.0-rc11</Version>
+    <Product>UiSharp</Product>
+    <Company>UiSharp</Company>
+    <Copyright>Copyright (c) UiSharp contributors</Copyright>
+  </PropertyGroup>
+
+</Project>

@@ -28,7 +28,7 @@ public sealed class LocalTSEnv : ITSEnv
         _environmentLookup = environmentLookup;
 
     public bool InTS => false;
-    public string? LogPath => null;
+    public string? LogDirectory => null;
 
     public IReadOnlyDictionary<string, string> GetAll() => _vars;
 

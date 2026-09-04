@@ -32,7 +32,10 @@ public sealed class ConfigMgrTSEnv : ITSEnv
     }
 
     public bool InTS    => _com is not null;
-    public string? LogPath => InTS ? Get("_SMSTSLogPath") : null;
+    // Get() returns "" rather than null when the variable is missing, so
+    // normalise that here — otherwise a null-coalescing fallback never fires.
+    public string? LogDirectory =>
+        InTS && Get("_SMSTSLogPath") is { Length: > 0 } dir ? dir : null;
 
     public string Get(string name)
     {
