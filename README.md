@@ -71,6 +71,34 @@ These are the only intentional behavioral changes:
 
 All other XML attributes, variable names, dialog behavior, and output formats are identical to the C++ original. Existing XML config files work without modification.
 
+Parity is verified two ways, both in the test suite: golden-file snapshots of the original project's own sample configs, and differential tests that run the same expressions through the native engine and the real `vbscript.dll` and assert they agree.
+
+## COM constructs in conditions
+
+Conditions in existing configs often reach for COM, most commonly the file system:
+
+```xml
+<Action Type="Info" Condition='CreateObject("Scripting.FileSystemObject").FileExists("C:\marker.txt")'>
+```
+
+The native engine handles these itself, so such a config runs unchanged in a WinPE image **without** the `WinPE-Scripting` component. This compatibility shim is a bridge for existing XML rather than the place to stay — each use is noted in the log alongside its native replacement.
+
+| COM member | Native equivalent |
+|---|---|
+| `CreateObject("Scripting.FileSystemObject").FileExists(p)` | `FileExists(p)` |
+| `…FolderExists(p)` / `…DriveExists(d)` | `FolderExists(p)` / `DriveExists(d)` |
+| `…GetParentFolderName(p)` | `PathParent(p)` |
+| `…GetFileName(p)` / `…GetBaseName(p)` | `PathFileName(p)` / `PathBaseName(p)` |
+| `…GetExtensionName(p)` / `…GetDriveName(p)` | `PathExtension(p)` / `PathDrive(p)` |
+| `…BuildPath(p, name)` | `PathCombine(p, name)` |
+| `CreateObject("WScript.Network").ComputerName` | `ComputerName()` |
+| `…UserName` / `…UserDomain` | `UserName()` / `UserDomain()` |
+| `CreateObject("WScript.Shell").ExpandEnvironmentStrings(s)` | `ExpandEnvironment(s)` |
+
+The native functions are UiSharp-only: a config using them will not run under the original C++ UI++, which is the trade for dropping the dependency on a deprecated scripting engine. Both forms return the same answer, so migrating is safe to do incrementally.
+
+Still requiring `ConditionEngine="vbscript"`: `GetObject` (WMI — prefer `<Action Type="WMIRead">`), `Eval`, `Execute`, `Split`, `WScript.Shell.RegRead` (prefer `<Action Type="RegRead">`), and any other ProgID. These are reported in the log rather than silently evaluating false.
+
 ## Repository layout
 
 | File / folder | Purpose |

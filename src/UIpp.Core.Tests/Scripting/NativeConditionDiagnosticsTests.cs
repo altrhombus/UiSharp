@@ -104,30 +104,34 @@ public class NativeConditionDiagnosticsTests
     // ----------------------------------------------------------
 
     [Theory]
-    [InlineData("CreateObject('Scripting.FileSystemObject')")]
+    // A ProgID the compatibility shim has no equivalent for.
+    [InlineData("CreateObject('Scripting.Dictionary')")]
+    // Constructs with no native equivalent at all.
     [InlineData("GetObject('winmgmts:')")]
     [InlineData("Eval('1 = 1')")]
     [InlineData("Execute('x = 1')")]
     public void ComConstructs_ReportRequiresComHost(string expr)
     {
         var result = Run(expr);
-        Assert.Contains(result.Diagnostics,
+        Assert.Contains(result.Problems,
             d => d.Kind == ConditionDiagnosticKind.RequiresComHost);
     }
 
-    // The condition that actually appears in UI++/UI++5.xml. Under VBScript this
-    // is true when the file exists; the native engine can only return false, so it
-    // must say so rather than quietly reporting a false condition.
+    // The condition that actually appears in UI++/UI++5.xml. It is handled by the
+    // COM compatibility shim rather than needing a script host, so the config
+    // runs unchanged in a WinPE image without WinPE-Scripting.
     [Fact]
-    public void FileSystemObjectCondition_FromSampleConfig_IsReportedNotSilentlyFalse()
+    public void FileSystemObjectCondition_FromSampleConfig_EvaluatesThroughTheShim()
     {
         var result = Run(
             "CreateObject(\"Scripting.FileSystemObject\").FileExists(\"C:\\Windows\")");
 
-        Assert.False(result.Value);
-        Assert.False(result.IsReliable);
-        Assert.Contains(result.Diagnostics,
-            d => d.Kind == ConditionDiagnosticKind.RequiresComHost);
+        // Nothing blocks evaluation any more — the compatibility shim handles it...
+        Assert.True(result.IsReliable, result.DescribeProblems());
+
+        // ...and the advisory names the native replacement to migrate to.
+        Assert.Contains(result.Advice,
+            d => d.Kind == ConditionDiagnosticKind.ComCompatibilityShim);
     }
 
     // ----------------------------------------------------------
@@ -164,13 +168,17 @@ public class NativeConditionDiagnosticsTests
             d => d.Kind == ConditionDiagnosticKind.UnsupportedConstruct);
     }
 
+    // Member access works now, but only on an object a supported CreateObject
+    // produced — not on a plain string.
     [Fact]
-    public void MemberAccess_IsReportedAsUnsupported()
+    public void MemberAccess_OnANonObject_IsReported()
     {
         var result = Run("'abc'.Length = 3");
-        Assert.Contains(result.Diagnostics,
+
+        Assert.False(result.Value);
+        Assert.Contains(result.Problems,
             d => d.Kind == ConditionDiagnosticKind.UnsupportedConstruct &&
-                 d.Detail.Contains("member access"));
+                 d.Detail.Contains("requires an object"));
     }
 
     // '&' concatenation is now supported, so it must NOT be reported.
@@ -238,7 +246,7 @@ public class NativeConditionDiagnosticsTests
     [InlineData("Adobe Reader DC 2019")]
     [InlineData("Please choose a volume")]
     // Constructs the engine cannot honour.
-    [InlineData(@"CreateObject('Scripting.FileSystemObject').FileExists('C:\x')")]
+    [InlineData("GetObject('winmgmts:') = 1")]
     [InlineData("FormatNumber(1234) = '1,234'")]
     [InlineData("'abc'.Length = 3")]
     [InlineData("1 / 0 = 0")]

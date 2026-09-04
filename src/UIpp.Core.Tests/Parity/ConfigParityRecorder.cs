@@ -58,6 +58,26 @@ internal sealed class ConfigParityRecorder
             ["ComputerName"] = "PARITY-TEST-PC",
         };
 
+    // A fixed stand-in for the machine. CreateObject("Scripting.FileSystemObject")
+    // is now evaluated natively, so without this a snapshot would depend on which
+    // files happen to exist on the machine running the tests.
+    private sealed class FixedScriptHost : IScriptHostServices
+    {
+        public bool FileExists(string path)   => false;
+        public bool FolderExists(string path) => false;
+        public bool DriveExists(string drive) => drive.StartsWith("C", StringComparison.OrdinalIgnoreCase);
+
+        public string ComputerName => "PARITY-TEST-PC";
+        public string UserName     => "parityuser";
+        public string UserDomain   => "PARITYDOMAIN";
+
+        public string ExpandEnvironmentStrings(string input) => input;
+    }
+
+    private static readonly FixedScriptHost ScriptHost = new();
+
+    private static NativeConditionEvaluator NewEvaluator() => new(ScriptHost);
+
     private readonly List<string> _actionLines = [];
     private readonly CapturingLog _log = new();
     private readonly LocalTSEnv _env =
@@ -222,7 +242,7 @@ internal sealed class ConfigParityRecorder
         var data = new ActionData
         {
             ActionNode         = actionsEl,
-            Conditions         = new NativeConditionEvaluator(),
+            Conditions         = NewEvaluator(),
             TsEnv              = _env,
             Log                = _log,
             GlobalDialogTraits = config.GlobalTraits,
@@ -230,7 +250,7 @@ internal sealed class ConfigParityRecorder
             Messages           = config.Messages,
         };
 
-        var result = new ActionProcessor(factory, new NativeConditionEvaluator())
+        var result = new ActionProcessor(factory, NewEvaluator())
             .Run(actionsEl, data);
 
         _actionLines.Add($"=> processor result: {result}");

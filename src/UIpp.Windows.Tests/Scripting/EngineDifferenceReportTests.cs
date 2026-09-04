@@ -26,6 +26,7 @@ public class EngineDifferenceReportTests(ITestOutputHelper output)
         var lines  = new List<string>();
 
         var all = EngineCorpus.Deterministic
+            .Concat(EngineCorpus.ComCompatibility)
             .Concat(EngineCorpus.NotExpressions)
             .Concat(EngineCorpus.RuntimeErrors)
             .ToArray();

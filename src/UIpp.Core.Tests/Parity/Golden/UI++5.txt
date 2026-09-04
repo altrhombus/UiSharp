@@ -157,9 +157,8 @@ OUChoice = "IST"
 SystemName = ""
 YSystemDiskFreeSpaceGB = "Round(%YSystemDiskFreeSpaceBytes% / 1024 / 1024 / 1024, 2)"
 
-## Warnings and errors (4)
+## Warnings and errors (3)
 
-[Warning] Condition in <ErrorInfo> was not fully evaluated and has been treated as False. RequiresComHost: CreateObject() requires the vbscript condition engine; UnsupportedConstruct: member access ('.') is not supported by the native engine, in "CreateObject("Scripting.FileSystemObject").FileExists("C:\Users\Jason\Desktop\ConfigMgr update notes.doc")". Set ConditionEngine="vbscript" (or pass /conditionengine:vbscript) to evaluate it.
 [Warning] Condition in preflight check 'Minimum memory > 1GB' CheckCondition was not fully evaluated and has been treated as False. UnsupportedConstruct: unsupported operator or character '%' in "%XHWMemory% >= 1024"; TrailingInput: stopped at 'XHWMemory% >= 1024' in "%XHWMemory% >= 1024". Rewrite the condition using constructs the native engine supports.
 [Warning] Condition in preflight check 'CPU Supports Windows 8+' CheckCondition was not fully evaluated and has been treated as False. UnsupportedConstruct: unsupported operator or character '%' in "%XCPUPAE% AND %XCPUNX% AND %XCPUSSE2% = True"; TrailingInput: stopped at 'XCPUPAE% AND %XCPUNX% AND %XCPUSSE2% = True' in "%XCPUPAE% AND %XCPUNX% AND %XCPUSSE2% = True". Rewrite the condition using constructs the native engine supports.
 [Warning] Condition in preflight check '30GB System Disk Free Space' CheckCondition was not fully evaluated and has been treated as False. UnsupportedConstruct: unsupported operator or character '%' in "Round(%YSystemDiskFreeSpaceBytes% / 1024 / 1024 / 1024, 2) > 3000"; UnsupportedConstruct: unsupported operator or character '%' in "Round(%YSystemDiskFreeSpaceBytes% / 1024 / 1024 / 1024, 2) > 3000"; EvaluationError: operator '/' needs numbers, but got "%"; EvaluationError: operator '/' needs numbers, but got ""; EvaluationError: operator '/' needs numbers, but got "". Rewrite the condition using constructs the native engine supports.

@@ -53,20 +53,39 @@ public class ConditionDiagnosticLoggingTests
     // Action-level conditions
     // ----------------------------------------------------------
 
+    // GetObject reaches WMI and has no native equivalent, unlike
+    // CreateObject("Scripting.FileSystemObject") which the compatibility shim now
+    // handles without a script host.
     [Fact]
     public void ActionCondition_RequiringCom_IsSkippedButWarnsWithRemedy()
     {
         var (env, log) = Run("""
             <Action Type="TSVar" Variable="Ran"
-                    Condition="CreateObject('Scripting.FileSystemObject').FileExists('C:\Windows')">yes</Action>
+                    Condition="GetObject('winmgmts:root\cimv2') = 1">yes</Action>
             """);
 
         // The action is skipped, exactly as before this change...
         Assert.True(string.IsNullOrEmpty(env.Get("Ran")));
 
         // ...but no longer silently.
-        var warning = Assert.Single(log.Warnings, w => w.Contains("CreateObject"));
+        var warning = Assert.Single(log.Warnings, w => w.Contains("GetObject"));
         Assert.Contains("vbscript", warning);
+    }
+
+    // The compatibility shim evaluates successfully, so it must not raise a
+    // warning — only an informational note naming the native replacement, so an
+    // administrator can migrate the XML when they choose to.
+    [Fact]
+    public void ActionCondition_UsingCompatibilityShim_InformsButDoesNotWarn()
+    {
+        var (_, log) = Run("""
+            <Action Type="TSVar" Variable="Ran"
+                    Condition="CreateObject('Scripting.FileSystemObject').FolderExists('C:\Windows')">yes</Action>
+            """);
+
+        Assert.Empty(log.Warnings);
+        Assert.Contains(log.Entries,
+            e => e.Severity == LogSeverity.Info && e.Message.Contains("FolderExists(path)"));
     }
 
     [Fact]
@@ -117,7 +136,7 @@ public class ConditionDiagnosticLoggingTests
         var actionEl = XElement.Parse("""
             <Action Type="Preflight">
               <Check Text="Marker file present"
-                     CheckCondition="CreateObject('Scripting.FileSystemObject').FileExists('C:\marker')" />
+                     CheckCondition="GetObject('winmgmts:root\cimv2') = 1" />
             </Action>
             """);
 
@@ -179,7 +198,7 @@ public class ConditionDiagnosticLoggingTests
         var actionEl = XElement.Parse("""
             <Action Type="Input">
               <InputText Question="Name" Variable="Name"
-                         Condition="CreateObject('Scripting.FileSystemObject').FileExists('C:\x')" />
+                         Condition="GetObject('winmgmts:root\cimv2') = 1" />
             </Action>
             """);
 
@@ -217,7 +236,7 @@ public class ConditionDiagnosticLoggingTests
     {
         var actionEl = XElement.Parse("""
             <Action Type="Input">
-              <InputText Question="Name" Variable="Name" Condition="CreateObject('X')" />
+              <InputText Question="Name" Variable="Name" Condition="GetObject('X')" />
             </Action>
             """);
 

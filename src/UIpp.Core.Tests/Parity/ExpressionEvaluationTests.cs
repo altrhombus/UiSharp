@@ -244,6 +244,10 @@ public class ExpressionEvaluationTests
     [InlineData("1 Mod 0")]
     [InlineData("\"abc\" - 1")]
     // Needs a script host
+    [InlineData("GetObject(\"winmgmts:\")")]
+    [InlineData("Eval(\"1 = 1\")")]
+    // A supported object, but an object reference is not something a
+    // task-sequence variable can hold, so the engine declines.
     [InlineData("CreateObject(\"Scripting.FileSystemObject\")")]
     // Empty results are rejected, matching the VARIANT length check
     [InlineData("\"\"")]
