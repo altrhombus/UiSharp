@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using UiSharp.Core.Configuration;
 using UiSharp.Core.Dialogs;
 using C = UiSharp.Core.Configuration.XmlConstants;
+using UiSharp.Editing;
 
 namespace UiSharp.Editor.ViewModels;
 

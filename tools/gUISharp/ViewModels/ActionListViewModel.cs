@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using UiSharp.Editor.Services;
 using UiSharp.Core.Configuration;
 using C = UiSharp.Core.Configuration.XmlConstants;
+using UiSharp.Editing;
 
 namespace UiSharp.Editor.ViewModels;
 
@@ -220,14 +221,14 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         try
         {
             var root = XElement.Parse(xml);
-            var pairs = ExtractNodePairs(root);
+            var pairs = ActionXml.ExtractNodePairs(root);
 
             if (pairs.Count == ActionTree.Count)
             {
                 // Count unchanged: update each node in-place (preserves VMs and scroll position).
                 for (int i = 0; i < pairs.Count; i++)
                 {
-                    ApplyParsedNode(ActionTree[i].Model.Node, pairs[i].El);
+                    ActionXml.ApplyParsedNode(ActionTree[i].Model.Node, pairs[i].Element);
                     ActionTree[i].Model.Comment = pairs[i].Comment;
                     ActionTree[i].NotifyCommentChanged();
                 }
@@ -249,7 +250,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         }
     }
 
-    private void RebuildTreeFromPairs(List<(string? Comment, XElement El)> pairs)
+    private void RebuildTreeFromPairs(List<(string? Comment, XElement Element)> pairs)
     {
         // Remember which index was selected so we can restore the closest match.
         int selectedIdx = SelectedAction is not null ? ActionTree.IndexOf(SelectedAction) : -1;
@@ -262,7 +263,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
 
         foreach (var (comment, el) in pairs)
         {
-            var model = BuildModelFromElement(el);
+            var model = ActionXml.BuildModel(el);
             model.Comment = comment;
             var vm = new ActionNodeViewModel(model, _factory);
             vm.Dirtied += (_, _) => RaiseDirty();
@@ -274,30 +275,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
             SelectedAction = ActionTree[Math.Min(selectedIdx, ActionTree.Count - 1)];
     }
 
-    private static ActionNodeModel BuildModelFromElement(XElement el)
-    {
-        var model = new ActionNodeModel { Node = el };
-        if (model.IsGroup)
-        {
-            foreach (var (comment, child) in ExtractNodePairs(el))
-            {
-                var childModel = BuildModelFromElement(child);
-                childModel.Comment = comment;
-                model.Children.Add(childModel);
-            }
-        }
-        return model;
-    }
 
-    private static void ApplyParsedNode(XElement target, XElement parsed)
-    {
-        target.Name = parsed.Name;
-        target.RemoveAll();
-        foreach (var attr in parsed.Attributes())
-            target.Add(new XAttribute(attr));
-        foreach (var child in parsed.Nodes())
-            target.Add(CloneXNode(child));
-    }
 
     // ── Full document XML builder ─────────────────────────────────────────────
 
@@ -371,43 +349,22 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
     {
         _lineRanges.Clear();
         SelectedLineRange = (-1, -1);
-        try
+
+        // Range computation lives in ActionXml so it can be tested; this only
+        // zips the ranges onto the view models they belong to.
+        var ranges = ActionXml.ComputeElementLineRanges(xml);
+
+        for (int i = 0; i < Math.Min(ranges.Count, ActionTree.Count); i++)
         {
-            var root = XElement.Parse(xml, LoadOptions.SetLineInfo);
-            var children = root.Elements().ToList();
+            var (start, end) = ranges[i];
+            var vm = ActionTree[i];
 
-            for (int i = 0; i < Math.Min(children.Count, ActionTree.Count); i++)
-            {
-                var el = children[i];
-                var vm = ActionTree[i];
-                var li = (IXmlLineInfo)el;
-                int startLine = li.HasLineInfo() ? li.LineNumber : 1;
-
-                // Use the element's own line count rather than extending to the next element.
-                // Extending to nextElement.LineNumber - 1 pulls comment lines between actions
-                // into the preceding action's range, causing clicks on those comment lines to
-                // select the wrong action and trigger a spurious RefreshXmlFromNode that drops
-                // comments not yet stored in any Model.Comment.
-                int elementLineCount = el.ToString().Split('\n').Length;
-                int endLine = startLine + elementLineCount - 1;
-
-                _lineRanges.Add((vm, startLine, endLine));
-                if (vm == SelectedAction)
-                    SelectedLineRange = (startLine, endLine);
-            }
+            _lineRanges.Add((vm, start, end));
+            if (vm == SelectedAction)
+                SelectedLineRange = (start, end);
         }
-        catch { }
     }
 
-    private static XNode CloneXNode(XNode node) => node switch
-    {
-        XElement el               => new XElement(el),
-        XCData cd                 => new XCData(cd.Value),
-        XText txt                 => new XText(txt.Value),
-        XComment c                => new XComment(c.Value),
-        XProcessingInstruction pi => new XProcessingInstruction(pi.Target, pi.Data),
-        _                         => new XText(node.ToString())
-    };
 
     // ── Commands ──────────────────────────────────────────────────────────────
 
@@ -465,7 +422,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
             !localName.Equals(C.Elements.ActionGroup, StringComparison.OrdinalIgnoreCase))
             return false;
 
-        var model = BuildModelFromElement(el);
+        var model = ActionXml.BuildModel(el);
         var vm    = new ActionNodeViewModel(model, _factory);
         vm.Dirtied += (_, _) => RaiseDirty();
         vm.ApplyFilter(FilterText);
@@ -507,7 +464,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
     {
         if (SelectedAction is null) return;
         var copy = new XElement(SelectedAction.Model.Node);
-        var model = BuildModelFromElement(copy);
+        var model = ActionXml.BuildModel(copy);
         var vm = new ActionNodeViewModel(model, _factory);
         vm.Dirtied += (_, _) => RaiseDirty();
         vm.ApplyFilter(FilterText);
@@ -865,40 +822,9 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         RaiseDirty();
     }
 
-    private static List<(string? Comment, XElement El)> ExtractNodePairs(XElement root)
-    {
-        var result = new List<(string? Comment, XElement El)>();
-        string? pendingComment = null;
-        foreach (var node in root.Nodes())
-        {
-            if (node is XComment comment)
-            {
-                var normalized = NormalizeComment(comment.Value);
-                pendingComment = pendingComment is null ? normalized : pendingComment + "\n" + normalized;
-            }
-            else if (node is XElement el)
-            {
-                result.Add((pendingComment, el));
-                pendingComment = null;
-            }
-            // Whitespace XText nodes between elements are silently skipped
-        }
-        return result;
-    }
 
     // Strips outer whitespace and per-line indentation from XComment.Value so the Note TextBox
     // sees clean text without leading spaces/newlines that a block-style comment introduces.
-    private static string NormalizeComment(string rawValue)
-    {
-        var lines = rawValue
-            .Split('\n')
-            .Select(l => l.Trim())
-            .SkipWhile(string.IsNullOrEmpty)
-            .ToList();
-        while (lines.Count > 0 && string.IsNullOrEmpty(lines[^1]))
-            lines.RemoveAt(lines.Count - 1);
-        return string.Join("\n", lines);
-    }
 
     private static void AttachLeadingComment(ActionNodeModel model)
     {
@@ -908,7 +834,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         {
             if (node is XComment comment)
             {
-                comments.Insert(0, NormalizeComment(comment.Value));
+                comments.Insert(0, ActionXml.NormalizeComment(comment.Value));
                 node = node.PreviousNode;
             }
             else if (node is XText text && string.IsNullOrWhiteSpace(text.Value))

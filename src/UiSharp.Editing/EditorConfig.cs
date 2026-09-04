@@ -1,8 +1,9 @@
 using System.Xml.Linq;
 using UiSharp.Core.Dialogs;
+using UiSharp.Core.Configuration;
 using UiSharp.Core.Software;
 
-namespace UiSharp.Core.Configuration;
+namespace UiSharp.Editing;
 
 public sealed class EditorConfig
 {

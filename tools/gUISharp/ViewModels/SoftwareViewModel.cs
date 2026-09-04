@@ -7,6 +7,7 @@ using CommunityToolkit.Mvvm.Input;
 using UiSharp.Core.Configuration;
 using UiSharp.Core.Software;
 using C = UiSharp.Core.Configuration.XmlConstants;
+using UiSharp.Editing;
 
 namespace UiSharp.Editor.ViewModels;
 
@@ -298,13 +299,13 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
         try
         {
             var root = XElement.Parse(xml);
-            var pairs = ExtractNodePairs(root);
+            var pairs = ActionXml.ExtractNodePairs(root);
 
             if (pairs.Count == Items.Count)
             {
                 for (int i = 0; i < pairs.Count; i++)
                 {
-                    ApplyXmlToItem(Items[i], pairs[i].El);
+                    ApplyXmlToItem(Items[i], pairs[i].Element);
                     Items[i].Comment = pairs[i].Comment;
                 }
             }
@@ -323,7 +324,7 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
         }
     }
 
-    private void RebuildItemsFromXml(List<(string? Comment, XElement El)> pairs)
+    private void RebuildItemsFromXml(List<(string? Comment, XElement Element)> pairs)
     {
         int selectedIdx = SelectedItem is not null ? Items.IndexOf(SelectedItem) : -1;
         SelectedItem = null;
@@ -332,7 +333,7 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
         for (int i = 0; i < pairs.Count; i++)
         {
             var vm = new SoftwareItemViewModel { OrderIndex = i };
-            ApplyXmlToItem(vm, pairs[i].El);
+            ApplyXmlToItem(vm, pairs[i].Element);
             vm.Comment = pairs[i].Comment;
             Items.Add(vm);
         }
@@ -391,7 +392,7 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
         {
             if (node is XComment comment)
             {
-                var normalized = NormalizeComment(comment.Value);
+                var normalized = ActionXml.NormalizeComment(comment.Value);
                 pendingComment = pendingComment is null ? normalized : pendingComment + "\n" + normalized;
             }
             else if (node is XElement el)
@@ -412,35 +413,5 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
         }
     }
 
-    private static List<(string? Comment, XElement El)> ExtractNodePairs(XElement root)
-    {
-        var result = new List<(string? Comment, XElement El)>();
-        string? pendingComment = null;
-        foreach (var node in root.Nodes())
-        {
-            if (node is XComment comment)
-            {
-                var normalized = NormalizeComment(comment.Value);
-                pendingComment = pendingComment is null ? normalized : pendingComment + "\n" + normalized;
-            }
-            else if (node is XElement el)
-            {
-                result.Add((pendingComment, el));
-                pendingComment = null;
-            }
-        }
-        return result;
-    }
 
-    private static string NormalizeComment(string rawValue)
-    {
-        var lines = rawValue
-            .Split('\n')
-            .Select(l => l.Trim())
-            .SkipWhile(string.IsNullOrEmpty)
-            .ToList();
-        while (lines.Count > 0 && string.IsNullOrEmpty(lines[^1]))
-            lines.RemoveAt(lines.Count - 1);
-        return string.Join("\n", lines);
-    }
 }

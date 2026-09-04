@@ -1,10 +1,11 @@
 using System.Drawing;
 using System.Xml.Linq;
 using UiSharp.Core.Configuration;
+using UiSharp.Editing;
 using UiSharp.Core.Dialogs;
 using UiSharp.Core.Software;
 
-namespace UiSharp.Core.Tests.Configuration;
+namespace UiSharp.Editing.Tests;
 
 public class ConfigWriterTests
 {

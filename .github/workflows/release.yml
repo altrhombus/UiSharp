@@ -28,6 +28,9 @@ jobs:
       - name: UiSharp.Core tests
         run: dotnet test src/UiSharp.Core.Tests -c Release
 
+      - name: UiSharp.Editing tests
+        run: dotnet test src/UiSharp.Editing.Tests -c Release
+
       - name: UiSharp.Windows tests
         run: dotnet test src/UiSharp.Windows.Tests -c Release
 

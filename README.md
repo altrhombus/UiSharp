@@ -24,6 +24,7 @@ gUI# is a WinUI 3 desktop app for creating and editing UiSharp/UI++ XML configur
 | `UiSharp.Core` | net10.0 | Pure logic — parsers, evaluators, action implementations. No Windows dependencies. |
 | `UiSharp.Windows` | net10.0-windows | WMI, COM, LDAP, registry integrations |
 | `UiSharp.UI` | net10.0-windows | WinForms dialogs and controls |
+| `UiSharp.Editing` | net10.0 | Editor-only model and XML round-tripping used by gUI#. Kept out of the runtime so the WinPE executable carries no editing code. |
 | `UiSharp` | net10.0-windows | Entry point, single-file publish target |
 | `tools/gUISharp` | net10.0-windows10.0.22621.0 | WinUI 3 visual XML editor — see [tools/gUISharp/README.md](tools/gUISharp/README.md) |
 
@@ -34,6 +35,7 @@ gUI# is a WinUI 3 desktop app for creating and editing UiSharp/UI++ XML configur
 ```bash
 dotnet build
 dotnet test src/UiSharp.Core.Tests        # pure logic, runs on any OS
+dotnet test src/UiSharp.Editing.Tests     # editor XML round-tripping, runs on any OS
 dotnet test src/UiSharp.Windows.Tests     # registry/WMI + VBScript differential, Windows only
 ```
 
@@ -106,7 +108,7 @@ Still requiring `ConditionEngine="vbscript"`: `GetObject` (WMI — prefer `<Acti
 | File / folder | Purpose |
 |---|---|
 | `UiSharp.slnx` | Modern C# solution — open this in Visual Studio or Rider |
-| `src/` | C# runtime projects (`UiSharp.Core`, `UiSharp.Windows`, `UiSharp.UI`, `UiSharp`) |
+| `src/` | C# projects — runtime (`UiSharp.Core`, `UiSharp.Windows`, `UiSharp.UI`, `UiSharp`) and editor support (`UiSharp.Editing`) |
 | `tools/gUISharp/` | WinUI 3 visual XML editor — see [tools/gUISharp/README.md](tools/gUISharp/README.md) |
 | `UI++.sln` | Legacy C++ solution for the original UI++ source (not the C# port) |
 | `UI++/`, `FTWCMLog/`, `FTWldap/` | Original C++ source, included for historical reference |

@@ -6,6 +6,7 @@ using UiSharp.Editor.Services;
 using UiSharp.Editor.ViewModels;
 using UiSharp.Core.Configuration;
 using C = UiSharp.Core.Configuration.XmlConstants;
+using UiSharp.Editing;
 
 namespace UiSharp.Editor.ViewModels.ActionEditors;
 

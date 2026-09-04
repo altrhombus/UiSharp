@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\UiSharp.Core\UiSharp.Core.csproj" />
+    <ProjectReference Include="..\..\src\UiSharp.Editing\UiSharp.Editing.csproj" />
   </ItemGroup>
 
   <ItemGroup>

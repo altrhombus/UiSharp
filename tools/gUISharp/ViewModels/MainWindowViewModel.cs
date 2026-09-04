@@ -7,6 +7,7 @@ using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using UiSharp.Core.Configuration;
+using UiSharp.Editing;
 
 namespace UiSharp.Editor.ViewModels;
 

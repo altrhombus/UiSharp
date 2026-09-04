@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using UiSharp.Editor.ViewModels.ActionEditors;
 using UiSharp.Core.Configuration;
 using C = UiSharp.Core.Configuration.XmlConstants;
+using UiSharp.Editing;
 
 namespace UiSharp.Editor.Services;
 
