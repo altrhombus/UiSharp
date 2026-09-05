@@ -19,9 +19,12 @@ public sealed class ActionErrorInfo(ActionData data) : ActionBase(data)
         var showCancel  = BoolAttr(XmlConstants.Attributes.ShowCancel);
         // C++: if (!includeCancel && inWinPE) dlg.ShowRestartButton()
         var showRestart = Data.InWinPE && !showCancel;
+        var banner      = UiImage.Load(Attr(XmlConstants.Attributes.Image),     Data.Log, "banner image");
+        var infoImage   = UiImage.Load(Attr(XmlConstants.Attributes.InfoImage), Data.Log, "info image");
 
         ActionResult dialogResult;
-        using (var dlg = new DlgErrorInfo(Data.GlobalDialogTraits, Data.TsEnv, title, infoText, showBack, showRestart))
+        using (var dlg = new DlgErrorInfo(Data.GlobalDialogTraits, Data.TsEnv, title, infoText,
+                                          banner, infoImage, showBack, showRestart, Data.Log))
         {
             dlg.ShowDialog();
             dialogResult = dlg.Result;

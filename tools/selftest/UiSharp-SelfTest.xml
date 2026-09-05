@@ -11,6 +11,9 @@
 
       UiSharp.exe /config:UiSharp-SelfTest.xml
 
+  Run it from this directory: the image attributes below use relative paths, and
+  they resolve against the working directory.
+
   Each dialog says what to look at. Answer honestly: the answers are written to
   %temp%\UiSharp-SelfTest.dat and shown back at the end, so a run leaves a record
   of what was actually seen rather than only whether it finished.
@@ -19,7 +22,8 @@
   network or a task sequence.
 -->
 
-<UIpp Title="UiSharp self-test" CenterTitle="True" Flat="True" AlwaysOnTop="True">
+<UIpp Title="UiSharp self-test" CenterTitle="True" Flat="True" AlwaysOnTop="True"
+      Icon="icon.ico">
 
   <Software>
     <Application Id="A1000000-0000-0000-0000-00000000000A" Label="Sample application A" Name="Sample application A" Info="A leaf in the tree. Selecting it should set a variable." />
@@ -40,7 +44,8 @@
 
     <!-- ============================================================= 1. Info -->
 
-    <Action Type="Info" Title="UiSharp self-test" ShowCancel="True">
+    <Action Type="Info" Title="UiSharp self-test" ShowCancel="True"
+            Image="banner.png" InfoImage="spinner.gif">
       <![CDATA[Welcome.
 
 This runs through every dialog UiSharp can show, one at a time. On each screen, check that:
@@ -50,6 +55,12 @@ This runs through every dialog UiSharp can show, one at a time. On each screen, 
   - Back and Cancel do what they say
 
 Cancel on any screen stops the self-test. That is itself worth testing at least once.
+
+This screen also carries two images. Check that:
+
+  - the banner across the top is fully visible and not cut off - the file is 900 pixels wide, wider than this dialog, so it has to have been scaled down
+  - the small square below the text is animating through four colours - a still square means this boot image cannot animate a GIF
+  - the title bar and the panel on the left both show a round blue icon
 
 Continue when you are ready.]]>
     </Action>
@@ -173,18 +184,34 @@ Back from here should return to the previous screen rather than leaving the grou
 
     <!-- ========================================================= 7. ErrorInfo -->
 
-    <Action Type="ErrorInfo" Title="Error screen" ShowCancel="False">
+    <Action Type="ErrorInfo" Title="Error screen" ShowCancel="False" Image="banner.png">
       <![CDATA[This is the error dialog, shown deliberately.
 
-It should be visibly an error — not just an ordinary information screen with different words — and it should offer no way to continue past it other than acknowledging it.]]>
+It should be visibly an error — not just an ordinary information screen with different words — and it should offer no way to continue past it other than acknowledging it.
+
+It takes the same banner as the welcome screen, and renders the same <b>markup</b> the information screens do: that word should be bold rather than showing its tags.]]>
     </Action>
 
     <!-- ================================================= 8. Full-screen info -->
 
-    <Action Type="InfoFullScreen" ShowCancel="True" Timeout="20" TimeoutAction="Continue">
+    <Action Type="InfoFullScreen" ShowCancel="True" Timeout="20" TimeoutAction="Continue"
+            Image="banner.png">
       <![CDATA[This screen should cover the whole display, with nothing of the desktop or of WinPE visible behind it.
 
+The banner should be centred near the top, scaled to the screen rather than to the dialog it was scaled to earlier.
+
 It also has a timeout: if nothing is pressed it continues on its own after twenty seconds, counting down as it goes. Watch the countdown rather than pressing anything, so the timeout is tested too.]]>
+    </Action>
+
+    <Action Type="Info" Title="Missing images" Subtitle="A failure that must not be fatal"
+            ShowCancel="True"
+            Image="no-such-file.png"
+            InfoImage="http://uisharp.invalid/does-not-exist.png">
+      <![CDATA[This screen asks for two images that cannot be loaded: one file that does not exist, and one URL that cannot be reached.
+
+Both should be missing, this text should be exactly where it would be if no images had been asked for, and the log should carry a warning naming each one. What must not happen is the dialog failing to appear.
+
+The URL will take a few seconds to give up. That wait is the point: it is what a boot image does when the network is not up yet.]]>
     </Action>
 
     <Action Type="TSVar" Variable="SelfTestReachedEnd">yes</Action>

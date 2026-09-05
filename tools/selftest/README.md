@@ -75,10 +75,17 @@ in `%_SMSTSLogPath%`.
 UiSharp.exe /config:UiSharp-SelfTest.xml
 ```
 
+Run it from this directory — the image attributes use relative paths.
+
 It shows every dialog UiSharp can display, one after another, and each screen
 says what to look at. Run it in the boot image, on the hardware you deploy to,
 at the resolution that hardware actually boots at — a dialog that looks right on
 a 4K desktop can be unreadable at 1024x768 in WinPE with a different font set.
+
+It also carries a banner, an animated GIF, an icon, and one screen that
+deliberately points at a file that does not exist and a URL that cannot be
+reached. A boot image without the codec for a format, or without a network yet
+when the first dialog appears, is exactly what that screen is there to find.
 
 It writes what you entered to `%temp%\UiSharp-SelfTest.dat` and shows it back at
 the end, so the run leaves a record of what was seen rather than only that it

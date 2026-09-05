@@ -91,10 +91,39 @@ still `<UIpp>`.
 - **`tools/selftest/UiSharp-SelfTest.xml`** is the companion for what only a
   person can judge: it shows every dialog in turn, each screen saying what to
   look at, and records the answers. Meant to be run in the boot image on the
-  hardware being deployed to. See `tools/selftest/README.md`.
+  hardware being deployed to. See `tools/selftest/README.md`. It carries a
+  banner, an animated GIF and an icon, and a screen that deliberately points at
+  a missing file and an unreachable URL — a boot image without a codec, or
+  without a network yet, is exactly what it is there to find.
 - The release workflow now runs `/selftest` against the published single-file
   binary and fails the build if it reports a failure, so trimming cannot quietly
   remove an action type between a green test run and a shipped executable.
+
+### Fixed — images
+
+- **`http(s)` image URLs were silently ignored.** Every image attribute was
+  tested with `File.Exists`, so a URL failed that test and the dialog appeared
+  with no branding and nothing in the log. The original downloads them
+  (`DlgBase.cpp:391`), and its own sample configuration brands every dialog from
+  a web server.
+- **`InfoImage` was never read**, on either `Info` or `ErrorInfo`.
+- **`ErrorInfo` ignored `Image`**, and **`InfoFullScreen` ignored `Image`** —
+  the original passes a branding image to both.
+- **The root `Icon` attribute was parsed and then used by nothing**, so every
+  dialog carried the default WinForms icon. It now appears beside the dialog
+  title, as in the original, and in the title bar.
+- **`ErrorInfo` showed raw markup.** The original renders it through the same
+  control as `Info`; `<b>bold</b>` appeared as its tags.
+- Images are scaled down to fit rather than drawn at native size, so an
+  oversized one can no longer crowd the text off the dialog. Scaling is done as
+  the image is drawn, which keeps an animated GIF animating.
+- Every outcome is logged — loaded, not found, could not be downloaded, could
+  not be decoded — with the format named, because a boot image missing a codec
+  is the usual cause of the last one.
+- `InfoFullScreen` laid a 760x520 dialog out in the corner of a maximized,
+  borderless window, leaving bare form across the rest of the screen. Its panels
+  now follow the screen, which is also what lets its branding image be measured
+  against the display rather than against a dialog that is no longer that size.
 
 ### Fixed — an apostrophe in a comment broke config loading
 
@@ -136,7 +165,7 @@ still `<UIpp>`.
 
 ### Verification
 
-- Tests: 303 → 1432.
+- Tests: 303 → 1460.
 - Golden-file snapshots of the original project's eight sample configurations,
   covering configuration resolution end to end.
 - Differential tests running 257 expressions through both the native engine and

@@ -38,6 +38,7 @@ dotnet build
 dotnet test src/UiSharp.Core.Tests        # pure logic, runs on any OS
 dotnet test src/UiSharp.Editing.Tests     # editor XML round-tripping, runs on any OS
 dotnet test src/UiSharp.Windows.Tests     # registry/WMI + VBScript differential, Windows only
+dotnet test src/UiSharp.UI.Tests          # dialog resources, Windows only
 dotnet test src/UiSharp.Diagnostics.Tests # the self-test checks, Windows only
 ```
 
@@ -90,10 +91,22 @@ These are the only intentional behavioral changes:
 | WinPE optional components | `WinPE-WMI` + `WinPE-Scripting` required | `WinPE-WMI` always; `WinPE-Scripting` only when using the vbscript engine |
 | Log file name | `UI++.log` in `_SMSTSLogPath` (or `%TEMP%`), CMTrace component `UI++` | `UiSharp.log`, CMTrace component `UiSharp` — so it is obvious which tool wrote it. Update any log-collection step that looks for `UI++.log` by name. |
 | Unhandled errors | No handler — a crash left nothing behind | Written to the log and to `UiSharp_crash.txt` beside it, exiting with code 3. No dialog, so an unattended task sequence cannot hang on one. |
+| `Image` / `InfoImage` sizing | Drawn at native size on the standard dialogs | Scaled down to fit, so an oversized image cannot crowd out the text it is next to. An animated GIF keeps animating: it is scaled as it is drawn rather than resampled. |
+| `Icon` | Local `.ico` only, `LoadImage(..., LR_LOADFROMFILE)` | Any image format, and `http(s)` as well as a local path. Also used as the window icon, not only the sidebar icon. |
 
 The XML root element remains `<UIpp>`, as in the original — configuration files need no edit. All other XML attributes, variable names, dialog behavior, and output formats are identical to the C++ original. Existing XML config files work without modification.
 
 Parity is verified two ways, both in the test suite: golden-file snapshots of the original project's own sample configs, and differential tests that run the same expressions through the native engine and the real `vbscript.dll` and assert they agree.
+
+## Images
+
+`<Action Type="Info">`, `ErrorInfo` and `InfoFullScreen` take an `Image` attribute (branding across the top, or centred near the top of a full-screen dialog); `Info` and `ErrorInfo` also take `InfoImage`, centred below the text. The root `<UIpp Icon="...">` sets the icon shown beside the dialog title and in the title bar.
+
+Each of these may be a local path or an `http(s)` URL, which is downloaded before the dialog is shown — the original does this too, and its own sample configuration brands every dialog from a web server.
+
+Anything GDI+ can decode works: PNG, BMP, JPEG, GIF, TIFF. An animated GIF animates. Images larger than the space available are scaled down rather than cropped or allowed to push the text off the dialog.
+
+None of it is load-bearing: an image that is missing, unreachable or in a format the boot image has no codec for is written to the log with the reason, and the dialog is shown without it.
 
 ## COM constructs in conditions
 

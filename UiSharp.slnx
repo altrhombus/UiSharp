@@ -10,6 +10,7 @@
     <Project Path="src/UiSharp.Windows.Tests/UiSharp.Windows.Tests.csproj" />
     <Project Path="src/UiSharp.Editing.Tests/UiSharp.Editing.Tests.csproj" />
     <Project Path="src/UiSharp.Diagnostics.Tests/UiSharp.Diagnostics.Tests.csproj" />
+    <Project Path="src/UiSharp.UI.Tests/UiSharp.UI.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <Project Path="tools/gUISharp/gUISharp.csproj">
