@@ -126,9 +126,18 @@ public static class VariableScanner
         };
     }
 
+    /// <summary>Label for a reference in element content rather than an attribute.</summary>
+    private const string ContentField = "Content";
+
     /// <summary>
     /// Every place <paramref name="variableName"/> is referenced as
     /// <c>%name%</c>, in document order.
+    ///
+    /// Both attributes and element content are searched. Content matters as much
+    /// as attributes — a TSVar's value and an Info body live there — and it is
+    /// what <see cref="CountReferences"/> sees, so omitting it left the editor
+    /// reporting a reference count higher than the list of places it could
+    /// navigate to.
     ///
     /// A leaf action's descendants are searched as well, so a reference inside a
     /// Switch case or an Input field is found. Groups are not searched that way,
@@ -164,24 +173,43 @@ public static class VariableScanner
                 into.Add(new VariableUsageSite(position, FriendlyAttributeName(attr.Name.LocalName)));
         }
 
+        if (Contains(OwnText(action.Node), tag))
+            into.Add(new VariableUsageSite(position, ContentField));
+
         if (!action.IsGroup)
         {
             foreach (var descendant in action.Node.Descendants())
             {
+                var elementName = descendant.Name.LocalName;
+
                 foreach (var attr in descendant.Attributes())
                 {
                     if (Contains(attr.Value, tag))
                     {
                         into.Add(new VariableUsageSite(position,
-                            $"{descendant.Name.LocalName} · {FriendlyAttributeName(attr.Name.LocalName)}"));
+                            $"{elementName} · {FriendlyAttributeName(attr.Name.LocalName)}"));
                     }
                 }
+
+                if (Contains(OwnText(descendant), tag))
+                    into.Add(new VariableUsageSite(position, $"{elementName} · {ContentField}"));
             }
         }
 
         foreach (var child in action.Children)
             FindUsages(child, tag, ref index, into);
     }
+
+    /// <summary>
+    /// An element's own text, excluding any nested elements' text — so a parent
+    /// is not credited with a reference that belongs to its child. CDATA counts
+    /// as text: Info bodies use it.
+    /// </summary>
+    private static string OwnText(XElement element) =>
+        string.Concat(element.Nodes()
+            .Where(n => n is XText)           // XCData derives from XText
+            .Cast<XText>()
+            .Select(t => t.Value));
 
     /// <summary>
     /// How many times <c>%name%</c> appears in the given text. Counted over the
