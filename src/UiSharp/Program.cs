@@ -94,11 +94,9 @@ internal static class Program
         }
 
         // CLI /conditionengine: overrides the XML ConditionEngine attribute.
+        // ConditionEngine is a whole-document setting; see ActionProcessor.
         var engineName = opts.ConditionEngine ?? config.ConditionEngine;
-        IConditionEvaluator evaluator = engineName.Equals(
-            XmlConstants.Values.ConditionEngineVbscript, StringComparison.OrdinalIgnoreCase)
-            ? new VBScriptConditionEvaluator()
-            : new NativeConditionEvaluator();
+        var evaluator  = SelectConditionEngine(engineName, log);
 
         var processor = new ActionProcessor(factory, evaluator);
         var result    = processor.Run(actionsEl, defaultAction);
@@ -176,6 +174,50 @@ internal static class Program
 
         yield return Path.GetTempPath();
         yield return AppContext.BaseDirectory;
+    }
+
+    // -------------------------------------------------------------------------
+    // Condition engine selection
+    //
+    // The native engine is the default and needs no WinPE component. VBScript
+    // remains available for the handful of constructs the native engine cannot
+    // evaluate -- GetObject, Eval, Execute, Split -- but it is a legacy path:
+    // Microsoft is deprecating VBScript, so every use is announced in the log
+    // with the native alternative, and asking for an engine that is not
+    // installed is an error rather than a silent downgrade.
+    // -------------------------------------------------------------------------
+
+    private static IConditionEvaluator SelectConditionEngine(string engineName, ICMLog log)
+    {
+        var wantsVbScript = engineName.Equals(
+            XmlConstants.Values.ConditionEngineVbscript, StringComparison.OrdinalIgnoreCase);
+
+        if (!wantsVbScript)
+            return new NativeConditionEvaluator();
+
+        if (!VBScriptConditionEvaluator.IsAvailable)
+        {
+            // Falling back quietly would evaluate every COM condition as false,
+            // which reads as a passing deployment making wrong choices.
+            log.Write(
+                "ConditionEngine=\"vbscript\" was requested but the VBScript engine is " +
+                "not registered on this system. Add the WinPE-Scripting component to the " +
+                "boot image, or use the native engine. Conditions needing a script host " +
+                "will now evaluate as false and be reported individually.",
+                LogSeverity.Error);
+
+            return new NativeConditionEvaluator();
+        }
+
+        log.Write(
+            "Using the VBScript condition engine. This is a legacy path: it requires the " +
+            "WinPE-Scripting component, and Microsoft is deprecating VBScript. The native " +
+            "engine handles everything except GetObject, Eval, Execute and Split - prefer " +
+            "<Action Type=\"WMIRead\"> and <Action Type=\"RegRead\"> over CreateObject for " +
+            "WMI and the registry.",
+            LogSeverity.Warning);
+
+        return new VBScriptConditionEvaluator();
     }
 
     private static LoadedConfig LoadConfig(CliOptions opts, ICMLog log, ITSEnv env)

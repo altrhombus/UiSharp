@@ -58,7 +58,7 @@ Copy the output `UiSharp.exe` into your WinPE image in place of the original `UI
 | `/ConfigFallback:<path>` | Local file to use if the URL download fails after all retries. |
 | `/ConfigRetry:<n>` | Number of download attempts before falling back (default: 3). |
 | `/DisableTSVarEditor` | Prevents the Ctrl+F2 task-sequence variable editor from opening during dialogs. |
-| `/conditionengine:native\|vbscript` | Override the condition evaluator. Default: `native`. `vbscript` uses the Windows `IActiveScript` COM host; requires `WinPE-Scripting` in WinPE. |
+| `/conditionengine:native\|vbscript` | Override the condition evaluator for the whole run. Default: `native`. `vbscript` is a legacy path — see below. |
 
 ## Differences from the original C++ UI++
 
@@ -68,7 +68,7 @@ These are the only intentional behavioral changes:
 |---|---|---|
 | `<Action Type="Vars">` save format | MFC `CArchive` binary (`.dat`) | JSON — existing `.dat` files are not readable |
 | `<Action Type="RandomString">` output variable | Always writes to `Random` regardless of the `Variable` attribute (C++ bug) | Correctly uses the `Variable` attribute |
-| VBScript condition engine | Fully supported via `IActiveScript` COM | Supported — select with `ConditionEngine="vbscript"` or `/conditionengine:vbscript`. Requires `WinPE-Scripting` in WinPE; default engine is `native` which needs no extra component. |
+| VBScript condition engine | Always used; no way to opt out | Available but not the default, and legacy — see [Condition engines](#condition-engines). `native` is the default and needs no extra WinPE component. |
 | WinPE optional components | `WinPE-WMI` + `WinPE-Scripting` required | `WinPE-WMI` always; `WinPE-Scripting` only when using the vbscript engine |
 | Log file name | `UI++.log` in `_SMSTSLogPath` (or `%TEMP%`), CMTrace component `UI++` | `UiSharp.log`, CMTrace component `UiSharp` — so it is obvious which tool wrote it. Update any log-collection step that looks for `UI++.log` by name. |
 | Unhandled errors | No handler — a crash left nothing behind | Written to the log and to `UiSharp_crash.txt` beside it, exiting with code 3. No dialog, so an unattended task sequence cannot hang on one. |
@@ -101,7 +101,26 @@ The native engine handles these itself, so such a config runs unchanged in a Win
 
 The native functions are UiSharp-only: a config using them will not run under the original C++ UI++, which is the trade for dropping the dependency on a deprecated scripting engine. Both forms return the same answer, so migrating is safe to do incrementally.
 
-Still requiring `ConditionEngine="vbscript"`: `GetObject` (WMI — prefer `<Action Type="WMIRead">`), `Eval`, `Execute`, `Split`, `WScript.Shell.RegRead` (prefer `<Action Type="RegRead">`), and any other ProgID. These are reported in the log rather than silently evaluating false.
+Still requiring the VBScript engine: `GetObject` (WMI — prefer `<Action Type="WMIRead">`), `Eval`, `Execute`, `Split`, `WScript.Shell.RegRead` (prefer `<Action Type="RegRead">`), and any other ProgID. These are reported in the log rather than silently evaluating false.
+
+## Condition engines
+
+`ConditionEngine` is a **whole-document** setting on the root `<UIpp>` element, overridable for a run with `/conditionengine`:
+
+```xml
+<UIpp ConditionEngine="vbscript">
+```
+
+Putting it on an individual `<Action>` does nothing and is reported in the log. It cannot work per-action: an action's own condition and the conditions inside it (a preflight `<Check>`, a `<Choice>`, an input field) would end up on different engines, and the `WinPE-Scripting` dependency belongs to the boot image rather than to any one action.
+
+| Engine | When to use |
+|---|---|
+| `native` (default) | Everything, unless you hit one of the four constructs above. No extra WinPE component. |
+| `vbscript` | Legacy. Hosts `IActiveScript`, so the boot image needs `WinPE-Scripting`. Microsoft is deprecating VBScript, so treat this as a bridge and migrate the config. |
+
+Selecting `vbscript` logs a warning naming the native alternatives. Selecting it on a system where the engine is not registered is logged as an **error** — conditions needing a script host then evaluate as false, and each one is reported individually, rather than the run quietly making wrong choices.
+
+None of the original project's own sample configs need the VBScript engine.
 
 ## Repository layout
 

@@ -7,9 +7,8 @@ namespace UiSharp.Core.Actions;
 // Walks the <Actions> element tree depth-first, evaluating conditions and running each action.
 // Mirrors the CUiSharpApp::Process() while-loop from the C++ original.
 public sealed class ActionProcessor(
-    ActionFactory        factory,
-    IConditionEvaluator  defaultEvaluator,
-    IConditionEvaluator? vbscriptEvaluator = null)
+    ActionFactory       factory,
+    IConditionEvaluator evaluator)
 {
     private static readonly IReadOnlyDictionary<string, string> EmptyVars =
         new Dictionary<string, string>();
@@ -29,9 +28,9 @@ public sealed class ActionProcessor(
 
             if (isAction || isGroup)
             {
-                var condition  = (string?)cursor.Attribute(XmlConstants.Attributes.Condition) ?? string.Empty;
-                var engineAttr = (string?)cursor.Attribute(XmlConstants.Attributes.ConditionEngine);
-                var evaluator  = ResolveEvaluator(engineAttr);
+                var condition = (string?)cursor.Attribute(XmlConstants.Attributes.Condition) ?? string.Empty;
+
+                WarnIfPerActionEngine(cursor, baseData);
 
                 var conditionPasses = EvaluateCondition(condition, evaluator, baseData);
 
@@ -110,16 +109,22 @@ public sealed class ActionProcessor(
 
     // -------------------------------------------------------------------------
 
-    private IConditionEvaluator ResolveEvaluator(string? engineAttr)
+    // ConditionEngine is a whole-document setting on the root element. Saying so
+    // out loud matters: silently ignoring it here is what previously let a
+    // config ask for VBScript and get a false condition instead.
+    private static void WarnIfPerActionEngine(XElement node, ActionData data)
     {
-        if (!string.IsNullOrWhiteSpace(engineAttr) &&
-            engineAttr.Equals(XmlConstants.Values.ConditionEngineVbscript,
-                              StringComparison.OrdinalIgnoreCase) &&
-            vbscriptEvaluator is not null)
-        {
-            return vbscriptEvaluator;
-        }
-        return defaultEvaluator;
+        var engineAttr = (string?)node.Attribute(XmlConstants.Attributes.ConditionEngine);
+        if (string.IsNullOrWhiteSpace(engineAttr)) return;
+
+        var name = (string?)node.Attribute(XmlConstants.Attributes.Type)
+                   ?? node.Name.LocalName;
+
+        data.Log.Write(
+            $"ConditionEngine=\"{engineAttr}\" on <{name}> is ignored: it is a " +
+            "whole-document setting. Move it to the root <UIpp> element, or pass " +
+            "/conditionengine, to apply it to every condition.",
+            Logging.LogSeverity.Warning);
     }
 
     private static bool EvaluateCondition(string condition, IConditionEvaluator evaluator, ActionData data)
