@@ -1,5 +1,120 @@
 # Changelog
 
+## v1.1.0-rc1 — unreleased
+
+Parity, correctness and architecture work. The theme throughout: several
+behaviours differed from C++ UI++ in ways that produced a *wrong answer* rather
+than an error, and one bug stopped the runtime from starting at all.
+
+Existing configuration files continue to work unchanged. The XML root element is
+still `<UIpp>`.
+
+### Fixed — the runtime could not start in a task sequence
+
+- `UiSharp.exe` threw at startup inside any real task sequence and left nothing
+  behind — no dialog, no log. `_SMSTSLogPath` is a *directory*, and it was
+  passed straight to `FileStream` as if it were a file. This is very likely why
+  the port had never been successfully field-tested.
+- Unhandled exceptions are now written to the log and to `UiSharp_crash.txt`
+  beside it, exiting with code 3. No dialog, so an unattended task sequence
+  cannot hang on one.
+- Opening the log can no longer stop a deployment: it falls back to `%TEMP%`,
+  then to discarding output.
+
+### Fixed — variable files
+
+- `<Action Type="Vars" Direction="Save">` wrote an **empty file** inside a task
+  sequence. Variables set during a task sequence live in the ConfigMgr
+  environment object, which was never enumerated.
+- The runtime wrote `name=value` where the documentation says JSON; the two
+  `ITSEnv` implementations disagreed about the format of the same interface
+  method. Both now share one implementation. JSON also survives values
+  containing newlines, which a line-per-variable file silently corrupts.
+- A damaged variable file is ignored rather than taking the process down.
+
+### Fixed — conditions gave wrong answers
+
+- **Attributes are variable-substituted**, as in C++ `GetXMLAttribute`. Only
+  `Condition`, `CheckCondition` and `WarnCondition` are read raw. Previously
+  substitution was applied per attribute, so `RegEx=".{3,5}%Suffix%"` never
+  matched and the field could not be satisfied.
+- **`DontEval` is honoured**, and values are evaluated as expressions by
+  default, as the original does. `<Action Type="TSVar">"%Volume%"</Action>` now
+  yields `C:` rather than `"C:"` with the quote characters attached.
+- **String comparison is case-sensitive**, matching VBScript's binary compare.
+  Affects any config that had come to rely on the previous leniency.
+- **`True` and `False` are keywords**, not truthy strings — `True AND False` was
+  true.
+- **Conditions fail closed.** Anything the engine cannot evaluate is false and
+  reported, where before the leftovers of a failed parse could read as true. A
+  preflight check on a variable that was never set used to *pass*.
+- `<Field>` attributes in `UserAuth`, and the `Match` attributes in
+  `SoftwareDiscovery` and `WMIWrite` properties, are substituted.
+- `UserAuth` domain lists split on `,` and `;` as the original does, not `|`.
+- An absent `Namespace` on a WMI action defaults to `root\cimv2` again.
+
+### Added — the native condition engine
+
+- **The whole VBScript function library is accounted for** — all 92. Most are
+  implemented, including arrays (`Split`, `Join`, `Filter`, `UBound`, `LBound`,
+  `IsArray`, `arr(0)` indexing), date arithmetic, and every function the UI++
+  documentation calls common. The rest are refused with a reason in the log
+  rather than returning an empty string, which reads as a false condition.
+- **`CreateObject` is evaluated natively** for `Scripting.FileSystemObject`,
+  `WScript.Network` and `WScript.Shell.ExpandEnvironmentStrings`, so a config
+  using them runs in a WinPE image **without** the `WinPE-Scripting` component.
+  Each use is noted in the log alongside its native replacement.
+- **UiSharp-only functions**: `FileExists`, `FolderExists`, `DriveExists`,
+  `PathParent`, `PathFileName`, `PathBaseName`, `PathExtension`, `PathDrive`,
+  `PathCombine`, `ComputerName`, `UserName`, `UserDomain`,
+  `ExpandEnvironment`, and four conveniences for what VBScript makes awkward:
+  `EqualsIgnoreCase`, `IsSet`, `InList`, `VersionCompare`. A config using these
+  will not run under the original C++ UI++.
+- Conditions the engine cannot evaluate faithfully are reported in the log with
+  the reason and a remedy, rather than silently evaluating false.
+- `InputBox`, `MsgBox` and `LoadPicture` are refused: they wait for a person,
+  which in an unattended task sequence stops the deployment.
+
+### Changed
+
+- The executable is now `UiSharp.exe`, and namespaces are `UiSharp.*`
+  (`UiSharp.Editor.*` for gUI#). The XML root element is unchanged.
+- The log is `UiSharp.log` with CMTrace component `UiSharp`, where the original
+  wrote `UI++.log`. Update any log-collection step that looks for it by name.
+- `ConditionEngine` is a whole-document setting on the root element. On an
+  individual action it was silently ignored — and its conditions then evaluated
+  false — so it is now reported instead.
+- Selecting the VBScript engine logs a warning naming the native alternatives;
+  requesting it where the engine is not registered is logged as an error rather
+  than falling back in silence.
+- The executable carries version and product metadata; it previously had no
+  version resource at all.
+
+### Internal
+
+- New `UiSharp.Editing` project: editor-only model and XML round-tripping, so
+  the WinPE executable carries no editing code.
+- gUI#'s XML sync is shared between the Actions and Software panes. Both panes
+  had the same defect independently — an item's comment counted towards its line
+  range in one direction but not the other, so clicking a comment selected a
+  different item depending on which pane was edited last.
+- Variable analysis and the cascading-rename offer moved out of the view model.
+  The Variables page's reference count and its usage list now cover the same
+  ground; references in element content were counted but not listed.
+- Shared build settings and version identity in `Directory.Build.props`.
+
+### Verification
+
+- Tests: 303 → 1398.
+- Golden-file snapshots of the original project's eight sample configurations,
+  covering configuration resolution end to end.
+- Differential tests running 257 expressions through both the native engine and
+  the real `vbscript.dll`, asserting they agree. This is how most of the
+  condition bugs above were found.
+- The published single-file executable is smoke-tested against a configuration
+  exercising the new functions, confirming reflection-based action discovery
+  survives trimming.
+
 ## v1.0.0 — 2026-05-19
 
 Initial open source release of UiSharp and gUI#.

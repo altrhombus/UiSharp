@@ -22,7 +22,7 @@
     because this file is imported before the project body.
   -->
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
-    <Version>1.0.0-rc11</Version>
+    <Version>1.1.0-rc1</Version>
     <Product>UiSharp</Product>
     <Company>UiSharp</Company>
     <Copyright>Copyright (c) UiSharp contributors</Copyright>
