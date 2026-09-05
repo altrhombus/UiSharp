@@ -1,6 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -250,48 +248,26 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
 
     private (string xml, int startLine, int endLine) BuildSoftwareXml()
     {
+        // Rendering and range computation live in EditorXml, shared with the
+        // Actions pane and tested against the inbound direction; this only maps
+        // the ranges onto the items they belong to.
+        var (xml, ranges) = EditorXml.BuildDocument(
+            XmlConstants.Elements.Software,
+            Items.Select(item => (item.Comment, item.ToXElement())));
+
         _lineRanges.Clear();
-        var sb = new StringBuilder();
-        sb.AppendLine("<Software>");
-        int line = 2;
         int selStart = -1, selEnd = -1;
 
-        foreach (var item in Items)
+        for (int i = 0; i < Math.Min(ranges.Count, Items.Count); i++)
         {
-            int itemStart = line;
+            var (start, end) = ranges[i];
+            var item = Items[i];
 
-            if (!string.IsNullOrWhiteSpace(item.Comment))
-            {
-                if (item.Comment.Contains('\n'))
-                {
-                    sb.Append("  "); sb.AppendLine("<!--"); line++;
-                    foreach (var commentLine in item.Comment.Split('\n'))
-                    {
-                        sb.Append("  "); sb.Append("  "); sb.AppendLine(commentLine); line++;
-                    }
-                    sb.Append("  "); sb.AppendLine("-->"); line++;
-                }
-                else
-                {
-                    sb.Append("  "); sb.AppendLine($"<!-- {item.Comment.Trim()} -->"); line++;
-                }
-            }
-
-            var raw = item.ToXElement().ToString();
-            foreach (var rawLine in raw.Split('\n'))
-            {
-                sb.Append("  ");
-                sb.AppendLine(rawLine.TrimEnd('\r'));
-                line++;
-            }
-
-            int itemEnd = line - 1;
-            _lineRanges.Add((item, itemStart, itemEnd));
-            if (item == SelectedItem) { selStart = itemStart; selEnd = itemEnd; }
+            _lineRanges.Add((item, start, end));
+            if (item == SelectedItem) (selStart, selEnd) = (start, end);
         }
 
-        sb.Append("</Software>");
-        return (sb.ToString(), selStart, selEnd);
+        return (xml, selStart, selEnd);
     }
 
     private bool TryApplyXmlToItems(string xml)
@@ -299,7 +275,7 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
         try
         {
             var root = XElement.Parse(xml);
-            var pairs = ActionXml.ExtractNodePairs(root);
+            var pairs = EditorXml.ExtractNodePairs(root);
 
             if (pairs.Count == Items.Count)
             {
@@ -363,24 +339,20 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
     {
         _lineRanges.Clear();
         SelectedLineRange = (-1, -1);
-        try
+
+        // Same computation the outbound direction uses, so a comment line
+        // resolves to the same item whichever pane was edited last.
+        var ranges = EditorXml.ComputeElementLineRanges(xml);
+
+        for (int i = 0; i < Math.Min(ranges.Count, Items.Count); i++)
         {
-            var root = XElement.Parse(xml, LoadOptions.SetLineInfo);
-            var children = root.Elements().ToList();
-            for (int i = 0; i < Math.Min(children.Count, Items.Count); i++)
-            {
-                var el = children[i];
-                var item = Items[i];
-                var li = (IXmlLineInfo)el;
-                int startLine = li.HasLineInfo() ? li.LineNumber : 1;
-                int elementLineCount = el.ToString().Split('\n').Length;
-                int endLine = startLine + elementLineCount - 1;
-                _lineRanges.Add((item, startLine, endLine));
-                if (item == SelectedItem)
-                    SelectedLineRange = (startLine, endLine);
-            }
+            var (start, end) = ranges[i];
+            var item = Items[i];
+
+            _lineRanges.Add((item, start, end));
+            if (item == SelectedItem)
+                SelectedLineRange = (start, end);
         }
-        catch { }
     }
 
     private void AttachLeadingComments(XElement softwareElement)
@@ -392,7 +364,7 @@ public sealed partial class SoftwareViewModel : ObservableObject, IXmlEditorSour
         {
             if (node is XComment comment)
             {
-                var normalized = ActionXml.NormalizeComment(comment.Value);
+                var normalized = EditorXml.NormalizeComment(comment.Value);
                 pendingComment = pendingComment is null ? normalized : pendingComment + "\n" + normalized;
             }
             else if (node is XElement el)

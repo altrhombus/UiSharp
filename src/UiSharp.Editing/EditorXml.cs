@@ -14,7 +14,7 @@ namespace UiSharp.Editing;
 /// wrong action all traced back here. None of it was reachable by a test while
 /// it lived inside a ViewModel in an assembly with no test project.
 /// </summary>
-public static class ActionXml
+public static class EditorXml
 {
     /// <summary>
     /// Pairs each child element with the XML comment(s) immediately preceding
@@ -137,24 +137,41 @@ public static class ActionXml
     /// <see cref="ComputeElementLineRanges"/> for why.
     /// </returns>
     public static (string Xml, IReadOnlyList<(int Start, int End)> Ranges) BuildActionsXml(
-        IReadOnlyList<ActionNodeModel> models, string indent = "  ")
+        IReadOnlyList<ActionNodeModel> models, string indent = "  ") =>
+        BuildDocument(
+            XmlConstants.Elements.Actions,
+            models.Select(m => (m.Comment, m.Node)),
+            indent);
+
+    /// <summary>
+    /// Renders a container element holding commented children, and reports the
+    /// 1-based line range each child occupies.
+    ///
+    /// Both editor panes are this same shape — <c>&lt;Actions&gt;</c> holding
+    /// actions and <c>&lt;Software&gt;</c> holding packages and applications —
+    /// so they share one implementation rather than two that drift apart.
+    /// </summary>
+    public static (string Xml, IReadOnlyList<(int Start, int End)> Ranges) BuildDocument(
+        string rootElementName,
+        IEnumerable<(string? Comment, XElement Element)> items,
+        string indent = "  ")
     {
         var sb = new StringBuilder();
         var ranges = new List<(int Start, int End)>();
 
-        sb.AppendLine("<Actions>");
+        sb.AppendLine($"<{rootElementName}>");
         var line = 2;
 
-        foreach (var model in models)
+        foreach (var (comment, element) in items)
         {
-            // The range opens at the comment, so clicking anywhere in an
-            // action's note selects that action.
+            // The range opens at the comment, so clicking anywhere in an item's
+            // note selects that item.
             var start = line;
 
-            if (!string.IsNullOrWhiteSpace(model.Comment))
-                line = AppendComment(sb, indent, model.Comment, line);
+            if (!string.IsNullOrWhiteSpace(comment))
+                line = AppendComment(sb, indent, comment, line);
 
-            foreach (var raw in model.Node.ToString().Split('\n'))
+            foreach (var raw in element.ToString().Split('\n'))
             {
                 sb.Append(indent);
                 sb.AppendLine(raw.TrimEnd('\r'));
@@ -164,7 +181,7 @@ public static class ActionXml
             ranges.Add((start, line - 1));
         }
 
-        sb.Append("</Actions>");
+        sb.Append($"</{rootElementName}>");
         return (sb.ToString(), ranges);
     }
 

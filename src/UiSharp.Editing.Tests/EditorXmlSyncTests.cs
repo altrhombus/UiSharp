@@ -17,7 +17,7 @@ namespace UiSharp.Editing.Tests;
 /// FOLLOWS it, so the note belongs to that action and clicking it must select
 /// that action.
 /// </summary>
-public class ActionXmlSyncTests
+public class EditorXmlSyncTests
 {
     private static ActionNodeModel Action(string type, string? comment = null) =>
         new() { Node = XElement.Parse($"""<Action Type="{type}" />"""), Comment = comment };
@@ -92,8 +92,8 @@ public class ActionXmlSyncTests
     [MemberData(nameof(Documents))]
     public void BuildAndParseAgree(List<ActionNodeModel> models)
     {
-        var (xml, built) = ActionXml.BuildActionsXml(models);
-        var parsed = ActionXml.ComputeElementLineRanges(xml);
+        var (xml, built) = EditorXml.BuildActionsXml(models);
+        var parsed = EditorXml.ComputeElementLineRanges(xml);
 
         Assert.Equal(built.Count, parsed.Count);
 
@@ -109,16 +109,16 @@ public class ActionXmlSyncTests
     [MemberData(nameof(Documents))]
     public void EveryClaimedLineSelectsTheSameActionBothWays(List<ActionNodeModel> models)
     {
-        var (xml, built) = ActionXml.BuildActionsXml(models);
-        var parsed = ActionXml.ComputeElementLineRanges(xml);
+        var (xml, built) = EditorXml.BuildActionsXml(models);
+        var parsed = EditorXml.ComputeElementLineRanges(xml);
 
         var lineCount = xml.Split('\n').Length;
 
         for (var line = 1; line <= lineCount; line++)
         {
             Assert.Equal(
-                ActionXml.IndexOfElementAtLine(built, line),
-                ActionXml.IndexOfElementAtLine(parsed, line));
+                EditorXml.IndexOfElementAtLine(built, line),
+                EditorXml.IndexOfElementAtLine(parsed, line));
         }
     }
 
@@ -131,8 +131,8 @@ public class ActionXmlSyncTests
     {
         var models = new List<ActionNodeModel> { Action("A"), Action("B", "about B") };
 
-        var (xml, built) = ActionXml.BuildActionsXml(models);
-        var parsed = ActionXml.ComputeElementLineRanges(xml);
+        var (xml, built) = EditorXml.BuildActionsXml(models);
+        var parsed = EditorXml.ComputeElementLineRanges(xml);
 
         // <Actions>        1
         //   <Action A/>    2
@@ -144,7 +144,7 @@ public class ActionXmlSyncTests
         Assert.Equal(built, parsed);
 
         // The comment line belongs to B, not to A and not to nothing.
-        Assert.Equal(1, ActionXml.IndexOfElementAtLine(parsed, 3));
+        Assert.Equal(1, EditorXml.IndexOfElementAtLine(parsed, 3));
     }
 
     [Fact]
@@ -152,15 +152,15 @@ public class ActionXmlSyncTests
     {
         var models = new List<ActionNodeModel> { Action("A"), Action("B", "one\ntwo") };
 
-        var (xml, built) = ActionXml.BuildActionsXml(models);
-        var parsed = ActionXml.ComputeElementLineRanges(xml);
+        var (xml, built) = EditorXml.BuildActionsXml(models);
+        var parsed = EditorXml.ComputeElementLineRanges(xml);
 
         Assert.Equal(built, parsed);
 
         // <!--, one, two, --> then the element: every one of those lines is B's.
         var range = parsed[1];
         for (var line = range.Start; line <= range.End; line++)
-            Assert.Equal(1, ActionXml.IndexOfElementAtLine(parsed, line));
+            Assert.Equal(1, EditorXml.IndexOfElementAtLine(parsed, line));
     }
 
     [Fact]
@@ -168,7 +168,7 @@ public class ActionXmlSyncTests
     {
         var models = new List<ActionNodeModel> { Action("A", "about A"), Action("B", "about B") };
 
-        var (_, built) = ActionXml.BuildActionsXml(models);
+        var (_, built) = EditorXml.BuildActionsXml(models);
 
         // A's range must end at A's element, not run on into B's note.
         Assert.True(built[0].End < built[1].Start,
@@ -192,11 +192,11 @@ public class ActionXmlSyncTests
             "</Actions>",               // 7
         ]);
 
-        var ranges = ActionXml.ComputeElementLineRanges(xml);
+        var ranges = EditorXml.ComputeElementLineRanges(xml);
 
         Assert.Equal((2, 2), ranges[0]);
         Assert.Equal((4, 6), ranges[1]);
-        Assert.Equal(1, ActionXml.IndexOfElementAtLine(ranges, 4));
+        Assert.Equal(1, EditorXml.IndexOfElementAtLine(ranges, 4));
     }
 
     [Fact]
@@ -210,7 +210,7 @@ public class ActionXmlSyncTests
             "</Actions>",               // 4
         ]);
 
-        var ranges = ActionXml.ComputeElementLineRanges(xml);
+        var ranges = EditorXml.ComputeElementLineRanges(xml);
 
         Assert.Equal((2, 3), Assert.Single(ranges));
     }
@@ -228,10 +228,10 @@ public class ActionXmlSyncTests
             "</Actions>",               // 4
         ]);
 
-        var ranges = ActionXml.ComputeElementLineRanges(xml);
+        var ranges = EditorXml.ComputeElementLineRanges(xml);
 
         Assert.Equal((2, 2), Assert.Single(ranges));
-        Assert.Equal(-1, ActionXml.IndexOfElementAtLine(ranges, 3));
+        Assert.Equal(-1, EditorXml.IndexOfElementAtLine(ranges, 3));
     }
 
     // -------------------------------------------------------------------------
@@ -241,7 +241,7 @@ public class ActionXmlSyncTests
     [Fact]
     public void BuildActionsXml_WrapsActionsAndIndentsThem()
     {
-        var (xml, _) = ActionXml.BuildActionsXml([Action("A")]);
+        var (xml, _) = EditorXml.BuildActionsXml([Action("A")]);
 
         Assert.Equal(
             string.Join(Environment.NewLine, ["<Actions>", "  <Action Type=\"A\" />", "</Actions>"]),
@@ -251,7 +251,7 @@ public class ActionXmlSyncTests
     [Fact]
     public void BuildActionsXml_WithNoActions_IsStillAValidDocument()
     {
-        var (xml, ranges) = ActionXml.BuildActionsXml([]);
+        var (xml, ranges) = EditorXml.BuildActionsXml([]);
 
         Assert.Empty(ranges);
         var parsed = XElement.Parse(xml);
@@ -270,8 +270,8 @@ public class ActionXmlSyncTests
             Action("C"),
         };
 
-        var (xml, _) = ActionXml.BuildActionsXml(models);
-        var pairs = ActionXml.ExtractNodePairs(XElement.Parse(xml));
+        var (xml, _) = EditorXml.BuildActionsXml(models);
+        var pairs = EditorXml.ExtractNodePairs(XElement.Parse(xml));
 
         Assert.Equal(3, pairs.Count);
         Assert.Equal("first note", pairs[0].Comment);
@@ -287,7 +287,7 @@ public class ActionXmlSyncTests
             FromXml("""<Action Type="Info"><![CDATA[<b>hi</b>]]></Action>"""),
         };
 
-        var (xml, _) = ActionXml.BuildActionsXml(models);
+        var (xml, _) = EditorXml.BuildActionsXml(models);
 
         Assert.Contains("<![CDATA[<b>hi</b>]]>", xml);
     }

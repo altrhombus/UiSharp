@@ -61,7 +61,7 @@ public sealed partial class ActionListPage : Page
 
     private void CopyAsXml_Click(object sender, RoutedEventArgs e)
     {
-        var xml = ViewModel.ActionList.GetSelectedActionXml();
+        var xml = ViewModel.ActionList.GetSelectedEditorXml();
         if (xml is null) return;
         var dp = new Windows.ApplicationModel.DataTransfer.DataPackage();
         dp.SetText(xml);
@@ -70,7 +70,7 @@ public sealed partial class ActionListPage : Page
 
     private async void ExportGroupToFile_Click(object sender, RoutedEventArgs e)
     {
-        var xml = ViewModel.ActionList.GetSelectedActionXml();
+        var xml = ViewModel.ActionList.GetSelectedEditorXml();
         if (xml is null) return;
 
         var picker = new Windows.Storage.Pickers.FileSavePicker();
@@ -88,7 +88,7 @@ public sealed partial class ActionListPage : Page
         var view = Windows.ApplicationModel.DataTransfer.Clipboard.GetContent();
         if (!view.Contains(Windows.ApplicationModel.DataTransfer.StandardDataFormats.Text)) return;
         var text = await view.GetTextAsync();
-        if (!ViewModel.ActionList.TryPasteActionXml(text))
+        if (!ViewModel.ActionList.TryPasteEditorXml(text))
         {
             var dlg = new ContentDialog
             {

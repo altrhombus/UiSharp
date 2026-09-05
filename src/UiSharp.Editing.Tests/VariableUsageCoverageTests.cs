@@ -19,10 +19,10 @@ public class VariableUsageCoverageTests
     // Children produces a model the app can never hold, and the rendered XML
     // would not contain the children at all.
     private static ActionNodeModel Model(string xml) =>
-        ActionXml.BuildModel(XElement.Parse(xml));
+        EditorXml.BuildModel(XElement.Parse(xml));
 
     private static string Document(params ActionNodeModel[] actions) =>
-        ActionXml.BuildActionsXml(actions).Xml;
+        EditorXml.BuildActionsXml(actions).Xml;
 
     // -------------------------------------------------------------------------
     // Content is searched, not just attributes

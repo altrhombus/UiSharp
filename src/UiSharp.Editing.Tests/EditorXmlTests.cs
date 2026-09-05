@@ -11,7 +11,7 @@ namespace UiSharp.Editing.Tests;
 /// keystrokes lost while typing in the XML pane, and clicks on a comment line
 /// selecting the wrong action. Each of those is now expressible as a test.
 /// </summary>
-public class ActionXmlTests
+public class EditorXmlTests
 {
     // -------------------------------------------------------------------------
     // Comment / element pairing — how author notes stay attached to actions
@@ -27,7 +27,7 @@ public class ActionXmlTests
             </Actions>
             """);
 
-        var pair = Assert.Single(ActionXml.ExtractNodePairs(root));
+        var pair = Assert.Single(EditorXml.ExtractNodePairs(root));
 
         Assert.Equal("name the machine", pair.Comment);
         Assert.Equal("Input", (string?)pair.Element.Attribute("Type"));
@@ -45,7 +45,7 @@ public class ActionXmlTests
             </Actions>
             """);
 
-        var pairs = ActionXml.ExtractNodePairs(root);
+        var pairs = EditorXml.ExtractNodePairs(root);
 
         Assert.Equal(3, pairs.Count);
         Assert.Null(pairs[0].Comment);
@@ -64,7 +64,7 @@ public class ActionXmlTests
             </Actions>
             """);
 
-        var pair = Assert.Single(ActionXml.ExtractNodePairs(root));
+        var pair = Assert.Single(EditorXml.ExtractNodePairs(root));
 
         Assert.Equal("first line\nsecond line", pair.Comment);
     }
@@ -81,13 +81,13 @@ public class ActionXmlTests
             </Actions>
             """);
 
-        var pair = Assert.Single(ActionXml.ExtractNodePairs(root));
+        var pair = Assert.Single(EditorXml.ExtractNodePairs(root));
         Assert.Null(pair.Comment);
     }
 
     [Fact]
     public void ExtractNodePairs_OnAnEmptyElement_ReturnsNothing() =>
-        Assert.Empty(ActionXml.ExtractNodePairs(XElement.Parse("<Actions />")));
+        Assert.Empty(EditorXml.ExtractNodePairs(XElement.Parse("<Actions />")));
 
     // -------------------------------------------------------------------------
     // Comment normalisation
@@ -102,7 +102,7 @@ public class ActionXmlTests
     [InlineData("\n\n  a\n\n  b\n\n", "a\n\nb")]
     [InlineData("", "")]
     public void NormalizeComment_StripsOuterWhitespaceAndIndentation(string raw, string expected) =>
-        Assert.Equal(expected, ActionXml.NormalizeComment(raw).Replace("\r", ""));
+        Assert.Equal(expected, EditorXml.NormalizeComment(raw).Replace("\r", ""));
 
     // -------------------------------------------------------------------------
     // Model construction
@@ -111,7 +111,7 @@ public class ActionXmlTests
     [Fact]
     public void BuildModel_OnAPlainAction_HasNoChildren()
     {
-        var model = ActionXml.BuildModel(XElement.Parse("""<Action Type="TSVar" />"""));
+        var model = EditorXml.BuildModel(XElement.Parse("""<Action Type="TSVar" />"""));
 
         Assert.Equal("TSVar", model.TypeName);
         Assert.False(model.IsGroup);
@@ -121,7 +121,7 @@ public class ActionXmlTests
     [Fact]
     public void BuildModel_OnAGroup_RecursesAndCarriesChildComments()
     {
-        var model = ActionXml.BuildModel(XElement.Parse("""
+        var model = EditorXml.BuildModel(XElement.Parse("""
             <ActionGroup Name="Setup">
               <!-- ask first -->
               <Action Type="Input" />
@@ -139,7 +139,7 @@ public class ActionXmlTests
     [Fact]
     public void BuildModel_OnNestedGroups_RecursesAllTheWayDown()
     {
-        var model = ActionXml.BuildModel(XElement.Parse("""
+        var model = EditorXml.BuildModel(XElement.Parse("""
             <ActionGroup Name="Outer">
               <ActionGroup Name="Inner">
                 <Action Type="Info" />
@@ -162,7 +162,7 @@ public class ActionXmlTests
         var target = XElement.Parse("""<Action Type="TSVar" Variable="Old">before</Action>""");
         var sameInstance = target;
 
-        ActionXml.ApplyParsedNode(target,
+        EditorXml.ApplyParsedNode(target,
             XElement.Parse("""<Action Type="TSVar" Variable="New">after</Action>"""));
 
         // The model holds this reference; replacing the object would detach it.
@@ -176,7 +176,7 @@ public class ActionXmlTests
     {
         var target = XElement.Parse("""<Action Type="Input" Title="Old" Extra="x" />""");
 
-        ActionXml.ApplyParsedNode(target, XElement.Parse("""<Action Type="Input" />"""));
+        EditorXml.ApplyParsedNode(target, XElement.Parse("""<Action Type="Input" />"""));
 
         Assert.Null(target.Attribute("Title"));
         Assert.Null(target.Attribute("Extra"));
@@ -187,7 +187,7 @@ public class ActionXmlTests
     {
         var target = XElement.Parse("""<Action Type="Input" />""");
 
-        ActionXml.ApplyParsedNode(target, XElement.Parse("""<ActionGroup Name="G" />"""));
+        EditorXml.ApplyParsedNode(target, XElement.Parse("""<ActionGroup Name="G" />"""));
 
         Assert.Equal("ActionGroup", target.Name.LocalName);
     }
@@ -199,7 +199,7 @@ public class ActionXmlTests
         // markup on the next save.
         var target = XElement.Parse("""<Action Type="Info" />""");
 
-        ActionXml.ApplyParsedNode(target,
+        EditorXml.ApplyParsedNode(target,
             XElement.Parse("""<Action Type="Info"><![CDATA[<b>bold</b>]]></Action>"""));
 
         Assert.Single(target.Nodes().OfType<XCData>());
@@ -213,19 +213,19 @@ public class ActionXmlTests
     [Fact]
     public void CloneNode_PreservesEachNodeKind()
     {
-        Assert.IsType<XElement>(ActionXml.CloneNode(new XElement("a")));
-        Assert.IsType<XCData>(ActionXml.CloneNode(new XCData("c")));
-        Assert.IsType<XText>(ActionXml.CloneNode(new XText("t")));
-        Assert.IsType<XComment>(ActionXml.CloneNode(new XComment("k")));
+        Assert.IsType<XElement>(EditorXml.CloneNode(new XElement("a")));
+        Assert.IsType<XCData>(EditorXml.CloneNode(new XCData("c")));
+        Assert.IsType<XText>(EditorXml.CloneNode(new XText("t")));
+        Assert.IsType<XComment>(EditorXml.CloneNode(new XComment("k")));
         Assert.IsType<XProcessingInstruction>(
-            ActionXml.CloneNode(new XProcessingInstruction("t", "d")));
+            EditorXml.CloneNode(new XProcessingInstruction("t", "d")));
     }
 
     [Fact]
     public void CloneNode_ProducesAnIndependentCopy()
     {
         var original = new XElement("a", new XAttribute("x", "1"));
-        var clone = (XElement)ActionXml.CloneNode(original);
+        var clone = (XElement)EditorXml.CloneNode(original);
 
         clone.SetAttributeValue("x", "2");
 
@@ -247,7 +247,7 @@ public class ActionXmlTests
             "</Actions>",           // 4
         ]);
 
-        var ranges = ActionXml.ComputeElementLineRanges(xml);
+        var ranges = EditorXml.ComputeElementLineRanges(xml);
 
         Assert.Equal(2, ranges.Count);
         Assert.Equal((2, 2), ranges[0]);
@@ -267,7 +267,7 @@ public class ActionXmlTests
             "</Actions>",                 // 6
         ]);
 
-        var ranges = ActionXml.ComputeElementLineRanges(xml);
+        var ranges = EditorXml.ComputeElementLineRanges(xml);
 
         Assert.Equal((2, 4), ranges[0]);
         Assert.Equal((5, 5), ranges[1]);
@@ -277,7 +277,7 @@ public class ActionXmlTests
     // ExtractNodePairs. It must not fall into the preceding action's range —
     // that selected the wrong action and triggered a refresh that dropped the
     // comment — nor into no range at all, which left the note unclickable.
-    // ActionXmlSyncTests pins that both sync directions agree on this.
+    // EditorXmlSyncTests pins that both sync directions agree on this.
     [Fact]
     public void ComputeElementLineRanges_GivesACommentToTheActionBelowIt()
     {
@@ -290,14 +290,14 @@ public class ActionXmlTests
             "</Actions>",               // 5
         ]);
 
-        var ranges = ActionXml.ComputeElementLineRanges(xml);
+        var ranges = EditorXml.ComputeElementLineRanges(xml);
 
         Assert.Equal((2, 2), ranges[0]);
         Assert.Equal((3, 4), ranges[1]);
 
-        Assert.Equal(0, ActionXml.IndexOfElementAtLine(ranges, 2));
-        Assert.Equal(1, ActionXml.IndexOfElementAtLine(ranges, 3));
-        Assert.Equal(1, ActionXml.IndexOfElementAtLine(ranges, 4));
+        Assert.Equal(0, EditorXml.IndexOfElementAtLine(ranges, 2));
+        Assert.Equal(1, EditorXml.IndexOfElementAtLine(ranges, 3));
+        Assert.Equal(1, EditorXml.IndexOfElementAtLine(ranges, 4));
     }
 
     [Fact]
@@ -312,9 +312,9 @@ public class ActionXmlTests
             "</Actions>",               // 5
         ]);
 
-        var ranges = ActionXml.ComputeElementLineRanges(xml);
+        var ranges = EditorXml.ComputeElementLineRanges(xml);
 
-        Assert.Equal(-1, ActionXml.IndexOfElementAtLine(ranges, 3));
+        Assert.Equal(-1, EditorXml.IndexOfElementAtLine(ranges, 3));
     }
 
     // Half-typed XML is the normal state while editing, not an error.
@@ -325,20 +325,20 @@ public class ActionXmlTests
     [InlineData("")]
     [InlineData("   ")]
     public void ComputeElementLineRanges_OnUnparseableText_ReturnsEmpty(string xml) =>
-        Assert.Empty(ActionXml.ComputeElementLineRanges(xml));
+        Assert.Empty(EditorXml.ComputeElementLineRanges(xml));
 
     [Fact]
     public void ComputeElementLineRanges_OnNoActions_ReturnsEmpty() =>
-        Assert.Empty(ActionXml.ComputeElementLineRanges("<Actions />"));
+        Assert.Empty(EditorXml.ComputeElementLineRanges("<Actions />"));
 
     [Fact]
     public void IndexOfElementAtLine_OutsideEveryRange_IsMinusOne()
     {
-        var ranges = ActionXml.ComputeElementLineRanges(
+        var ranges = EditorXml.ComputeElementLineRanges(
             "<Actions>\n  <Action Type=\"A\" />\n</Actions>");
 
-        Assert.Equal(-1, ActionXml.IndexOfElementAtLine(ranges, 1));
-        Assert.Equal(-1, ActionXml.IndexOfElementAtLine(ranges, 99));
+        Assert.Equal(-1, EditorXml.IndexOfElementAtLine(ranges, 1));
+        Assert.Equal(-1, EditorXml.IndexOfElementAtLine(ranges, 99));
     }
 
     // -------------------------------------------------------------------------
@@ -360,10 +360,10 @@ public class ActionXmlTests
             </Actions>
             """);
 
-        var models = ActionXml.ExtractNodePairs(root)
+        var models = EditorXml.ExtractNodePairs(root)
             .Select(p =>
             {
-                var m = ActionXml.BuildModel(p.Element);
+                var m = EditorXml.BuildModel(p.Element);
                 m.Comment = p.Comment;
                 return m;
             })

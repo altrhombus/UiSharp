@@ -220,14 +220,14 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         try
         {
             var root = XElement.Parse(xml);
-            var pairs = ActionXml.ExtractNodePairs(root);
+            var pairs = EditorXml.ExtractNodePairs(root);
 
             if (pairs.Count == ActionTree.Count)
             {
                 // Count unchanged: update each node in-place (preserves VMs and scroll position).
                 for (int i = 0; i < pairs.Count; i++)
                 {
-                    ActionXml.ApplyParsedNode(ActionTree[i].Model.Node, pairs[i].Element);
+                    EditorXml.ApplyParsedNode(ActionTree[i].Model.Node, pairs[i].Element);
                     ActionTree[i].Model.Comment = pairs[i].Comment;
                     ActionTree[i].NotifyCommentChanged();
                 }
@@ -262,7 +262,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
 
         foreach (var (comment, el) in pairs)
         {
-            var model = ActionXml.BuildModel(el);
+            var model = EditorXml.BuildModel(el);
             model.Comment = comment;
             var vm = new ActionNodeViewModel(model, _factory);
             vm.Dirtied += (_, _) => RaiseDirty();
@@ -280,10 +280,10 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
 
     private (string xml, int startLine, int endLine) BuildFullActionsXml()
     {
-        // Rendering and range computation live in ActionXml, where they are
+        // Rendering and range computation live in EditorXml, where they are
         // tested against the inbound direction; this only maps the ranges onto
         // the view models they belong to.
-        var (xml, ranges) = ActionXml.BuildActionsXml(ActionTree.Select(vm => vm.Model).ToList());
+        var (xml, ranges) = EditorXml.BuildActionsXml(ActionTree.Select(vm => vm.Model).ToList());
 
         _lineRanges.Clear();
         int selStart = -1, selEnd = -1;
@@ -307,9 +307,9 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         _lineRanges.Clear();
         SelectedLineRange = (-1, -1);
 
-        // Range computation lives in ActionXml so it can be tested; this only
+        // Range computation lives in EditorXml so it can be tested; this only
         // zips the ranges onto the view models they belong to.
-        var ranges = ActionXml.ComputeElementLineRanges(xml);
+        var ranges = EditorXml.ComputeElementLineRanges(xml);
 
         for (int i = 0; i < Math.Min(ranges.Count, ActionTree.Count); i++)
         {
@@ -365,10 +365,10 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         owning.Insert(idx + 1, vm);
     }
 
-    public string? GetSelectedActionXml()
+    public string? GetSelectedEditorXml()
         => SelectedAction?.Model.Node.ToString();
 
-    public bool TryPasteActionXml(string xml)
+    public bool TryPasteEditorXml(string xml)
     {
         XElement el;
         try { el = XElement.Parse(xml); }
@@ -379,7 +379,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
             !localName.Equals(C.Elements.ActionGroup, StringComparison.OrdinalIgnoreCase))
             return false;
 
-        var model = ActionXml.BuildModel(el);
+        var model = EditorXml.BuildModel(el);
         var vm    = new ActionNodeViewModel(model, _factory);
         vm.Dirtied += (_, _) => RaiseDirty();
         vm.ApplyFilter(FilterText);
@@ -421,7 +421,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
     {
         if (SelectedAction is null) return;
         var copy = new XElement(SelectedAction.Model.Node);
-        var model = ActionXml.BuildModel(copy);
+        var model = EditorXml.BuildModel(copy);
         var vm = new ActionNodeViewModel(model, _factory);
         vm.Dirtied += (_, _) => RaiseDirty();
         vm.ApplyFilter(FilterText);
@@ -691,7 +691,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         {
             if (node is XComment comment)
             {
-                comments.Insert(0, ActionXml.NormalizeComment(comment.Value));
+                comments.Insert(0, EditorXml.NormalizeComment(comment.Value));
                 node = node.PreviousNode;
             }
             else if (node is XText text && string.IsNullOrWhiteSpace(text.Value))
