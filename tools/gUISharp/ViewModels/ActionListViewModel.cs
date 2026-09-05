@@ -444,7 +444,7 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
 
         RefreshXmlFromNode();
 
-        _trackedVarName = value is not null ? GetDeclaredVariable(value) : null;
+        _trackedVarName = value is not null ? VariableScanner.DeclaredVariableOf(value.Model) : null;
         DismissPendingRename();
 
         RemoveActionCommand.NotifyCanExecuteChanged();
@@ -486,38 +486,28 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         // label reflects the current edit rather than the previous one.
         SelectedAction?.NotifyDisplayChanged();
 
-        // _trackedVarName is set once on selection and never updated here so it always
-        // represents the original name. Compare every edit against that anchor.
+        // _trackedVarName is set once on selection and never updated here, so every
+        // edit is compared against the original name rather than the last keystroke.
         if (SelectedAction is null) return;
-        string? currentVar = GetDeclaredVariable(SelectedAction);
 
-        // Bootstrap: _trackedVarName can be null when a legacy TSVar uses the Name attribute
-        // (GetDeclaredVariable only reads Variable). After the first flush migrates Name→Variable,
-        // capture the real original name and skip the offer on this stabilising edit.
-        if (_trackedVarName is null)
-        {
-            _trackedVarName = currentVar;
-            return;
-        }
+        var decision = VariableScanner.DecideRename(
+            _trackedVarName,
+            VariableScanner.DeclaredVariableOf(SelectedAction.Model),
+            name => VariableScanner.CountReferences(name, CurrentXmlText));
 
-        if (currentVar != _trackedVarName)
+        switch (decision.Action)
         {
-            if (!string.IsNullOrEmpty(currentVar))
-            {
-                int count = CountVariableReferences(_trackedVarName!);
-                if (count > 0)
-                    SetPendingRename(_trackedVarName!, currentVar!, count);
-                else
-                    DismissPendingRename();
-            }
-            else
-            {
+            case RenameAction.AdoptAnchor:
+                _trackedVarName = decision.To;
+                break;
+
+            case RenameAction.Offer:
+                SetPendingRename(decision.From!, decision.To!, decision.ReferenceCount);
+                break;
+
+            default:
                 DismissPendingRename();
-            }
-        }
-        else
-        {
-            DismissPendingRename();
+                break;
         }
     }
 
@@ -578,10 +568,10 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
     private void AcceptRename()
     {
         if (string.IsNullOrEmpty(_pendingRenameFrom) || string.IsNullOrEmpty(_pendingRenameTo)) return;
-        string oldTag = $"%{_pendingRenameFrom}%";
-        string newTag = $"%{_pendingRenameTo}%";
+
         _preRenameSnapshot = CurrentXmlText;
-        OnXmlEdited(CurrentXmlText.Replace(oldTag, newTag, StringComparison.OrdinalIgnoreCase));
+        OnXmlEdited(VariableScanner.RenameReferences(
+            CurrentXmlText, _pendingRenameFrom, _pendingRenameTo));
         DismissPendingRename();
     }
 
@@ -611,125 +601,35 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
         HasPendingRename = true;
     }
 
-    private int CountVariableReferences(string varName)
-        => CountVariableReferences(varName, CurrentXmlText);
-
-    private static int CountVariableReferences(string varName, string xml)
-    {
-        var tag = $"%{varName}%";
-        int count = 0, idx = 0;
-        while ((idx = xml.IndexOf(tag, idx, StringComparison.OrdinalIgnoreCase)) >= 0)
-        {
-            count++;
-            idx += tag.Length;
-        }
-        return count;
-    }
-
-    private static string? GetDeclaredVariable(ActionNodeViewModel vm)
-    {
-        if (vm.IsGroup) return null;
-        return vm.TypeName switch
-        {
-            C.ActionTypes.TSVar or C.ActionTypes.RegRead or C.ActionTypes.WmiRead or
-            C.ActionTypes.FileRead or C.ActionTypes.Rest or C.ActionTypes.FromJson or
-            C.ActionTypes.ToJson or C.ActionTypes.RandomString
-                => (string?)vm.Model.Node.Attribute(C.Attributes.Variable),
-            C.ActionTypes.ExternalCall
-                => (string?)vm.Model.Node.Attribute(C.Attributes.ExitCodeVariable),
-            _ => null
-        };
-    }
-
     private void RefreshVariables()
     {
-        var vars = new List<VariableEntry>();
-        int pos = 1;
-        foreach (var vm in ActionTree)
-            CollectVariables(vm, ref pos, vars);
+        // The scan itself lives in VariableScanner, which numbers actions
+        // depth-first; FlattenActionTree walks the same order, so an index maps
+        // straight onto the view model the Variables page navigates to.
+        var models = ActionTree.Select(vm => vm.Model).ToList();
+        var flattened = FlattenActionTree().ToList();
         var xml = CurrentXmlText;
-        foreach (var v in vars)
+
+        var entries = new List<VariableEntry>();
+
+        foreach (var declared in VariableScanner.CollectDeclared(models))
         {
-            v.RefCount = CountVariableReferences(v.Name, xml);
-            var tag = $"%{v.Name}%";
-            int idx = 1;
-            foreach (var vm in ActionTree)
-                ScanForVariableUsages(vm, tag, v.Usages, ref idx);
+            var entry = new VariableEntry(declared.Name, declared.SourceType, declared.ActionIndex)
+            {
+                RefCount = VariableScanner.CountReferences(declared.Name, xml),
+            };
+
+            foreach (var site in VariableScanner.FindUsages(models, declared.Name))
+            {
+                if (site.ActionIndex >= 1 && site.ActionIndex <= flattened.Count)
+                    entry.Usages.Add(new VariableUsage(flattened[site.ActionIndex - 1], site.ActionIndex, site.Field));
+            }
+
+            entries.Add(entry);
         }
-        DeclaredVariables = vars;
+
+        DeclaredVariables = entries;
         OnPropertyChanged(nameof(DeclaredVariables));
-    }
-
-    private static void ScanForVariableUsages(
-        ActionNodeViewModel vm, string tag, List<VariableUsage> usages, ref int actionIndex)
-    {
-        // Scan root action attributes
-        foreach (var attr in vm.Model.Node.Attributes())
-        {
-            if (attr.Value.Contains(tag, StringComparison.OrdinalIgnoreCase))
-                usages.Add(new(vm, actionIndex, FriendlyAttributeName(attr.Name.LocalName)));
-        }
-        // For leaf actions, scan all descendant elements (Switch cases, Input fields, etc.).
-        // Groups skip this because their child actions are visited as separate vm.Children.
-        if (!vm.IsGroup)
-        {
-            foreach (var descendant in vm.Model.Node.Descendants())
-            {
-                var elName = descendant.Name.LocalName;
-                foreach (var attr in descendant.Attributes())
-                {
-                    if (attr.Value.Contains(tag, StringComparison.OrdinalIgnoreCase))
-                        usages.Add(new(vm, actionIndex,
-                            $"{elName} · {FriendlyAttributeName(attr.Name.LocalName)}"));
-                }
-            }
-        }
-        actionIndex++;
-        foreach (var childVm in vm.Children)
-            ScanForVariableUsages(childVm, tag, usages, ref actionIndex);
-    }
-
-    private static string FriendlyAttributeName(string xmlName) => xmlName switch
-    {
-        "Condition"        => "Condition",
-        "OnValue"          => "On Value",
-        "Default"          => "Default",
-        "Variable"         => "Variable",
-        "ExitCodeVariable" => "Exit Code Var",
-        "Title"            => "Title",
-        "Value"            => "Value",
-        "Text"             => "Text",
-        "Description"      => "Description",
-        "WarnDescription"  => "Warn Description",
-        "ErrorDescription" => "Error Description",
-        _                  => xmlName,
-    };
-
-    private static void CollectVariables(ActionNodeViewModel vm, ref int pos, List<VariableEntry> vars)
-    {
-        if (!vm.IsGroup)
-        {
-            var varAttr = (string?)vm.Model.Node.Attribute(C.Attributes.Variable);
-            if (!string.IsNullOrWhiteSpace(varAttr))
-                vars.Add(new(varAttr!, vm.TypeName, pos));
-
-            var exitVar = (string?)vm.Model.Node.Attribute(C.Attributes.ExitCodeVariable);
-            if (!string.IsNullOrWhiteSpace(exitVar))
-                vars.Add(new(exitVar!, vm.TypeName, pos));
-
-            if (vm.TypeName == C.ActionTypes.UserInput)
-            {
-                foreach (var child in vm.Model.Node.Elements())
-                {
-                    var fieldVar = (string?)child.Attribute(C.Attributes.Variable);
-                    if (!string.IsNullOrWhiteSpace(fieldVar))
-                        vars.Add(new(fieldVar!, child.Name.LocalName, pos));
-                }
-            }
-        }
-        pos++;
-        foreach (var child in vm.Children)
-            CollectVariables(child, ref pos, vars);
     }
 
     private static int CountMatches(IEnumerable<ActionNodeViewModel> nodes)
