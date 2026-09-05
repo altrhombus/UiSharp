@@ -34,6 +34,9 @@ jobs:
       - name: UiSharp.Windows tests
         run: dotnet test src/UiSharp.Windows.Tests -c Release
 
+      - name: UiSharp.Diagnostics tests
+        run: dotnet test src/UiSharp.Diagnostics.Tests -c Release
+
   # ── 2. Build & release ──────────────────────────────────────────────────────
   release:
     name: Build & Release
@@ -72,6 +75,26 @@ jobs:
           Copy-Item src/UiSharp/bin/Release/net10.0-windows/win-x64/publish/UiSharp.exe UiSharp-x64.exe
           Copy-Item src/UiSharp/bin/Release/net10.0-windows/win-x86/publish/UiSharp.exe UiSharp-x86.exe
 
+      # ── Self-test the published binary ──────────────────────────────────────
+      #
+      # The unit tests run against ordinary assemblies; this runs the artefact
+      # that ships. Single-file publishing with partial trimming can drop the
+      # types the action registry finds by reflection, and nothing about that
+      # failure is visible until a configuration quietly stops doing anything.
+      # A runner is not WinPE and not inside a task sequence, so the
+      # task-sequence checks only exercise the local fallback here — the point
+      # is the binary, not the environment.
+
+      - name: Self-test the published binary (win-x64)
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath ./UiSharp-x64.exe -Wait -PassThru `
+                 -ArgumentList '/selftest', '/selftestreport:selftest-x64.txt'
+          if (Test-Path selftest-x64.txt) { Get-Content selftest-x64.txt }
+          if ($p.ExitCode -ne 0) {
+            throw "The published binary failed its self-test (exit code $($p.ExitCode))."
+          }
+
       # ── gUISharp editor — ZIP of the full output folder ─────────────────────
 
       - name: Build gUISharp (x64)
@@ -107,5 +130,6 @@ jobs:
           files: |
             UiSharp-x64.exe
             UiSharp-x86.exe
+            selftest-x64.txt
             gUISharp-x64.zip
             gUISharp-arm64.zip

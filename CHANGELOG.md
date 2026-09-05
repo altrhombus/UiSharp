@@ -75,6 +75,37 @@ still `<UIpp>`.
 - `InputBox`, `MsgBox` and `LoadPicture` are refused: they wait for a person,
   which in an unattended task sequence stops the deployment.
 
+### Added — self-test instruments
+
+- **`UiSharp.exe /selftest`** runs about fifty checks against the live machine
+  and writes a report beside the log, where SMSTS log collection will pick it up.
+  It displays nothing, so it is safe to run unattended inside a real deployment.
+  Exit code 0 if everything passed, 4 if anything failed.
+  `/selftestreport:<path>` puts the report somewhere else; a directory is fine.
+- The checks cover the paths a unit test cannot reach: the task-sequence
+  environment (including *enumerating* variables, the one that has shipped
+  broken), the log location, variable files, the condition engine as it actually
+  shipped, action-type discovery after trimming, the registry, WMI, and the `X`
+  variables collected by `DefaultValues`. The report names whether the run was
+  inside a task sequence, because a clean run outside one proves much less.
+- **`tools/selftest/UiSharp-SelfTest.xml`** is the companion for what only a
+  person can judge: it shows every dialog in turn, each screen saying what to
+  look at, and records the answers. Meant to be run in the boot image on the
+  hardware being deployed to. See `tools/selftest/README.md`.
+- The release workflow now runs `/selftest` against the published single-file
+  binary and fails the build if it reports a failure, so trimming cannot quietly
+  remove an action type between a green test run and a shipped executable.
+
+### Fixed — an apostrophe in a comment broke config loading
+
+- Unescaped `<` in condition attributes is repaired before parsing, and that
+  repair treated `<!-- ... -->` as an ordinary tag. An apostrophe inside a
+  comment — `the developer's machine` — opened a quoted attribute section that
+  never closed, swallowing the rest of the document. The config then failed to
+  parse, pointing at a line nowhere near the comment. Comments, CDATA and
+  processing instructions are now copied through untouched. Found by writing the
+  interactive self-test configuration and having it refuse to load.
+
 ### Changed
 
 - The executable is now `UiSharp.exe`, and namespaces are `UiSharp.*`
@@ -105,15 +136,15 @@ still `<UIpp>`.
 
 ### Verification
 
-- Tests: 303 → 1398.
+- Tests: 303 → 1432.
 - Golden-file snapshots of the original project's eight sample configurations,
   covering configuration resolution end to end.
 - Differential tests running 257 expressions through both the native engine and
   the real `vbscript.dll`, asserting they agree. This is how most of the
   condition bugs above were found.
 - The published single-file executable is smoke-tested against a configuration
-  exercising the new functions, confirming reflection-based action discovery
-  survives trimming.
+  exercising the new functions, and self-tested on every release build,
+  confirming reflection-based action discovery survives trimming.
 
 ## v1.0.0 — 2026-05-19
 

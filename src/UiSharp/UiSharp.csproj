@@ -11,6 +11,7 @@
   <ItemGroup>
     <ProjectReference Include="..\UiSharp.Windows\UiSharp.Windows.csproj" />
     <ProjectReference Include="..\UiSharp.UI\UiSharp.UI.csproj" />
+    <ProjectReference Include="..\UiSharp.Diagnostics\UiSharp.Diagnostics.csproj" />
   </ItemGroup>
 
 </Project>

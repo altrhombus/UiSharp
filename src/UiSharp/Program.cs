@@ -1,6 +1,7 @@
 using System.Reflection;
 using UiSharp.Core.Actions;
 using UiSharp.Core.Configuration;
+using UiSharp.Diagnostics;
 using UiSharp.Core.Dialogs;
 using UiSharp.Core.Logging;
 using UiSharp.Core.Scripting;
@@ -17,6 +18,7 @@ internal static class Program
     private const int ExitCancel     = 1;
     private const int ExitBadConfig  = 2;
     private const int ExitFatal      = 3;
+    private const int ExitSelfTestFailed = 4;
 
     // Set once the log is open so the crash handlers can use it. They are
     // installed before the log exists, because opening it is itself something
@@ -47,6 +49,14 @@ internal static class Program
 
         if (logFailure is not null)
             log.Write($"Log fallback in effect: {logFailure}", LogSeverity.Warning);
+
+        // /selftest runs the diagnostics instead of a configuration. It exists
+        // because the task-sequence path cannot be reached from a unit test:
+        // every serious fault found so far -- the log directory, enumerating
+        // variables, starting up at all -- only appears once this is running
+        // where it is meant to run.
+        if (opts.SelfTest)
+            return RunSelfTest(opts, env, log);
 
         // Load config
         LoadedConfig config;
@@ -81,10 +91,7 @@ internal static class Program
             config.GlobalTraits.Flags &= ~DialogTraitFlags.AllowVarEditor;
 
         // Register all action types from all assemblies
-        var factory = new ActionFactory();
-        factory.RegisterFromAssembly(Assembly.GetAssembly(typeof(UiSharp.Core.Actions.ActionBase))!);
-        factory.RegisterFromAssembly(Assembly.GetAssembly(typeof(UiSharp.Windows.Actions.ActionRegRead))!);
-        factory.RegisterFromAssembly(Assembly.GetAssembly(typeof(UiSharp.UI.Actions.ActionInfo))!);
+        var factory = BuildActionFactory();
 
         var actionsEl = config.Document.Root?.Element(XmlConstants.Elements.Actions);
         if (actionsEl is null)
@@ -109,6 +116,85 @@ internal static class Program
             ActionResult.Cancel => ExitCancel,
             _                   => ExitCancel,
         };
+    }
+
+    private static ActionFactory BuildActionFactory()
+    {
+        var factory = new ActionFactory();
+        factory.RegisterFromAssembly(Assembly.GetAssembly(typeof(UiSharp.Core.Actions.ActionBase))!);
+        factory.RegisterFromAssembly(Assembly.GetAssembly(typeof(UiSharp.Windows.Actions.ActionRegRead))!);
+        factory.RegisterFromAssembly(Assembly.GetAssembly(typeof(UiSharp.UI.Actions.ActionInfo))!);
+        return factory;
+    }
+
+    // -------------------------------------------------------------------------
+    // Self-test
+    // -------------------------------------------------------------------------
+
+    private static int RunSelfTest(CliOptions opts, ITSEnv env, ICMLog log)
+    {
+        log.Write("Running the self-test. No configuration will be processed.");
+
+        var report = SelfTestRunner.Standard().Run(env, log, BuildActionFactory());
+
+        // Every line goes to the log as well as the report file: in a task
+        // sequence the log is collected automatically, and a report nobody
+        // collects is a report nobody reads.
+        foreach (var result in report.Results)
+        {
+            var severity = result.Outcome == CheckOutcome.Fail
+                ? LogSeverity.Error
+                : LogSeverity.Info;
+
+            var detail = string.IsNullOrWhiteSpace(result.Detail) ? "" : $" -- {result.Detail}";
+
+            log.Write($"Self-test [{result.Area}] {result.Outcome}: {result.Name}{detail}", severity);
+        }
+
+        log.Write($"Self-test finished: {report.Summary}",
+            report.AllPassed ? LogSeverity.Info : LogSeverity.Error);
+
+        var path = SelfTestReportPath(opts, log);
+
+        try
+        {
+            File.WriteAllText(path, report.ToText());
+            log.Write($"Self-test report written to {path}");
+        }
+        catch (Exception ex)
+        {
+            log.Write($"Could not write the self-test report to {path}: {ex.Message}",
+                LogSeverity.Warning);
+        }
+
+        return report.AllPassed ? ExitSuccess : ExitSelfTestFailed;
+    }
+
+    /// <summary>
+    /// Where the report goes. Beside the log by default, so whatever collects
+    /// SMSTS logs picks it up without anyone configuring a second location.
+    /// </summary>
+    private static string SelfTestReportPath(CliOptions opts, ICMLog log)
+    {
+        const string fileName = "UiSharp_selftest.txt";
+
+        if (opts.SelfTestReport is { Length: > 0 } requested)
+        {
+            // A directory is as reasonable a thing to pass as a file, and
+            // treating one as the other is the exact bug that used to stop the
+            // runtime dead at startup.
+            return Directory.Exists(requested)
+                ? Path.Combine(requested, fileName)
+                : requested;
+        }
+
+        if (log.FilePath is { Length: > 0 } logFile &&
+            Path.GetDirectoryName(logFile) is { Length: > 0 } logDir)
+        {
+            return Path.Combine(logDir, fileName);
+        }
+
+        return Path.Combine(Path.GetTempPath(), fileName);
     }
 
     // -------------------------------------------------------------------------
@@ -249,7 +335,9 @@ internal static class Program
         string? ConfigFallback,
         int ConfigRetry,
         bool DisableTsVarEditor,
-        string? ConditionEngine);
+        string? ConditionEngine,
+        bool SelfTest,
+        string? SelfTestReport);
 
     private static CliOptions ParseArgs(string[] args)
     {
@@ -258,6 +346,8 @@ internal static class Program
         int     configRetry        = 3;
         bool    disableTsVarEditor = false;
         string? conditionEngine    = null;
+        bool    selfTest           = false;
+        string? selfTestReport     = null;
 
         foreach (var arg in args)
         {
@@ -267,6 +357,17 @@ internal static class Program
             if (TrySwitch(arg, "/configretry:",       out v))
             {
                 if (int.TryParse(v, out var n)) configRetry = n;
+                continue;
+            }
+            if (TrySwitch(arg, "/selftestreport:",     out v))
+            {
+                selfTestReport = v;
+                selfTest       = true;
+                continue;
+            }
+            if (arg.Equals("/selftest", StringComparison.OrdinalIgnoreCase))
+            {
+                selfTest = true;
                 continue;
             }
             if (arg.Equals("/disabletsvareditor", StringComparison.OrdinalIgnoreCase))
@@ -279,7 +380,8 @@ internal static class Program
                 configPath = arg;
         }
 
-        return new CliOptions(configPath, configFallback, configRetry, disableTsVarEditor, conditionEngine);
+        return new CliOptions(configPath, configFallback, configRetry, disableTsVarEditor,
+            conditionEngine, selfTest, selfTestReport);
     }
 
     private static bool TrySwitch(string arg, string prefix, out string value)

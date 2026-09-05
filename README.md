@@ -25,6 +25,7 @@ gUI# is a WinUI 3 desktop app for creating and editing UiSharp/UI++ XML configur
 | `UiSharp.Windows` | net10.0-windows | WMI, COM, LDAP, registry integrations |
 | `UiSharp.UI` | net10.0-windows | WinForms dialogs and controls |
 | `UiSharp.Editing` | net10.0 | Editor-only model and XML round-tripping used by gUI#. Kept out of the runtime so the WinPE executable carries no editing code. |
+| `UiSharp.Diagnostics` | net10.0-windows | The `/selftest` checks — see [Self-testing](#self-testing) |
 | `UiSharp` | net10.0-windows | Entry point, single-file publish target |
 | `tools/gUISharp` | net10.0-windows10.0.22621.0 | WinUI 3 visual XML editor — see [tools/gUISharp/README.md](tools/gUISharp/README.md) |
 
@@ -37,6 +38,7 @@ dotnet build
 dotnet test src/UiSharp.Core.Tests        # pure logic, runs on any OS
 dotnet test src/UiSharp.Editing.Tests     # editor XML round-tripping, runs on any OS
 dotnet test src/UiSharp.Windows.Tests     # registry/WMI + VBScript differential, Windows only
+dotnet test src/UiSharp.Diagnostics.Tests # the self-test checks, Windows only
 ```
 
 ## Deploying to WinPE
@@ -59,6 +61,22 @@ Copy the output `UiSharp.exe` into your WinPE image in place of the original `UI
 | `/ConfigRetry:<n>` | Number of download attempts before falling back (default: 3). |
 | `/DisableTSVarEditor` | Prevents the Ctrl+F2 task-sequence variable editor from opening during dialogs. |
 | `/conditionengine:native\|vbscript` | Override the condition evaluator for the whole run. Default: `native`. `vbscript` is a legacy path — see below. |
+| `/SelfTest` | Run the diagnostics instead of a configuration — see [Self-testing](#self-testing). |
+| `/SelfTestReport:<path>` | Where to write the self-test report. A directory is fine. Implies `/SelfTest`. |
+
+## Self-testing
+
+UiSharp runs where almost nothing can be observed: a WinPE boot image, mid-deployment, with one log file to show for it. Every serious defect found in this port has lived in that path, and none of it is reachable from a unit test.
+
+```
+UiSharp.exe /selftest
+```
+
+Runs about fifty checks against the live machine and writes a report beside the log, so SMSTS log collection picks it up. Nothing is displayed — it is safe to run unattended inside a real deployment. Exit code `0` if everything passed, `4` if anything failed.
+
+It covers the log location, the task-sequence environment (including *enumerating* variables, the check with the worst track record), variable files, the condition engine as it actually shipped, whether every action type survived trimming, the registry, WMI, and the `X` variables collected by `DefaultValues`. The report says whether the run was inside a task sequence, because a clean run outside one proves much less.
+
+For the dialogs — which need eyes, not assertions — `tools/selftest/UiSharp-SelfTest.xml` shows every screen in turn, each one saying what to look at. See [tools/selftest/README.md](tools/selftest/README.md).
 
 ## Differences from the original C++ UI++
 
@@ -162,8 +180,9 @@ A config using any of these will not run under the original C++ UI++ or under th
 | File / folder | Purpose |
 |---|---|
 | `UiSharp.slnx` | Modern C# solution — open this in Visual Studio or Rider |
-| `src/` | C# projects — runtime (`UiSharp.Core`, `UiSharp.Windows`, `UiSharp.UI`, `UiSharp`) and editor support (`UiSharp.Editing`) |
+| `src/` | C# projects — runtime (`UiSharp.Core`, `UiSharp.Windows`, `UiSharp.UI`, `UiSharp`), diagnostics (`UiSharp.Diagnostics`) and editor support (`UiSharp.Editing`) |
 | `tools/gUISharp/` | WinUI 3 visual XML editor — see [tools/gUISharp/README.md](tools/gUISharp/README.md) |
+| `tools/selftest/` | The interactive self-test configuration — see [tools/selftest/README.md](tools/selftest/README.md) |
 | `UI++.sln` | Legacy C++ solution for the original UI++ source (not the C# port) |
 | `UI++/`, `FTWCMLog/`, `FTWldap/` | Original C++ source, included for historical reference |
 

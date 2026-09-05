@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UiSharp.Core\UiSharp.Core.csproj" />
+    <ProjectReference Include="..\UiSharp.Windows\UiSharp.Windows.csproj" />
+  </ItemGroup>
+
+</Project>

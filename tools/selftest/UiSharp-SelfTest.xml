@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+  UiSharp interactive self-test.
+
+  The /selftest switch covers everything that can be judged without a person.
+  This covers what is left: the dialogs. It is meant to be run by someone sitting
+  in front of the machine, in the boot image, on the hardware it will be deployed
+  to — a dialog that renders correctly on a developer's 4K desktop can be
+  unreadable at 1024x768 in WinPE with a different font set.
+
+      UiSharp.exe /config:UiSharp-SelfTest.xml
+
+  Each dialog says what to look at. Answer honestly: the answers are written to
+  %temp%\UiSharp-SelfTest.dat and shown back at the end, so a run leaves a record
+  of what was actually seen rather than only whether it finished.
+
+  Nothing here writes outside the temp directory, and nothing here needs a
+  network or a task sequence.
+-->
+
+<UIpp Title="UiSharp self-test" CenterTitle="True" Flat="True" AlwaysOnTop="True">
+
+  <Software>
+    <Application Id="A1000000-0000-0000-0000-00000000000A" Label="Sample application A" Name="Sample application A" Info="A leaf in the tree. Selecting it should set a variable." />
+    <Application Id="A2000000-0000-0000-0000-00000000000A" Label="Sample application B" Name="Sample application B" />
+    <Package     Id="P1000000-0000-0000-0000-00000000000P" Label="Sample package"       PkgID="ABC00001" ProgramName="Install sample" />
+  </Software>
+
+  <Messages>
+    <Message Id="INTRO">This is the UiSharp interactive self-test. Every screen tells you what to check.</Message>
+  </Messages>
+
+  <Actions>
+
+    <!-- Facts about the machine, so the later screens have something real to show. -->
+    <Action Type="DefaultValues" ValueTypes="OS,Asset,VM,Net,TPM" ShowProgress="True" />
+
+    <Action Type="TSVar" Variable="SelfTestFile" DontEval="True">%temp%\UiSharp-SelfTest.dat</Action>
+
+    <!-- ============================================================= 1. Info -->
+
+    <Action Type="Info" Title="UiSharp self-test" ShowCancel="True">
+      <![CDATA[Welcome.
+
+This runs through every dialog UiSharp can show, one at a time. On each screen, check that:
+
+  - the text is readable and nothing is cut off at the edges
+  - the buttons are reachable and hit the right size for this screen
+  - Back and Cancel do what they say
+
+Cancel on any screen stops the self-test. That is itself worth testing at least once.
+
+Continue when you are ready.]]>
+    </Action>
+
+    <!-- ========================================================== 2. Text input -->
+
+    <Action Type="Input" Title="Text input" Subtitle="Typing, validation and passwords" ShowCancel="True" Size="Tall">
+
+      <InputInfo NumberofLines="3"><![CDATA[Type into each field below. The first two are validated: the dialog should refuse to continue until they are filled in correctly, and say why.]]></InputInfo>
+
+      <InputText Question="A required name (3-15 characters, letters only)"
+                 Variable="SelfTestName"
+                 Prompt="Name"
+                 Hint="Letters only, at least three of them."
+                 RegEx="^[A-Za-z]{3,15}$"
+                 Required="True" />
+
+      <InputText Question="A password field — the characters must not be visible"
+                 Variable="SelfTestPassword"
+                 Prompt="Password"
+                 Password="True"
+                 RegEx=".{1,}" />
+
+      <InputText Question="An optional note — leaving this empty must be allowed"
+                 Variable="SelfTestNote"
+                 Prompt="Note" />
+
+    </Action>
+
+    <!-- ======================================================== 3. Choices -->
+
+    <Action Type="Input" Title="Choices" Subtitle="Drop-downs, defaults and check boxes" ShowCancel="True" Size="Tall">
+
+      <InputInfo NumberofLines="2"><![CDATA[The first drop-down should already have "Second" selected, because the configuration set a default.]]></InputInfo>
+
+      <InputChoice Question="A drop-down with a default" Variable="SelfTestChoice" Default="2">
+        <Choice Option="First"  Value="1" />
+        <Choice Option="Second" Value="2" />
+        <Choice Option="Third"  Value="3" />
+      </InputChoice>
+
+      <InputChoice Question="A drop-down built from a list" Variable="SelfTestList">
+        <ChoiceList OptionList="Alpha,Bravo,Charlie,Delta" ValueList="A,B,C,D" />
+      </InputChoice>
+
+      <InputChoice Question="This choice only appears when the machine is x64"
+                   Variable="SelfTestConditional"
+                   Condition='"%XOSArchitecture%" = "x64"'>
+        <Choice Option="Seen it" Value="yes" />
+      </InputChoice>
+
+      <InputCheckbox Question="A check box, starting checked"
+                     Variable="SelfTestCheckbox"
+                     Default="True"
+                     CheckedValue="checked"
+                     UncheckedValue="unchecked" />
+
+    </Action>
+
+    <!-- ================================================== 4. Group, Back, Refresh -->
+
+    <ActionGroup Name="Navigation">
+
+      <Action Type="Info" Title="Navigation" Subtitle="Back and Cancel" ShowCancel="True">
+        <![CDATA[This screen is inside an action group, and it is not the first dialog of the run — so a Back button should be offered.
+
+Press Back, confirm you land on the previous screen with your answers still filled in, then come forward again.]]>
+      </Action>
+
+      <Action Type="Info" Title="Navigation" Subtitle="Still inside the group" ShowCancel="True">
+        <![CDATA[This is the second dialog in the same group.
+
+Back from here should return to the previous screen rather than leaving the group.]]>
+      </Action>
+
+    </ActionGroup>
+
+    <!-- ======================================================== 5. Preflight -->
+
+    <Action Type="Preflight" Title="Preflight checks"
+            Subtitle="Passing, warning and failing checks side by side"
+            ShowOnFailureOnly="False" ShowCancel="True">
+
+      <Check Text="A check that passes"
+             CheckCondition="1 = 1"
+             ErrorDescription="This should never be shown." />
+
+      <Check Text="A check that warns"
+             WarnCondition="1 = 1"
+             WarnDescription="A warning should look different from a failure, and should not block continuing." />
+
+      <Check Text="A check that fails"
+             CheckCondition="1 = 2"
+             ErrorDescription="This one is meant to fail. Confirm the failure is obvious and that this text is readable." />
+
+      <Check Text="This machine reports at least 1 GB of memory"
+             CheckCondition="%XHWMemory% >= 1024"
+             WarnCondition="%XHWMemory% &lt; 4096"
+             ErrorDescription="Reported memory: %XHWMemory% MB."
+             WarnDescription="Under 4 GB reported (%XHWMemory% MB) — fine for a self-test, worth noticing on real hardware." />
+
+    </Action>
+
+    <!-- ========================================================== 6. AppTree -->
+
+    <Action Type="AppTree" Title="Software selection"
+            Subtitle="Groups, nesting and check state"
+            ShowCancel="True">
+      <SoftwareSets>
+        <Set Name="Default">
+          <SoftwareGroup Id="G1000000-0000-0000-0000-00000000000G" Label="A group" Expanded="True">
+            <SoftwareRef Id="A1000000-0000-0000-0000-00000000000A" />
+            <SoftwareGroup Id="G2000000-0000-0000-0000-00000000000G" Label="A nested group">
+              <SoftwareRef Id="A2000000-0000-0000-0000-00000000000A" />
+            </SoftwareGroup>
+          </SoftwareGroup>
+          <SoftwareRef Id="P1000000-0000-0000-0000-00000000000P" />
+        </Set>
+      </SoftwareSets>
+    </Action>
+
+    <!-- ========================================================= 7. ErrorInfo -->
+
+    <Action Type="ErrorInfo" Title="Error screen" ShowCancel="False">
+      <![CDATA[This is the error dialog, shown deliberately.
+
+It should be visibly an error — not just an ordinary information screen with different words — and it should offer no way to continue past it other than acknowledging it.]]>
+    </Action>
+
+    <!-- ================================================= 8. Full-screen info -->
+
+    <Action Type="InfoFullScreen" ShowCancel="True" Timeout="20" TimeoutAction="Continue">
+      <![CDATA[This screen should cover the whole display, with nothing of the desktop or of WinPE visible behind it.
+
+It also has a timeout: if nothing is pressed it continues on its own after twenty seconds, counting down as it goes. Watch the countdown rather than pressing anything, so the timeout is tested too.]]>
+    </Action>
+
+    <Action Type="TSVar" Variable="SelfTestReachedEnd">yes</Action>
+
+    <!-- Cleared before the variables are written: nothing about this self-test
+         justifies leaving a typed password in a file on disk. -->
+    <Action Type="TSVar" Variable="SelfTestPassword">cleared</Action>
+
+    <!-- ============================================================ 9. Record -->
+
+    <Action Type="Vars" Direction="Save" Filename="%SelfTestFile%" />
+
+    <Action Type="Info" Title="Self-test complete" Subtitle="What was recorded" ShowCancel="False" Size="ExtraTall">
+      <![CDATA[Every dialog was shown. What you entered:
+
+  Name                %SelfTestName%
+  Note                %SelfTestNote%
+  Choice              %SelfTestChoice%
+  List choice         %SelfTestList%
+  Check box           %SelfTestCheckbox%
+
+What the machine reported:
+
+  WinPE               %XOSWinPE%
+  Architecture        %XOSArchitecture%
+  Chassis             %XHWChassisType%
+  Manufacturer        %XHWManufacturer%
+  Model               %XHWModel%
+  Serial              %XHWSerialNumber%
+  Memory (MB)         %XHWMemory%
+  UEFI                %XSystemUEFI%
+
+Everything above was written to:
+
+  %SelfTestFile%
+
+If any screen looked wrong, that file plus the UiSharp log is what to attach to the report.
+
+The password you typed was cleared before anything was written, so it appears in neither.]]>
+    </Action>
+
+  </Actions>
+
+</UIpp>

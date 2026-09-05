@@ -176,4 +176,52 @@ public class ConfigLoaderTests
         var cfg = LoadXml(xml);
         Assert.NotNull(cfg.Document.Root);
     }
+
+    // An apostrophe in a comment used to open a quoted attribute section that
+    // never closed, swallowing the rest of the document. The parse then failed
+    // at the next element, pointing nowhere near the comment that caused it.
+    [Theory]
+    [InlineData("the developer's machine")]
+    [InlineData("a \"quoted\" phrase")]
+    [InlineData("an unbalanced \" quote")]
+    [InlineData("a < b and c > d")]
+    public void Load_CommentContainingQuotesOrAngleBrackets_DoesNotSwallowTheDocument(string comment)
+    {
+        var cfg = LoadXml($"""
+            <UIpp>
+              <!-- {comment} -->
+              <Actions>
+                <Action Type="TSVar" Variable="X">val</Action>
+              </Actions>
+            </UIpp>
+            """);
+
+        Assert.NotNull(cfg.Document.Root);
+        Assert.Single(cfg.Document.Descendants("Action"));
+    }
+
+    [Fact]
+    public void Load_CdataContainingQuotes_KeepsItsContentVerbatim()
+    {
+        // A '<' inside CDATA is already literal. Escaping it to &lt; there would
+        // put the escape itself on screen.
+        var cfg = LoadXml("""
+            <UIpp>
+              <Actions>
+                <Action Type="Info"><![CDATA[He said "1 < 2" and meant it]]></Action>
+              </Actions>
+            </UIpp>
+            """);
+
+        Assert.Equal("He said \"1 < 2\" and meant it",
+            cfg.Document.Descendants("Action").Single().Value);
+    }
+
+    [Fact]
+    public void Load_UnterminatedComment_ReportsAMalformedDocument()
+    {
+        // Malformed either way; what matters is that it is reported rather than
+        // silently producing a document missing everything after the comment.
+        Assert.ThrowsAny<System.Xml.XmlException>(() => LoadXml("<UIpp><!-- never closed <Actions /></UIpp>"));
+    }
 }

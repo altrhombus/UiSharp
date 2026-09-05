@@ -207,6 +207,12 @@ public static class ConfigLoader
     //   Inside quotes:  '<' is escaped to &lt;; the closing quote char exits the section.
     // A '>' that appears inside a quoted value (e.g. Condition="A &gt; B") does NOT hit
     // the break — it falls through to the final else{Append} branch instead.
+    //
+    // Comments, CDATA sections and processing instructions are copied through
+    // untouched: nothing inside them is an attribute. Without that, an ordinary
+    // apostrophe in a comment ("the developer's machine") opens a quoted section
+    // that never closes and swallows the rest of the file, and the config then
+    // fails to parse pointing at a line nowhere near the comment.
     private static string EscapeAttributeLt(string xml)
     {
         var sb = new System.Text.StringBuilder(xml.Length);
@@ -219,6 +225,11 @@ public static class ConfigLoader
             i++;
 
             if (c != '<') continue;
+
+            if (CopyVerbatim(xml, ref i, sb, "!--",      "-->")) continue;
+            if (CopyVerbatim(xml, ref i, sb, "![CDATA[", "]]>")) continue;
+            if (CopyVerbatim(xml, ref i, sb, "!DOCTYPE", ">"))   continue;
+            if (CopyVerbatim(xml, ref i, sb, "?",        "?>"))  continue;
 
             char quoteChar = '\0';
             while (i < xml.Length)
@@ -249,5 +260,24 @@ public static class ConfigLoader
         }
 
         return sb.ToString();
+    }
+
+    // Copies a run that starts with <prefix and ends with terminator straight
+    // through, advancing the cursor past it. Returns false when the text at the
+    // cursor does not begin such a run, leaving the cursor untouched.
+    private static bool CopyVerbatim(
+        string xml, ref int i, System.Text.StringBuilder sb, string prefix, string terminator)
+    {
+        if (string.CompareOrdinal(xml, i, prefix, 0, prefix.Length) != 0) return false;
+
+        var end = xml.IndexOf(terminator, i + prefix.Length, StringComparison.Ordinal);
+
+        // An unterminated comment is a malformed document: hand the remainder to
+        // the XML parser so it reports that, rather than guessing here.
+        var stop = end < 0 ? xml.Length : end + terminator.Length;
+
+        sb.Append(xml, i, stop - i);
+        i = stop;
+        return true;
     }
 }
