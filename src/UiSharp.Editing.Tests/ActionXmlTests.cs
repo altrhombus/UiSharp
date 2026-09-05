@@ -273,11 +273,13 @@ public class ActionXmlTests
         Assert.Equal((5, 5), ranges[1]);
     }
 
-    // The regression that motivated the "own lines only" rule: a comment
-    // between two actions must belong to NEITHER range, or clicking it selects
-    // the preceding action and triggers a refresh that drops the comment.
+    // A comment between two actions belongs to the action BELOW it, matching
+    // ExtractNodePairs. It must not fall into the preceding action's range —
+    // that selected the wrong action and triggered a refresh that dropped the
+    // comment — nor into no range at all, which left the note unclickable.
+    // ActionXmlSyncTests pins that both sync directions agree on this.
     [Fact]
-    public void ComputeElementLineRanges_ExcludesCommentLinesBetweenActions()
+    public void ComputeElementLineRanges_GivesACommentToTheActionBelowIt()
     {
         var xml = string.Join("\n",
         [
@@ -291,11 +293,10 @@ public class ActionXmlTests
         var ranges = ActionXml.ComputeElementLineRanges(xml);
 
         Assert.Equal((2, 2), ranges[0]);
-        Assert.Equal((4, 4), ranges[1]);
+        Assert.Equal((3, 4), ranges[1]);
 
-        // Line 3 maps to no action at all.
-        Assert.Equal(-1, ActionXml.IndexOfElementAtLine(ranges, 3));
         Assert.Equal(0, ActionXml.IndexOfElementAtLine(ranges, 2));
+        Assert.Equal(1, ActionXml.IndexOfElementAtLine(ranges, 3));
         Assert.Equal(1, ActionXml.IndexOfElementAtLine(ranges, 4));
     }
 

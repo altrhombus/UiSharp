@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -281,66 +280,24 @@ public sealed partial class ActionListViewModel : ObservableObject, IXmlEditorSo
 
     private (string xml, int startLine, int endLine) BuildFullActionsXml()
     {
+        // Rendering and range computation live in ActionXml, where they are
+        // tested against the inbound direction; this only maps the ranges onto
+        // the view models they belong to.
+        var (xml, ranges) = ActionXml.BuildActionsXml(ActionTree.Select(vm => vm.Model).ToList());
+
         _lineRanges.Clear();
-        var sb = new StringBuilder();
-        sb.AppendLine("<Actions>");
-        int line = 2;
         int selStart = -1, selEnd = -1;
 
-        AppendVmLines(ActionTree, sb, "  ", ref line, ref selStart, ref selEnd);
-
-        sb.Append("</Actions>");
-        return (sb.ToString(), selStart, selEnd);
-    }
-
-    private void AppendVmLines(
-        IEnumerable<ActionNodeViewModel> nodes,
-        StringBuilder sb,
-        string indent,
-        ref int line,
-        ref int selStart,
-        ref int selEnd)
-    {
-        foreach (var vm in nodes)
+        for (int i = 0; i < Math.Min(ranges.Count, ActionTree.Count); i++)
         {
-            // vmStart includes the Note/comment block so that clicking anywhere in the
-            // comment region correctly selects this action rather than landing in no range.
-            int vmStart = line;
+            var (start, end) = ranges[i];
+            var vm = ActionTree[i];
 
-            if (!string.IsNullOrWhiteSpace(vm.Model.Comment))
-            {
-                if (vm.Model.Comment.Contains('\n'))
-                {
-                    sb.Append(indent); sb.AppendLine("<!--"); line++;
-                    foreach (var commentLine in vm.Model.Comment.Split('\n'))
-                    {
-                        sb.Append(indent); sb.Append("  "); sb.AppendLine(commentLine); line++;
-                    }
-                    sb.Append(indent); sb.AppendLine("-->"); line++;
-                }
-                else
-                {
-                    sb.Append(indent); sb.AppendLine($"<!-- {vm.Model.Comment.Trim()} -->"); line++;
-                }
-            }
-
-            var raw = vm.Model.Node.ToString();
-            var rawLines = raw.Split('\n');
-
-            if (vm == SelectedAction) selStart = vmStart;
-
-            foreach (var rawLine in rawLines)
-            {
-                sb.Append(indent);
-                sb.AppendLine(rawLine.TrimEnd('\r'));
-                line++;
-            }
-
-            int vmEnd = line - 1;
-            _lineRanges.Add((vm, vmStart, vmEnd));
-
-            if (vm == SelectedAction) selEnd = vmEnd;
+            _lineRanges.Add((vm, start, end));
+            if (vm == SelectedAction) (selStart, selEnd) = (start, end);
         }
+
+        return (xml, selStart, selEnd);
     }
 
     // Computes _lineRanges and SelectedLineRange from the user's raw XML text using

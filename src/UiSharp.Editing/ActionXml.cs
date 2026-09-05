@@ -1,3 +1,4 @@
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using UiSharp.Core.Configuration;
@@ -121,15 +122,94 @@ public static class ActionXml
     };
 
     /// <summary>
+    /// Renders actions to the text shown in the XML pane, and reports the
+    /// 1-based line range each one occupies.
+    ///
+    /// This is the outbound half of the editor's sync;
+    /// <see cref="ComputeElementLineRanges"/> is the inbound half. The two must
+    /// agree on every range, or clicking a line selects a different action
+    /// depending on which pane was edited last — which is exactly what happened
+    /// while these lived apart. <c>BuildAndParseAgree</c> in the tests pins it.
+    /// </summary>
+    /// <returns>
+    /// The XML text, and one range per action in document order. A range starts
+    /// at the action's comment block, not at its element — see
+    /// <see cref="ComputeElementLineRanges"/> for why.
+    /// </returns>
+    public static (string Xml, IReadOnlyList<(int Start, int End)> Ranges) BuildActionsXml(
+        IReadOnlyList<ActionNodeModel> models, string indent = "  ")
+    {
+        var sb = new StringBuilder();
+        var ranges = new List<(int Start, int End)>();
+
+        sb.AppendLine("<Actions>");
+        var line = 2;
+
+        foreach (var model in models)
+        {
+            // The range opens at the comment, so clicking anywhere in an
+            // action's note selects that action.
+            var start = line;
+
+            if (!string.IsNullOrWhiteSpace(model.Comment))
+                line = AppendComment(sb, indent, model.Comment, line);
+
+            foreach (var raw in model.Node.ToString().Split('\n'))
+            {
+                sb.Append(indent);
+                sb.AppendLine(raw.TrimEnd('\r'));
+                line++;
+            }
+
+            ranges.Add((start, line - 1));
+        }
+
+        sb.Append("</Actions>");
+        return (sb.ToString(), ranges);
+    }
+
+    private static int AppendComment(StringBuilder sb, string indent, string comment, int line)
+    {
+        // A single-line note stays on one line; a multi-line note gets a block
+        // so the text is not mangled by re-reading it.
+        if (!comment.Contains('\n'))
+        {
+            sb.Append(indent);
+            sb.AppendLine($"<!-- {comment.Trim()} -->");
+            return line + 1;
+        }
+
+        sb.Append(indent);
+        sb.AppendLine("<!--");
+        line++;
+
+        foreach (var commentLine in comment.Split('\n'))
+        {
+            sb.Append(indent);
+            sb.Append("  ");
+            sb.AppendLine(commentLine);
+            line++;
+        }
+
+        sb.Append(indent);
+        sb.AppendLine("-->");
+        return line + 1;
+    }
+
+    /// <summary>
     /// Maps each top-level action in an <c>&lt;Actions&gt;</c> document to the
     /// 1-based line range it occupies, so selecting in the text editor can
     /// highlight the matching action and vice versa.
     ///
-    /// A range covers only the element's own lines. Extending it to the next
-    /// element's start would pull the comment lines between two actions into the
-    /// preceding action's range, so clicking such a comment selected the wrong
-    /// action and triggered a refresh that dropped comments not yet stored on a
-    /// model.
+    /// A range starts at the action's preceding comment rather than at the
+    /// element, because <see cref="ExtractNodePairs"/> attaches a comment to the
+    /// element that follows it — the note belongs to that action, so clicking it
+    /// must select that action. <see cref="BuildActionsXml"/> emits ranges the
+    /// same way; the two directions previously disagreed, so which action a
+    /// click selected depended on which pane had been edited last.
+    ///
+    /// A range never extends forward to the next element, which would swallow
+    /// the following action's note.
     /// </summary>
     /// <returns>
     /// One range per top-level element, in document order. Empty when the text
@@ -152,16 +232,38 @@ public static class ActionXml
             return ranges;
         }
 
-        foreach (var el in root.Elements())
-        {
-            var info = (IXmlLineInfo)el;
-            var start = info.HasLineInfo() ? info.LineNumber : 1;
-            var lineCount = el.ToString().Split('\n').Length;
+        int? pendingCommentLine = null;
 
-            ranges.Add((start, start + lineCount - 1));
+        foreach (var node in root.Nodes())
+        {
+            switch (node)
+            {
+                case XComment comment:
+                    // Only the first of a run of comments opens the range, and
+                    // whitespace between them does not break the run — matching
+                    // how ExtractNodePairs joins them into one note.
+                    pendingCommentLine ??= LineOf(comment);
+                    break;
+
+                case XElement el:
+                {
+                    var elementLine = LineOf(el);
+                    var lineCount = el.ToString().Split('\n').Length;
+
+                    ranges.Add((pendingCommentLine ?? elementLine, elementLine + lineCount - 1));
+                    pendingCommentLine = null;
+                    break;
+                }
+            }
         }
 
         return ranges;
+    }
+
+    private static int LineOf(XObject node)
+    {
+        var info = (IXmlLineInfo)node;
+        return info.HasLineInfo() ? info.LineNumber : 1;
     }
 
     /// <summary>
