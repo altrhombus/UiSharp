@@ -158,6 +158,39 @@ internal static class EngineCorpus
         @"StrComp(""LENOVO"", ""LENOVO"") = 0",
         @"DateDiff(""d"", ""1/1/2020"", ""1/1/2021"") > 300",
 
+        // ---- The rest of the VBScript surface.
+        @"CByte(200)", @"CByte(2.6)", @"CSng(1.5)", @"CCur(1.2345)",
+        @"RGB(255, 0, 0)", @"RGB(0, 255, 0)", @"RGB(0, 0, 255)", @"RGB(1, 2, 3)",
+        @"Sin(0)", @"Cos(0)", @"Tan(0)", @"Atn(0)", @"Atn(1) > 0.78",
+        @"UBound(Array(1, 2, 3))",
+        @"Join(Array(""a"", ""b""), ""-"")",
+        @"IsObject(""x"")",
+        @"TypeName(""abc"")",
+        @"TypeName(42)",
+        @"TypeName(42.5)",
+        @"TypeName(True)",
+        @"TypeName(100000)",
+        @"TypeName(Array(1))",
+        @"VarType(""abc"")",
+        @"VarType(42)",
+        @"VarType(42.5)",
+        @"VarType(True)",
+        @"CDate(""3/4/2021"")",
+        @"DateValue(""3/4/2021 13:45:12"")",
+        @"TimeValue(""3/4/2021 13:45:12"")",
+        @"DateSerial(2020, 1, 2)",
+        @"DateSerial(2020, 13, 1)",
+        @"TimeSerial(13, 45, 12)",
+        @"Year(DateSerial(2020, 1, 2))",
+        @"FormatDateTime(""3/4/2021 13:45:12"", 4)",
+        // FormatDateTime with a date pattern, and FormatCurrency, are absent on
+        // purpose: both render per locale, which the runtime deliberately does
+        // not follow. See NativeFormattingTests.
+        @"FormatNumber(1234.5678)",
+        @"FormatNumber(1234.5678, 1)",
+        @"FormatPercent(0.125)",
+        @"FormatPercent(0.125, 1)",
+
         // ---- Nested calls
         @"UCase(Left(""abcdef"", 3))",
         @"InStr(UCase(""srv-01""), ""SRV"")",

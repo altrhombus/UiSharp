@@ -97,13 +97,15 @@ public sealed class VBScriptConditionEvaluator : IConditionEvaluator
         double d  => d.ToString("R", CultureInfo.InvariantCulture),
         decimal m => m.ToString(CultureInfo.InvariantCulture),
 
-        // A Date VARIANT renders the way VBScript's CStr does -- no leading
-        // zeros, and the time only when there is one. .NET's default
+        // A Date VARIANT renders the way VBScript's CStr does. .NET's default
         // ("01/03/2020 00:00:00") is not what a config author sees, and the
         // original converts with (_bstr_t), not ToString().
-        DateTime t => t.TimeOfDay == TimeSpan.Zero
-            ? t.ToString("M/d/yyyy", CultureInfo.InvariantCulture)
-            : t.ToString("M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture),
+        //
+        // A Date carries both halves, so VBScript shows only the half that is
+        // set: no time at midnight, and no date when the date part is the zero
+        // date of 30 December 1899, which is what TimeValue and TimeSerial
+        // return.
+        DateTime t => FormatVariantDate(t),
         _         => Convert.ToString(v, CultureInfo.InvariantCulture) ?? string.Empty,
     };
 
@@ -122,6 +124,18 @@ public sealed class VBScriptConditionEvaluator : IConditionEvaluator
         null     => false,
         _        => TryConvert(v),
     };
+
+    private static readonly DateTime VariantZeroDate = new(1899, 12, 30);
+
+    private static string FormatVariantDate(DateTime value)
+    {
+        if (value.Date == VariantZeroDate)
+            return value.ToString("h:mm:ss tt", CultureInfo.InvariantCulture);
+
+        return value.TimeOfDay == TimeSpan.Zero
+            ? value.ToString("M/d/yyyy", CultureInfo.InvariantCulture)
+            : value.ToString("M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
+    }
 
     private static bool TryConvert(object v)
     {

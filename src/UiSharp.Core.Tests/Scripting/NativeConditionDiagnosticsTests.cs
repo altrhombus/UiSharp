@@ -141,7 +141,11 @@ public class NativeConditionDiagnosticsTests
     [Theory]
     [InlineData("UCse('abc') = 'ABC'")]              // typo for UCase
     [InlineData("SomeFunctionThatDoesNotExist('x')")]
-    [InlineData("FormatNumber(1234) = '1,234'")]     // real VBScript built-in, not replicated
+    // Every real VBScript function is now either implemented or refused with a
+    // reason, so the remaining unknowns are typos and things that were never
+    // VBScript at all.
+    [InlineData("FormatNumbre(1234) = '1,234'")]
+    [InlineData("Frobnicate('x')")]
     public void UnknownFunctions_AreReported(string expr)
     {
         var result = Run(expr);
@@ -251,7 +255,7 @@ public class NativeConditionDiagnosticsTests
     [InlineData("Please choose a volume")]
     // Constructs the engine cannot honour.
     [InlineData("GetObject('winmgmts:') = 1")]
-    [InlineData("FormatNumber(1234) = '1,234'")]
+    [InlineData("FormatNumbre(1234) = '1,234'")]
     [InlineData("'abc'.Length = 3")]
     [InlineData("1 / 0 = 0")]
     public void UnevaluatableCondition_IsFalseAndReported(string expr)

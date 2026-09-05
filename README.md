@@ -124,9 +124,21 @@ None of the original project's own sample configs need the VBScript engine.
 
 ### Condition functions
 
-The native engine implements the VBScript functions a configuration is likely to use, including every one the UI++ documentation calls common — `InStr`, `Left`, `Len`, `Mid`, `Replace`, `Split`, `StrComp` and `Trim` — plus arrays (`Split`, `Join`, `Filter`, `UBound`, `LBound`, `IsArray`, and `arr(0)` indexing), date arithmetic (`DateAdd`, `DateDiff`, `DatePart`, `Hour`, `Minute`, `Second`, `IsDate`, `MonthName`, `WeekdayName`), string and numeric conversion, and the comparison, boolean and arithmetic operators with VBScript's precedence.
+The native engine covers **every function in the VBScript library** — all 92 — along with the comparison, boolean and arithmetic operators at VBScript's precedence, arrays with `arr(0)` indexing, and member access.
 
-Every one of them is checked against the real engine: the differential test suite evaluates the same expressions through both and asserts they agree.
+Most are implemented outright. A few are deliberately not, and those are reported in the log rather than evaluating to an empty string that would read as a false condition:
+
+| Function | Why not |
+|---|---|
+| `InputBox`, `MsgBox`, `LoadPicture` | They wait for a person. In an unattended task sequence that stops the deployment rather than answering wrongly. Use an `Input` or `Info` action. |
+| `FormatCurrency` | The symbol and its placement *are* the locale, and the runtime carries no locale data. Use `FormatNumber` and add the symbol. |
+| `GetObject`, `Eval`, `Execute`, `GetRef`, `GetLocale`, `SetLocale`, `ScriptEngine*` | No native equivalent; these need the script host. |
+
+`Rnd` and `Timer` are implemented but cannot be compared between engines, for the obvious reason.
+
+Everything else is checked against the real engine: the differential suite evaluates the same expressions through both and asserts they agree.
+
+**Locale is the one place they can differ.** The runtime publishes with invariant globalization, so a WinPE image needs no ICU data and results never vary by machine. VBScript instead reads the system's regional settings — including Windows short-date overrides that .NET ignores regardless. `FormatNumber`, `FormatPercent` and `FormatDateTime` are therefore deterministic here rather than identical to VBScript on a machine with customised regional settings.
 
 ### UiSharp extensions
 

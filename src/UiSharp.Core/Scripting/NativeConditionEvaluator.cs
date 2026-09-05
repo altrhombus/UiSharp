@@ -768,8 +768,27 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                 case "GETOBJECT":
                 case "EVAL":
                 case "EXECUTE":
+                case "GETREF":
+                case "GETLOCALE":
+                case "SETLOCALE":
+                case "SCRIPTENGINE":
+                case "SCRIPTENGINEMAJORVERSION":
+                case "SCRIPTENGINEMINORVERSION":
+                case "SCRIPTENGINEBUILDVERSION":
                     Report(ConditionDiagnosticKind.RequiresComHost,
                         $"{name}() requires the vbscript condition engine");
+                    return Value.FromString(string.Empty);
+
+                // These wait for a person. In an unattended task sequence that
+                // is not a wrong answer, it is a deployment stopped until
+                // someone walks over to the machine — so they are refused
+                // outright rather than passed to a script host.
+                case "INPUTBOX":
+                case "MSGBOX":
+                case "LOADPICTURE":
+                    Report(ConditionDiagnosticKind.UnsupportedConstruct,
+                        $"{name}() waits for user interaction and is never evaluated in a " +
+                        "condition; use an Input or Info action instead");
                     return Value.FromString(string.Empty);
 
             }
@@ -823,6 +842,39 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
 
                 // ---- Remaining numeric conversions and maths.
                 "OCT"        => args.Count > 0 && args[0].TryGetDouble(out var oc) ? Value.FromString(Convert.ToString((long)Math.Truncate(oc), 8)) : Value.FromString(""),
+                "CBYTE"      => args.Count > 0 && args[0].TryGetDouble(out var cb) ? Value.FromNumber(Math.Clamp(Math.Round(cb, MidpointRounding.ToEven), 0, 255)) : Value.FromNumber(0),
+                "CSNG"       => args.Count > 0 && args[0].TryGetDouble(out var cs) ? Value.FromNumber((float)cs) : Value.FromNumber(0),
+                "CCUR"       => args.Count > 0 && args[0].TryGetDouble(out var cc) ? Value.FromNumber(Math.Round(cc, 4, MidpointRounding.ToEven)) : Value.FromNumber(0),
+                "RGB"        => Builtin_Rgb(args),
+
+                // Trigonometry, in radians as VBScript uses them.
+                "SIN"        => args.Count > 0 && args[0].TryGetDouble(out var sn) ? Value.FromNumber(Math.Sin(sn)) : Value.FromNumber(0),
+                "COS"        => args.Count > 0 && args[0].TryGetDouble(out var cn) ? Value.FromNumber(Math.Cos(cn)) : Value.FromNumber(0),
+                "TAN"        => args.Count > 0 && args[0].TryGetDouble(out var tn) ? Value.FromNumber(Math.Tan(tn)) : Value.FromNumber(0),
+                "ATN"        => args.Count > 0 && args[0].TryGetDouble(out var at) ? Value.FromNumber(Math.Atan(at)) : Value.FromNumber(0),
+
+                // Non-deterministic by nature, so these are the two functions
+                // the differential suite cannot compare between engines.
+                "RND"        => Value.FromNumber(Random.Shared.NextDouble()),
+                "TIMER"      => Value.FromNumber(DateTime.Now.TimeOfDay.TotalSeconds),
+
+                "ARRAY"      => Value.FromArray([.. args]),
+                "ISOBJECT"   => Value.FromBool(args.Count > 0 && args[0].Kind == ValueKind.Object),
+                "TYPENAME"   => Value.FromString(Builtin_TypeName(args)),
+                "VARTYPE"    => Value.FromNumber(Builtin_VarType(args)),
+
+                "CDATE"      => args.Count > 0 && TryParseVbDate(args[0].AsString(), out var cd2) ? Value.FromString(FormatVbDate(cd2)) : Value.FromString(""),
+                "DATEVALUE"  => args.Count > 0 && TryParseVbDate(args[0].AsString(), out var dv) ? Value.FromString(FormatVbDate(dv.Date)) : Value.FromString(""),
+                "TIMEVALUE"  => args.Count > 0 && TryParseVbDate(args[0].AsString(), out var tv) ? Value.FromString(FormatVbTime(tv)) : Value.FromString(""),
+                "DATESERIAL" => Builtin_DateSerial(args),
+                "TIMESERIAL" => Builtin_TimeSerial(args),
+
+                // Formatting follows the machine's locale, exactly as VBScript
+                // does, so both engines agree wherever they run.
+                "FORMATDATETIME" => Builtin_FormatDateTime(args),
+                "FORMATNUMBER"   => Builtin_FormatNumber(args),
+                "FORMATPERCENT"  => Builtin_FormatPercent(args),
+                "FORMATCURRENCY" => FormatCurrencyUnsupported(),
                 "LOG"        => args.Count > 0 && args[0].TryGetDouble(out var lg) && lg > 0 ? Value.FromNumber(Math.Log(lg)) : Value.FromNumber(0),
                 "EXP"        => args.Count > 0 && args[0].TryGetDouble(out var ex) ? Value.FromNumber(Math.Exp(ex)) : Value.FromNumber(0),
 
@@ -901,6 +953,170 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
             Array.Reverse(chars);
             return Value.FromString(new string(chars));
         }
+
+        private static Value Builtin_Rgb(List<Value> args)
+        {
+            if (args.Count < 3) return Value.FromNumber(0);
+
+            long Channel(int i) =>
+                args[i].TryGetDouble(out var v) ? (long)Math.Clamp(Math.Round(v), 0, 255) : 0;
+
+            // VBScript packs the channels blue-green-red, not red-green-blue.
+            return Value.FromNumber(Channel(0) + Channel(1) * 256 + Channel(2) * 65536);
+        }
+
+        // TypeName reports the VARIANT subtype, so a whole number is Integer or
+        // Long depending on its magnitude even though this engine keeps one
+        // numeric kind.
+        private static string Builtin_TypeName(List<Value> args)
+        {
+            if (args.Count == 0) return "Empty";
+
+            var value = args[0];
+
+            return value.Kind switch
+            {
+                ValueKind.Bool   => "Boolean",
+                ValueKind.Array  => "Variant()",
+                ValueKind.Object => "Object",
+                ValueKind.Number => NumericTypeName(value.Num),
+                _                => value.AsString().Length == 0 ? "String" : "String",
+            };
+        }
+
+        private static string NumericTypeName(double n)
+        {
+            if (n != Math.Truncate(n)) return "Double";
+            if (n >= short.MinValue && n <= short.MaxValue) return "Integer";
+            if (n >= int.MinValue && n <= int.MaxValue) return "Long";
+            return "Double";
+        }
+
+        private static double Builtin_VarType(List<Value> args)
+        {
+            if (args.Count == 0) return 0;   // vbEmpty
+
+            var value = args[0];
+
+            return value.Kind switch
+            {
+                ValueKind.Bool   => 11,      // vbBoolean
+                ValueKind.Array  => 8204,    // vbArray + vbVariant
+                ValueKind.Object => 9,       // vbObject
+                ValueKind.Number => NumericTypeName(value.Num) switch
+                {
+                    "Integer" => 2,          // vbInteger
+                    "Long"    => 3,          // vbLong
+                    _         => 5,          // vbDouble
+                },
+                _ => 8,                      // vbString
+            };
+        }
+
+        private static Value Builtin_DateSerial(List<Value> args)
+        {
+            if (args.Count < 3 ||
+                !args[0].TryGetDouble(out var y) ||
+                !args[1].TryGetDouble(out var m) ||
+                !args[2].TryGetDouble(out var d))
+                return Value.FromString("");
+
+            try
+            {
+                // Month and day roll over rather than failing, as VBScript does:
+                // DateSerial(2020, 13, 1) is January 2021.
+                var date = new DateTime((int)y, 1, 1)
+                    .AddMonths((int)m - 1)
+                    .AddDays((int)d - 1);
+
+                return Value.FromString(FormatVbDate(date));
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                return Value.FromString("");
+            }
+        }
+
+        private static Value Builtin_TimeSerial(List<Value> args)
+        {
+            if (args.Count < 3 ||
+                !args[0].TryGetDouble(out var h) ||
+                !args[1].TryGetDouble(out var m) ||
+                !args[2].TryGetDouble(out var sec))
+                return Value.FromString("");
+
+            var time = DateTime.Today
+                .AddHours(h)
+                .AddMinutes(m)
+                .AddSeconds(sec);
+
+            return Value.FromString(FormatVbTime(time));
+        }
+
+        // FormatDateTime(date [, format]): 0 general, 1 long date, 2 short date,
+        // 3 long time, 4 short time.
+        private static Value Builtin_FormatDateTime(List<Value> args)
+        {
+            if (args.Count == 0 || !TryParseVbDate(args[0].AsString(), out var date))
+                return Value.FromString("");
+
+            var format = args.Count > 1 && args[1].TryGetDouble(out var f) ? (int)f : 0;
+
+            // Invariant, so the output does not vary by machine. VBScript reads
+            // the system's date settings, so the two agree only where those
+            // settings match the invariant patterns.
+            var culture = CultureInfo.InvariantCulture;
+
+            return Value.FromString(format switch
+            {
+                1 => date.ToString("D", culture),
+                2 => date.ToString("d", culture),
+                3 => date.ToString("T", culture),
+                4 => date.ToString("t", culture),
+                // General shows the date, and the time only when there is one.
+                _ => date.TimeOfDay == TimeSpan.Zero
+                        ? date.ToString("d", culture)
+                        : date.ToString("g", culture),
+            });
+        }
+
+        private static Value Builtin_FormatNumber(List<Value> args)
+        {
+            if (args.Count == 0 || !args[0].TryGetDouble(out var n)) return Value.FromString("");
+
+            var digits = DigitsOf(args);
+            var grouped = args.Count <= 4 || args[4].IsTrue;
+
+            return Value.FromString(
+                n.ToString((grouped ? "N" : "F") + digits, CultureInfo.InvariantCulture));
+        }
+
+        // Built by hand rather than with "P", whose invariant form puts a space
+        // before the sign; VBScript does not.
+        private static Value Builtin_FormatPercent(List<Value> args)
+        {
+            if (args.Count == 0 || !args[0].TryGetDouble(out var n)) return Value.FromString("");
+
+            var digits = DigitsOf(args);
+
+            return Value.FromString(
+                (n * 100).ToString("N" + digits, CultureInfo.InvariantCulture) + "%");
+        }
+
+        // There is no locale-independent way to render a currency: the symbol
+        // and its placement are the locale. Guessing a dollar sign would be
+        // wrong everywhere else, so this is refused rather than approximated.
+        private Value FormatCurrencyUnsupported()
+        {
+            Report(ConditionDiagnosticKind.UnsupportedConstruct,
+                "FormatCurrency() needs locale data the runtime does not carry; " +
+                "use FormatNumber() and add the symbol yourself");
+
+            return Value.FromString(string.Empty);
+        }
+
+        private static int DigitsOf(List<Value> args) =>
+            args.Count > 1 && args[1].TryGetDouble(out var d) && d >= 0 ? (int)d : 2;
 
         // A variable reference that was never set survives substitution intact,
         // so a value still shaped like %Name% means "no value". This is the one
@@ -1284,6 +1500,9 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
 
         private static bool TryParseVbDate(string s, out DateTime value) =>
             DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.None, out value);
+
+        private static string FormatVbTime(DateTime value) =>
+            value.ToString("h:mm:ss tt", CultureInfo.InvariantCulture);
 
         // The shape VBScript renders a date in: no leading zeros, and the time
         // only when there is one. Matches the Now()/Date() formats above so a
