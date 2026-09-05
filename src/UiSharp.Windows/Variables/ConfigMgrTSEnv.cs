@@ -97,33 +97,58 @@ public sealed class ConfigMgrTSEnv : ITSEnv
         return current;
     }
 
-    private static bool IsExcluded(string key) =>
-        key.Length > 0 && (key[0] == 'X' || key[0] == '_');
+    // Format and exclusion rules live in VariableFile so every ITSEnv agrees.
+    // SaveToFile used to be an alias for DumpToFile here, which meant the
+    // shipping runtime wrote key=value while LocalTSEnv wrote the documented
+    // JSON -- the same interface method, two formats, and only the one that
+    // never ships had tests.
+    public void DumpToFile(string? path = null) =>
+        VariableFile.Dump(Snapshot(), ResolvePath(path));
 
-    public void DumpToFile(string? path = null)
-    {
-        path = Substitute(path ?? @"%temp%\ui++vars.dat");
-        var lines = _local
-            .Where(kv => !IsExcluded(kv.Key))
-            .Select(kv => $"{kv.Key}={kv.Value}");
-        File.WriteAllLines(path, lines);
-    }
+    public void SaveToFile(string? path = null) =>
+        VariableFile.Save(Snapshot(), ResolvePath(path));
 
-    public void SaveToFile(string? path = null) => DumpToFile(path);
+    private string ResolvePath(string? path) =>
+        Substitute(path ?? VariableFile.DefaultPath);
 
     public void LoadFromFile(string? path = null)
     {
-        path = Substitute(path ?? @"%temp%\ui++vars.dat");
-        if (!File.Exists(path)) return;
+        foreach (var (key, value) in VariableFile.Load(ResolvePath(path)))
+            Set(key, value);
+    }
 
-        foreach (var line in File.ReadAllLines(path))
+    /// <summary>
+    /// Every variable currently set, for writing to a file.
+    /// </summary>
+    /// <remarks>
+    /// Inside a task sequence Set() writes to the COM object and never touches
+    /// the local dictionary, so enumerating that dictionary wrote an empty file
+    /// exactly where the feature is meant to work. SMS_TSEnvironment exposes
+    /// GetVariables() for this; the local dictionary is only the fallback for
+    /// running outside a task sequence.
+    /// </remarks>
+    private IEnumerable<KeyValuePair<string, string>> Snapshot()
+    {
+        if (_com is null) return _local;
+
+        try
         {
-            var eq = line.IndexOf('=');
-            if (eq <= 0) continue;
-            var key = line[..eq].Trim();
-            var val = line[(eq + 1)..];
-            if (!IsExcluded(key))
-                Set(key, val);
+            var names = ((dynamic)_com).GetVariables();
+            var snapshot = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var name in (IEnumerable<object>)names)
+            {
+                if (name is string key && key.Length > 0)
+                    snapshot[key] = Get(key);
+            }
+
+            return snapshot;
+        }
+        catch
+        {
+            // An older or unexpected environment object: better to write what
+            // this process set than to write nothing at all.
+            return _local;
         }
     }
 }

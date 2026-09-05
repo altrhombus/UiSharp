@@ -67,50 +67,19 @@ public sealed class LocalTSEnv : ITSEnv
         return current;
     }
 
-    // Variables starting with 'X' or '_' are excluded from save/load (matches C++ behaviour).
-    private static bool IsExcluded(string key) =>
-        key.Length > 0 && (key[0] == 'X' || key[0] == '_');
+    // Format and exclusion rules live in VariableFile so every ITSEnv agrees.
+    public void DumpToFile(string? path = null) =>
+        VariableFile.Dump(_vars, ResolvePath(path));
 
-    public void DumpToFile(string? path = null)
-    {
-        path ??= @"%temp%\ui++vars.dat";
-        path = Substitute(path);
-
-        var lines = _vars
-            .Where(kv => !IsExcluded(kv.Key))
-            .Select(kv => $"{kv.Key}={kv.Value}");
-        File.WriteAllLines(path, lines);
-    }
-
-    public void SaveToFile(string? path = null)
-    {
-        path ??= @"%temp%\ui++vars.dat";
-        path = Substitute(path);
-
-        var filtered = _vars
-            .Where(kv => !IsExcluded(kv.Key))
-            .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
-
-        var json = JsonSerializer.Serialize(filtered, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(path, json);
-    }
+    public void SaveToFile(string? path = null) =>
+        VariableFile.Save(_vars, ResolvePath(path));
 
     public void LoadFromFile(string? path = null)
     {
-        path ??= @"%temp%\ui++vars.dat";
-        path = Substitute(path);
-
-        if (!File.Exists(path))
-            return;
-
-        var json = File.ReadAllText(path);
-        var loaded = JsonSerializer.Deserialize<Dictionary<string, string>>(json);
-        if (loaded is null) return;
-
-        foreach (var (k, v) in loaded)
-        {
-            if (!IsExcluded(k))
-                _vars[k] = v;
-        }
+        foreach (var (key, value) in VariableFile.Load(ResolvePath(path)))
+            _vars[key] = value;
     }
+
+    private string ResolvePath(string? path) =>
+        Substitute(path ?? VariableFile.DefaultPath);
 }
