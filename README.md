@@ -128,7 +128,22 @@ The native engine implements the VBScript functions a configuration is likely to
 
 Every one of them is checked against the real engine: the differential test suite evaluates the same expressions through both and asserts they agree.
 
-UiSharp also adds functions VBScript does not have, for migrating off the COM shim — `FileExists`, `FolderExists`, `DriveExists`, `PathParent`, `PathFileName`, `PathBaseName`, `PathExtension`, `PathDrive`, `PathCombine`, `ComputerName`, `UserName`, `UserDomain` and `ExpandEnvironment`. A config using these will not run under the original C++ UI++.
+### UiSharp extensions
+
+UiSharp adds functions VBScript does not have. They are functions rather than an engine mode on purpose: an existing config behaves exactly as before, and a new one opts in visibly, on the line where it matters. A mode would change what `=` means for every condition in a document, decided by an attribute the reader may never see.
+
+Replacements for the COM shim: `FileExists`, `FolderExists`, `DriveExists`, `PathParent`, `PathFileName`, `PathBaseName`, `PathExtension`, `PathDrive`, `PathCombine`, `ComputerName`, `UserName`, `UserDomain`, `ExpandEnvironment`.
+
+Conveniences for what VBScript makes awkward:
+
+| Function | Why |
+|---|---|
+| `EqualsIgnoreCase(a, b)` | VBScript compares strings case-sensitively, so `"%XHWManufacturer%" = "Lenovo"` is false when WMI reports `LENOVO`. Vendor casing varies by firmware. |
+| `IsSet(value)` | True when a value arrived — false when it is empty or still a literal `%Token%` because nothing set it. VBScript cannot tell those apart, which is how a preflight check on missing hardware data can appear to pass. |
+| `InList(list, item [, delimiter])` | Membership in a delimited string, ignoring case and surrounding spaces. Use `Filter(Split(…))` when an exact match is wanted. |
+| `VersionCompare(a, b)` | Compares dotted versions by number. As text, `"10.0.19041" > "10.0.9600"` is false, because `1` sorts before `9`. |
+
+A config using any of these will not run under the original C++ UI++ or under the `vbscript` engine — the differential tests assert that VBScript rejects them, so the trade is explicit rather than assumed.
 
 ## Repository layout
 

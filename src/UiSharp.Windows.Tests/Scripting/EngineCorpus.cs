@@ -262,6 +262,21 @@ internal static class EngineCorpus
     ];
 
     /// <summary>
+    /// UiSharp extensions with no VBScript counterpart of any kind — not a COM
+    /// idiom being replaced, but capability VBScript never had. Real VBScript
+    /// must reject these, which is exactly the cost of using them: such a config
+    /// will not run under the original C++ UI++.
+    /// </summary>
+    public static readonly string[] NativeOnlyExtensions =
+    [
+        @"EqualsIgnoreCase(""LENOVO"", ""Lenovo"")",
+        @"IsSet(""%XHWMemory%"")",
+        @"IsSet(""8192"")",
+        @"InList(""Fire,IST,HR"", ""ist"")",
+        @"VersionCompare(""10.0.19041"", ""10.0.9600"")",
+    ];
+
+    /// <summary>
     /// Expressions VBScript rejects outright. Both engines must decline to
     /// produce a value for these so the caller keeps the literal text.
     /// </summary>

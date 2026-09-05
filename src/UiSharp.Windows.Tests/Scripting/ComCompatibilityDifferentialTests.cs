@@ -101,6 +101,24 @@ public class ComCompatibilityDifferentialTests
     }
 
     // -------------------------------------------------------------------------
+    // Extensions VBScript never had
+    // -------------------------------------------------------------------------
+
+    [Theory]
+    [MemberData(nameof(NativeOnlyExtensions))]
+    public void NativeOnlyExtension_EvaluatesNativelyAndIsRejectedByVBScript(string expression)
+    {
+        // Evaluates cleanly here...
+        var result = Native.TryEvaluate(expression, EngineComparison.NoVars);
+        Assert.True(result.IsReliable, result.DescribeProblems());
+
+        if (Unavailable) return;
+
+        // ...and is not VBScript, which is the documented cost of using it.
+        Assert.Null(VbValue(expression));
+    }
+
+    // -------------------------------------------------------------------------
     // What still needs a script host
     // -------------------------------------------------------------------------
 
@@ -180,6 +198,9 @@ public class ComCompatibilityDifferentialTests
 
     public static IEnumerable<object[]> NativeExpressions() =>
         EngineCorpus.NativeEquivalents.Select(p => new object[] { p.Native });
+
+    public static IEnumerable<object[]> NativeOnlyExtensions() =>
+        EngineCorpus.NativeOnlyExtensions.Select(e => new object[] { e });
 
     public static IEnumerable<object[]> ScriptHostExpressions() =>
         EngineCorpus.RequireScriptHost.Select(e => new object[] { e });

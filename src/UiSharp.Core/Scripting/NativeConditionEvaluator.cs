@@ -846,6 +846,14 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                 "PATHDRIVE"        => Value.FromString(FileSystemObject.GetDriveName(Str(args, 0))),
                 "PATHCOMBINE"      => Value.FromString(FileSystemObject.BuildPath(Str(args, 0), Str(args, 1))),
 
+                // Conveniences for the things VBScript makes awkward. Each is a
+                // function rather than a mode, so an old config is unaffected and
+                // a new one opts in visibly, at the point of use.
+                "EQUALSIGNORECASE" => Value.FromBool(string.Equals(Str(args, 0), Str(args, 1), StringComparison.OrdinalIgnoreCase)),
+                "ISSET"            => Value.FromBool(IsResolved(Str(args, 0))),
+                "INLIST"           => Builtin_InList(args),
+                "VERSIONCOMPARE"   => Builtin_VersionCompare(args),
+
                 // Numeric functions. VBScript's Round and CInt both use
                 // banker's rounding, which is also .NET's MidpointRounding
                 // default, so Math.Round matches without extra work.
@@ -893,6 +901,75 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
             Array.Reverse(chars);
             return Value.FromString(new string(chars));
         }
+
+        // A variable reference that was never set survives substitution intact,
+        // so a value still shaped like %Name% means "no value". This is the one
+        // question VBScript cannot answer at all: by the time a condition runs,
+        // an unset variable and an empty one look identical.
+        private static bool IsResolved(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return false;
+
+            var trimmed = value.Trim();
+
+            return !(trimmed.Length > 2 &&
+                     trimmed[0] == '%' &&
+                     trimmed[^1] == '%' &&
+                     trimmed.IndexOf('%', 1) == trimmed.Length - 1);
+        }
+
+        // InList(list, item [, delimiter]) -- membership in a delimited string.
+        //
+        // Deliberately case-insensitive: it exists for hardware and department
+        // values, which are cased inconsistently by vendors and by whoever typed
+        // the list. Use Filter(Split(...)) when an exact match is wanted.
+        private static Value Builtin_InList(List<Value> args)
+        {
+            if (args.Count < 2) return Value.FromBool(false);
+
+            var delimiter = args.Count > 2 ? args[2].AsString() : ",";
+            if (delimiter.Length == 0) delimiter = ",";
+
+            var item = args[1].AsString().Trim();
+
+            var found = args[0].AsString()
+                .Split(delimiter)
+                .Any(entry => string.Equals(entry.Trim(), item, StringComparison.OrdinalIgnoreCase));
+
+            return Value.FromBool(found);
+        }
+
+        // VersionCompare(a, b) -> -1, 0 or 1, comparing dotted versions by
+        // number rather than as text.
+        //
+        // "10.0.19041" > "10.0.9600" is false as a string comparison, because
+        // "1" sorts before "9". Version checks are common enough in a task
+        // sequence that getting them silently backwards matters.
+        private static Value Builtin_VersionCompare(List<Value> args)
+        {
+            if (args.Count < 2) return Value.FromNumber(0);
+
+            var left  = VersionParts(args[0].AsString());
+            var right = VersionParts(args[1].AsString());
+
+            for (var i = 0; i < Math.Max(left.Count, right.Count); i++)
+            {
+                // A missing component is zero, so 10.0 equals 10.0.0.
+                var a = i < left.Count  ? left[i]  : 0;
+                var b = i < right.Count ? right[i] : 0;
+
+                if (a != b) return Value.FromNumber(a < b ? -1 : 1);
+            }
+
+            return Value.FromNumber(0);
+        }
+
+        private static List<long> VersionParts(string version) =>
+            version
+                .Split('.')
+                .Select(part => long.TryParse(part.Trim(), NumberStyles.Integer,
+                                              CultureInfo.InvariantCulture, out var n) ? n : 0L)
+                .ToList();
 
         // StrComp(s1, s2 [, compare]) -> -1, 0 or 1. Binary by default, like
         // every other VBScript string comparison.
