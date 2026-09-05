@@ -160,12 +160,16 @@ public class NativeConditionDiagnosticsTests
     // Constructs the engine recognises but cannot represent
     // ----------------------------------------------------------
 
+    // Split is supported now — the documentation lists it among the functions
+    // most often used with UI++ — so it must NOT be reported. Comparing an
+    // array to a string is still a type mismatch, hence UBound here.
     [Fact]
-    public void Split_IsReportedAsUnsupported()
+    public void Split_IsSupported()
     {
-        var result = Run("Split('a,b', ',') <> ''");
-        Assert.Contains(result.Diagnostics,
-            d => d.Kind == ConditionDiagnosticKind.UnsupportedConstruct);
+        var result = Run("UBound(Split('a,b', ',')) = 1");
+
+        Assert.True(result.Value, result.Describe());
+        Assert.True(result.IsReliable, result.Describe());
     }
 
     // Member access works now, but only on an object a supported CreateObject

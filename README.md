@@ -101,7 +101,7 @@ The native engine handles these itself, so such a config runs unchanged in a Win
 
 The native functions are UiSharp-only: a config using them will not run under the original C++ UI++, which is the trade for dropping the dependency on a deprecated scripting engine. Both forms return the same answer, so migrating is safe to do incrementally.
 
-Still requiring the VBScript engine: `GetObject` (WMI — prefer `<Action Type="WMIRead">`), `Eval`, `Execute`, `Split`, `WScript.Shell.RegRead` (prefer `<Action Type="RegRead">`), and any other ProgID. These are reported in the log rather than silently evaluating false.
+Still requiring the VBScript engine: `GetObject` (WMI — prefer `<Action Type="WMIRead">`), `Eval`, `Execute`, `WScript.Shell.RegRead` (prefer `<Action Type="RegRead">`), and any other ProgID. These are reported in the log rather than silently evaluating false.
 
 ## Condition engines
 
@@ -115,12 +115,20 @@ Putting it on an individual `<Action>` does nothing and is reported in the log. 
 
 | Engine | When to use |
 |---|---|
-| `native` (default) | Everything, unless you hit one of the four constructs above. No extra WinPE component. |
+| `native` (default) | Everything, unless you hit one of the constructs above. No extra WinPE component. |
 | `vbscript` | Legacy. Hosts `IActiveScript`, so the boot image needs `WinPE-Scripting`. Microsoft is deprecating VBScript, so treat this as a bridge and migrate the config. |
 
 Selecting `vbscript` logs a warning naming the native alternatives. Selecting it on a system where the engine is not registered is logged as an **error** — conditions needing a script host then evaluate as false, and each one is reported individually, rather than the run quietly making wrong choices.
 
 None of the original project's own sample configs need the VBScript engine.
+
+### Condition functions
+
+The native engine implements the VBScript functions a configuration is likely to use, including every one the UI++ documentation calls common — `InStr`, `Left`, `Len`, `Mid`, `Replace`, `Split`, `StrComp` and `Trim` — plus arrays (`Split`, `Join`, `Filter`, `UBound`, `LBound`, `IsArray`, and `arr(0)` indexing), date arithmetic (`DateAdd`, `DateDiff`, `DatePart`, `Hour`, `Minute`, `Second`, `IsDate`, `MonthName`, `WeekdayName`), string and numeric conversion, and the comparison, boolean and arithmetic operators with VBScript's precedence.
+
+Every one of them is checked against the real engine: the differential test suite evaluates the same expressions through both and asserts they agree.
+
+UiSharp also adds functions VBScript does not have, for migrating off the COM shim — `FileExists`, `FolderExists`, `DriveExists`, `PathParent`, `PathFileName`, `PathBaseName`, `PathExtension`, `PathDrive`, `PathCombine`, `ComputerName`, `UserName`, `UserDomain` and `ExpandEnvironment`. A config using these will not run under the original C++ UI++.
 
 ## Repository layout
 

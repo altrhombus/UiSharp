@@ -92,6 +92,72 @@ internal static class EngineCorpus
         "Hex(255)",
         "CStr(42)",
 
+        // ---- The functions the documentation calls "common", which the native
+        //      engine previously lacked. Split and StrComp are named on the
+        //      prerequisites page; Split needs a real array value.
+        @"StrComp(""a"", ""b"")",
+        @"StrComp(""b"", ""a"")",
+        @"StrComp(""a"", ""a"")",
+        @"StrComp(""a"", ""A"")",
+        @"StrComp(""a"", ""A"", 1)",
+        @"UBound(Split(""a,b,c"", "",""))",
+        @"LBound(Split(""a,b,c"", "",""))",
+        @"Split(""a,b,c"", "","")(0)",
+        @"Split(""a,b,c"", "","")(2)",
+        @"Split(""a b c"")(1)",
+        @"Split(""a,b,c"", "","", 2)(1)",
+        @"Split(""one::two"", ""::"")(1)",
+        @"Split("""", "","")(0)",
+        @"Join(Split(""a,b,c"", "",""), ""-"")",
+        @"Join(Split(""a,b,c"", "",""))",
+        @"UBound(Filter(Split(""ab,cd,ce"", "",""), ""c""))",
+        @"Join(Filter(Split(""ab,cd,ce"", "",""), ""c""), ""|"")",
+        @"Join(Filter(Split(""ab,cd,ce"", "",""), ""c"", False), ""|"")",
+        @"IsArray(Split(""a,b"", "",""))",
+        @"IsArray(""a,b"")",
+        @"String(3, ""x"")",
+        @"String(0, ""x"")",
+
+        // ---- Dates. Fixed inputs only: anything derived from the clock cannot
+        //      be compared between two engines.
+        @"DateAdd(""d"", 1, ""1/2/2020"")",
+        @"DateAdd(""d"", -1, ""1/2/2020"")",
+        @"DateAdd(""m"", 2, ""1/2/2020"")",
+        @"DateAdd(""yyyy"", 1, ""1/2/2020"")",
+        @"DateAdd(""ww"", 1, ""1/2/2020"")",
+        @"Year(DateAdd(""yyyy"", 5, ""1/2/2020""))",
+        @"Month(DateAdd(""m"", 13, ""1/2/2020""))",
+        @"DateDiff(""d"", ""1/1/2020"", ""1/31/2020"")",
+        @"DateDiff(""m"", ""1/1/2020"", ""6/1/2020"")",
+        @"DateDiff(""yyyy"", ""1/1/2020"", ""1/1/2024"")",
+        @"DateDiff(""ww"", ""1/1/2020"", ""1/29/2020"")",
+        @"DatePart(""yyyy"", ""3/4/2021"")",
+        @"DatePart(""m"", ""3/4/2021"")",
+        @"DatePart(""d"", ""3/4/2021"")",
+        @"DatePart(""q"", ""8/4/2021"")",
+        @"DatePart(""w"", ""3/4/2021"")",
+        @"Hour(""3/4/2021 13:45:12"")",
+        @"Minute(""3/4/2021 13:45:12"")",
+        @"Second(""3/4/2021 13:45:12"")",
+        @"IsDate(""3/4/2021"")",
+        @"IsDate(""not a date"")",
+        @"MonthName(3)",
+        @"MonthName(3, True)",
+        @"WeekdayName(1)",
+        @"WeekdayName(1, True)",
+
+        // ---- Remaining numeric conversions.
+        @"Oct(8)",
+        @"Oct(64)",
+        @"Log(1)",
+        @"Exp(0)",
+
+        // ---- Shapes a real config would use these for.
+        @"UBound(Split(""%Depts%"", "","")) >= 0",
+        @"Join(Split(""Fire,IST,HR"", "",""), "" / "")",
+        @"StrComp(""LENOVO"", ""LENOVO"") = 0",
+        @"DateDiff(""d"", ""1/1/2020"", ""1/1/2021"") > 300",
+
         // ---- Nested calls
         @"UCase(Left(""abcdef"", 3))",
         @"InStr(UCase(""srv-01""), ""SRV"")",
@@ -226,13 +292,15 @@ internal static class EngineCorpus
     /// these; the native engine must decline and say why, so configs using them
     /// keep working under ConditionEngine="vbscript" rather than silently
     /// producing a wrong answer.
+    ///
+    /// Split used to be here. It is implemented natively now, because the
+    /// documentation lists it among the functions most often used with UI++.
     /// </summary>
     public static readonly string[] RequireScriptHost =
     [
         @"GetObject(""winmgmts:\\.\root\cimv2"")",
         @"Eval(""1 = 1"")",
         @"Execute(""x = 1"")",
-        @"Split(""a,b"", "","")",
         // A ProgID with no native equivalent.
         @"CreateObject(""Scripting.Dictionary"")",
         // A supported object, but a member that is not implemented.

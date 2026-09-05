@@ -117,7 +117,7 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
     // Value types produced by the parser
     // -------------------------------------------------------------------------
 
-    private enum ValueKind { String, Number, Bool, Object }
+    private enum ValueKind { String, Number, Bool, Object, Array }
 
     private readonly struct Value
     {
@@ -125,7 +125,7 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
         public readonly string    Str;
         public readonly double    Num;
         public readonly bool      Bool;
-        public readonly object?   Obj;    // ScriptObject when Kind is Object
+        public readonly object?   Obj;    // ScriptObject when Object, List<Value> when Array
 
         private Value(ValueKind k, string s, double n, bool b, object? o = null)
         { Kind=k; Str=s; Num=n; Bool=b; Obj=o; }
@@ -134,6 +134,9 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
         public static Value FromNumber(double n) => new(ValueKind.Number, n.ToString(CultureInfo.InvariantCulture), n, false);
         public static Value FromBool(bool b)     => new(ValueKind.Bool,   b ? "True" : "False", b ? 1 : 0, b);
         public static Value FromObject(ScriptObject o) => new(ValueKind.Object, o.ProgId, 0, false, o);
+        public static Value FromArray(List<Value> items) => new(ValueKind.Array, string.Empty, 0, false, items);
+
+        public List<Value> AsArray => (List<Value>)Obj!;
 
         // Truthy: non-empty string, non-zero number, or bool true
         public bool IsTrue => Kind switch
@@ -141,6 +144,10 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
             ValueKind.Bool   => Bool,
             ValueKind.Number => Num != 0,
             ValueKind.Object => true,
+            // An array is not a truth value; VBScript raises a type mismatch.
+            // Callers check Kind first and report, so falling to false here is
+            // only the value that accompanies that diagnostic.
+            ValueKind.Array  => false,
             _                => !string.IsNullOrEmpty(Str),
         };
 
@@ -538,12 +545,46 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
             return Value.FromNumber(Math.Pow(ln, rn));
         }
 
+        // Array element access: Split("a,b", ",")(0). VBScript indexes with
+        // parentheses, the same syntax as a call, so this is only attempted when
+        // the value to the left is actually an array.
+        private Value IndexArray(Value array)
+        {
+            _lex.Advance();   // consume '('
+
+            var index = ParseExpr();
+
+            if (_lex.Kind == TokenKind.RParen) _lex.Advance();
+
+            if (!index.TryGetDouble(out var n))
+            {
+                Report(ConditionDiagnosticKind.EvaluationError,
+                    $"array index must be a number, but got \"{index.AsString()}\"");
+                return Value.FromString(string.Empty);
+            }
+
+            var items = array.AsArray;
+            var i = (int)Math.Truncate(n);
+
+            if (i < 0 || i >= items.Count)
+            {
+                Report(ConditionDiagnosticKind.EvaluationError,
+                    $"array index {i} is outside 0..{items.Count - 1}");
+                return Value.FromString(string.Empty);
+            }
+
+            return items[i];
+        }
+
         // Member access, chainable: obj.Member or obj.Method(args). Only objects
         // produced by a supported CreateObject have members; anything else is a
         // construct the engine cannot honour, and is reported as such.
         private Value ParsePostfix()
         {
             var value = ParseAtom();
+
+            while (value.Kind == ValueKind.Array && _lex.Kind == TokenKind.LParen)
+                value = IndexArray(value);
 
             while (_lex.Kind == TokenKind.Dot)
             {
@@ -731,10 +772,6 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                         $"{name}() requires the vbscript condition engine");
                     return Value.FromString(string.Empty);
 
-                case "SPLIT":
-                    Report(ConditionDiagnosticKind.UnsupportedConstruct,
-                        "Split() returns an array, which the native engine cannot represent");
-                    return Value.FromString(string.Empty);
             }
 
             return name.ToUpperInvariant() switch
@@ -760,6 +797,34 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
                 "CINT"       => args.Count > 0 && args[0].TryGetDouble(out var ci) ? Value.FromNumber(Math.Round(ci)) : Value.FromNumber(0),
                 "CDBL"       => args.Count > 0 && args[0].TryGetDouble(out var cd) ? Value.FromNumber(cd) : Value.FromNumber(0),
                 "REPLACE"    => Builtin_Replace(args),
+                "STRCOMP"    => Builtin_StrComp(args),
+                "STRING"     => Builtin_StringOf(args),
+
+                // ---- Arrays. The documentation lists Split among the functions
+                // most often used with UI++, so the engine needs a real array
+                // value rather than a diagnostic.
+                "SPLIT"      => Builtin_Split(args),
+                "JOIN"       => Builtin_Join(args),
+                "UBOUND"     => Builtin_UBound(args),
+                "LBOUND"     => Value.FromNumber(0),
+                "FILTER"     => Builtin_Filter(args),
+                "ISARRAY"    => Value.FromBool(args.Count > 0 && args[0].Kind == ValueKind.Array),
+
+                // ---- Dates beyond the simple parts already supported.
+                "DATEADD"    => Builtin_DateAdd(args),
+                "DATEDIFF"   => Builtin_DateDiff(args),
+                "DATEPART"   => Builtin_DatePart(args),
+                "HOUR"       => args.Count > 0 ? Value.FromNumber(ParseVbDate(args[0].AsString()).Hour)   : Value.FromNumber(DateTime.Now.Hour),
+                "MINUTE"     => args.Count > 0 ? Value.FromNumber(ParseVbDate(args[0].AsString()).Minute) : Value.FromNumber(DateTime.Now.Minute),
+                "SECOND"     => args.Count > 0 ? Value.FromNumber(ParseVbDate(args[0].AsString()).Second) : Value.FromNumber(DateTime.Now.Second),
+                "ISDATE"     => Value.FromBool(args.Count > 0 && TryParseVbDate(args[0].AsString(), out _)),
+                "MONTHNAME"  => Builtin_MonthName(args),
+                "WEEKDAYNAME" => Builtin_WeekdayName(args),
+
+                // ---- Remaining numeric conversions and maths.
+                "OCT"        => args.Count > 0 && args[0].TryGetDouble(out var oc) ? Value.FromString(Convert.ToString((long)Math.Truncate(oc), 8)) : Value.FromString(""),
+                "LOG"        => args.Count > 0 && args[0].TryGetDouble(out var lg) && lg > 0 ? Value.FromNumber(Math.Log(lg)) : Value.FromNumber(0),
+                "EXP"        => args.Count > 0 && args[0].TryGetDouble(out var ex) ? Value.FromNumber(Math.Exp(ex)) : Value.FromNumber(0),
 
                 // ---- UiSharp-native additions (no VBScript equivalent) --------
                 // These exist so a config can be migrated off the CreateObject
@@ -827,6 +892,195 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
             var chars = args[0].AsString().ToCharArray();
             Array.Reverse(chars);
             return Value.FromString(new string(chars));
+        }
+
+        // StrComp(s1, s2 [, compare]) -> -1, 0 or 1. Binary by default, like
+        // every other VBScript string comparison.
+        private static Value Builtin_StrComp(List<Value> args)
+        {
+            if (args.Count < 2) return Value.FromNumber(0);
+
+            var mode = CompareModeOf(args, compareArgIndex: 2);
+            var result = string.Compare(args[0].AsString(), args[1].AsString(), mode);
+
+            return Value.FromNumber(Math.Sign(result));
+        }
+
+        // String(count, character) repeats the FIRST character of its argument.
+        private static Value Builtin_StringOf(List<Value> args)
+        {
+            if (args.Count < 2 || !args[0].TryGetDouble(out var count) || count < 0)
+                return Value.FromString("");
+
+            var text = args[1].AsString();
+            if (text.Length == 0) return Value.FromString("");
+
+            return Value.FromString(new string(text[0], (int)count));
+        }
+
+        // Split(expression [, delimiter [, count [, compare]]])
+        // The delimiter defaults to a single space, as in VBScript.
+        private static Value Builtin_Split(List<Value> args)
+        {
+            if (args.Count == 0) return Value.FromArray([]);
+
+            var text = args[0].AsString();
+            var delimiter = args.Count > 1 ? args[1].AsString() : " ";
+            var limit = args.Count > 2 && args[2].TryGetDouble(out var c) ? (int)c : -1;
+
+            if (delimiter.Length == 0)
+                return Value.FromArray([Value.FromString(text)]);
+
+            var mode = CompareModeOf(args, compareArgIndex: 3);
+            var parts = new List<Value>();
+            var start = 0;
+
+            while (true)
+            {
+                if (limit >= 0 && parts.Count == limit - 1) break;
+
+                var at = text.IndexOf(delimiter, start, mode);
+                if (at < 0) break;
+
+                parts.Add(Value.FromString(text[start..at]));
+                start = at + delimiter.Length;
+            }
+
+            parts.Add(Value.FromString(text[start..]));
+            return Value.FromArray(parts);
+        }
+
+        // Join(array [, delimiter]) -- the delimiter also defaults to a space.
+        private static Value Builtin_Join(List<Value> args)
+        {
+            if (args.Count == 0 || args[0].Kind != ValueKind.Array) return Value.FromString("");
+
+            var delimiter = args.Count > 1 ? args[1].AsString() : " ";
+            return Value.FromString(string.Join(delimiter, args[0].AsArray.Select(v => v.AsString())));
+        }
+
+        // UBound is the last index, so an empty array is -1.
+        private static Value Builtin_UBound(List<Value> args)
+        {
+            if (args.Count == 0 || args[0].Kind != ValueKind.Array) return Value.FromNumber(-1);
+            return Value.FromNumber(args[0].AsArray.Count - 1);
+        }
+
+        // Filter(array, match [, include [, compare]]) keeps the elements that
+        // contain match, or excludes them when include is False.
+        private static Value Builtin_Filter(List<Value> args)
+        {
+            if (args.Count < 2 || args[0].Kind != ValueKind.Array) return Value.FromArray([]);
+
+            var match = args[1].AsString();
+            var include = args.Count < 3 || args[2].IsTrue;
+            var mode = CompareModeOf(args, compareArgIndex: 3);
+
+            var kept = args[0].AsArray
+                .Where(v => v.AsString().Contains(match, mode) == include)
+                .ToList();
+
+            return Value.FromArray(kept);
+        }
+
+        // DateAdd(interval, number, date). Intervals follow VBScript's codes:
+        // yyyy q m y/d/w h n s -- note "n" is minutes and "m" is months.
+        private static Value Builtin_DateAdd(List<Value> args)
+        {
+            if (args.Count < 3) return Value.FromString("");
+            if (!args[1].TryGetDouble(out var amount)) return Value.FromString("");
+            if (!TryParseVbDate(args[2].AsString(), out var date)) return Value.FromString("");
+
+            var n = (int)Math.Truncate(amount);
+
+            var shifted = args[0].AsString().ToLowerInvariant() switch
+            {
+                "yyyy" => date.AddYears(n),
+                "q"    => date.AddMonths(n * 3),
+                "m"    => date.AddMonths(n),
+                "y" or "d" or "w" => date.AddDays(n),
+                "ww"   => date.AddDays(n * 7),
+                "h"    => date.AddHours(n),
+                "n"    => date.AddMinutes(n),
+                "s"    => date.AddSeconds(n),
+                _      => date,
+            };
+
+            return Value.FromString(FormatVbDate(shifted));
+        }
+
+        private static Value Builtin_DateDiff(List<Value> args)
+        {
+            if (args.Count < 3) return Value.FromNumber(0);
+            if (!TryParseVbDate(args[1].AsString(), out var from)) return Value.FromNumber(0);
+            if (!TryParseVbDate(args[2].AsString(), out var to)) return Value.FromNumber(0);
+
+            var span = to - from;
+
+            var result = args[0].AsString().ToLowerInvariant() switch
+            {
+                "yyyy" => to.Year - from.Year,
+                "q"    => (to.Year - from.Year) * 4 + (to.Month - 1) / 3 - (from.Month - 1) / 3,
+                "m"    => (to.Year - from.Year) * 12 + to.Month - from.Month,
+                "y" or "d" => (int)span.TotalDays,
+                "w" or "ww" => (int)(span.TotalDays / 7),
+                "h"    => (int)span.TotalHours,
+                "n"    => (int)span.TotalMinutes,
+                "s"    => (int)span.TotalSeconds,
+                _      => 0,
+            };
+
+            return Value.FromNumber(result);
+        }
+
+        private static Value Builtin_DatePart(List<Value> args)
+        {
+            if (args.Count < 2 || !TryParseVbDate(args[1].AsString(), out var date))
+                return Value.FromNumber(0);
+
+            var result = args[0].AsString().ToLowerInvariant() switch
+            {
+                "yyyy" => date.Year,
+                "q"    => (date.Month - 1) / 3 + 1,
+                "m"    => date.Month,
+                "y"    => date.DayOfYear,
+                "d"    => date.Day,
+                "w"    => (int)date.DayOfWeek + 1,
+                "h"    => date.Hour,
+                "n"    => date.Minute,
+                "s"    => date.Second,
+                _      => 0,
+            };
+
+            return Value.FromNumber(result);
+        }
+
+        // MonthName(month [, abbreviate])
+        private static Value Builtin_MonthName(List<Value> args)
+        {
+            if (args.Count == 0 || !args[0].TryGetDouble(out var m) || m < 1 || m > 12)
+                return Value.FromString("");
+
+            var names = CultureInfo.InvariantCulture.DateTimeFormat;
+            var index = (int)m;
+
+            return Value.FromString(args.Count > 1 && args[1].IsTrue
+                ? names.GetAbbreviatedMonthName(index)
+                : names.GetMonthName(index));
+        }
+
+        // WeekdayName(weekday [, abbreviate]) -- 1 is Sunday, as in VBScript.
+        private static Value Builtin_WeekdayName(List<Value> args)
+        {
+            if (args.Count == 0 || !args[0].TryGetDouble(out var d) || d < 1 || d > 7)
+                return Value.FromString("");
+
+            var names = CultureInfo.InvariantCulture.DateTimeFormat;
+            var day = (DayOfWeek)(((int)d - 1) % 7);
+
+            return Value.FromString(args.Count > 1 && args[1].IsTrue
+                ? names.GetAbbreviatedDayName(day)
+                : names.GetDayName(day));
         }
 
         // Preserves the historical value (empty string) while making the fact that
@@ -949,7 +1203,17 @@ public sealed class NativeConditionEvaluator : IConditionEvaluator
         }
 
         private static DateTime ParseVbDate(string s) =>
-            DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.None, out var dt)
-                ? dt : DateTime.Now;
+            TryParseVbDate(s, out var dt) ? dt : DateTime.Now;
+
+        private static bool TryParseVbDate(string s, out DateTime value) =>
+            DateTime.TryParse(s, CultureInfo.InvariantCulture, DateTimeStyles.None, out value);
+
+        // The shape VBScript renders a date in: no leading zeros, and the time
+        // only when there is one. Matches the Now()/Date() formats above so a
+        // date can round-trip through DateAdd and back into Year()/Month()/Day().
+        private static string FormatVbDate(DateTime value) =>
+            value.TimeOfDay == TimeSpan.Zero
+                ? value.ToString("M/d/yyyy", CultureInfo.InvariantCulture)
+                : value.ToString("M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture);
     }
 }

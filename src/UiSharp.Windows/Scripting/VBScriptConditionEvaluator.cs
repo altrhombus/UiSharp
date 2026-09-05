@@ -96,7 +96,14 @@ public sealed class VBScriptConditionEvaluator : IConditionEvaluator
         float f   => f.ToString("R", CultureInfo.InvariantCulture),
         double d  => d.ToString("R", CultureInfo.InvariantCulture),
         decimal m => m.ToString(CultureInfo.InvariantCulture),
-        DateTime t => t.ToString(CultureInfo.InvariantCulture),
+
+        // A Date VARIANT renders the way VBScript's CStr does -- no leading
+        // zeros, and the time only when there is one. .NET's default
+        // ("01/03/2020 00:00:00") is not what a config author sees, and the
+        // original converts with (_bstr_t), not ToString().
+        DateTime t => t.TimeOfDay == TimeSpan.Zero
+            ? t.ToString("M/d/yyyy", CultureInfo.InvariantCulture)
+            : t.ToString("M/d/yyyy h:mm:ss tt", CultureInfo.InvariantCulture),
         _         => Convert.ToString(v, CultureInfo.InvariantCulture) ?? string.Empty,
     };
 
@@ -109,6 +116,9 @@ public sealed class VBScriptConditionEvaluator : IConditionEvaluator
         string s => !string.IsNullOrEmpty(s)
                     && s != "0"
                     && !s.Equals("False", StringComparison.OrdinalIgnoreCase),
+        // A Date coerces to a non-zero serial number, so it is truthy.
+        // Convert.ToBoolean throws on DateTime, which would have read as false.
+        DateTime  => true,
         null     => false,
         _        => TryConvert(v),
     };
